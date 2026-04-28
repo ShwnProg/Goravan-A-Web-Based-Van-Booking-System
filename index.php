@@ -4,13 +4,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GoraVan</title>
-    <link rel="stylesheet" href="/assets/css/style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <title><?= $title ?? 'GoraVan' ?></title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="/assets/css/style.css">
 </head>
 
 <body>
+
+    <!-- NAV BAR -->
     <nav class="navbar">
         <div class="logo">
             <img src="/images/logo.png" alt="goravan logo">
@@ -22,15 +27,14 @@
             <a href="#how" class="nav-link">How It Works</a>
             <a href="#routes" class="nav-link">Routes</a>
             <div class="btn-group">
-                <a href="/views/login.php" class="btn login-btn">Log In</a>
-                <a href="/views/register.php" class="btn register-btn">Get Started</a>
+                <a href="views/auth/login.php" class="btn login-btn">Log In</a>
+                <a href="views/auth/register.php" class="btn register-btn">Get Started</a>
             </div>
         </div>
         <button class="hamburger" id="hamburger" aria-label="Toggle menu">
             <span></span><span></span><span></span>
         </button>
     </nav>
-
     <div class="mobile-menu" id="mobileMenu">
         <a href="#home" class="nav-link">Home</a>
         <a href="#features" class="nav-link">Features</a>
@@ -38,8 +42,8 @@
         <a href="#routes" class="nav-link">Routes</a>
         <div class="mobile-divider"></div>
         <div class="btn-group">
-            <a href="/views/login.php" class="btn login-btn">Log In</a>
-            <a href="/views/register.php" class="btn register-btn">Get Started</a>
+            <a href="views/auth/login.php" class="btn login-btn">Log In</a>
+            <a href="views/auth/register.php" class="btn register-btn">Get Started</a>
         </div>
     </div>
 
@@ -51,16 +55,15 @@
             <p>GoraVan makes commuting between Southern Leyte destinations easier. Reserve your seat, view schedules,
                 and confirm your booking — all without going to the terminal.</p>
             <div class="hero-actions">
-                <a href="/views/register.php" class="cta-btn">Book a Ride</a>
-                <a href="/views/login.php" class="cta-outline">Log In</a>
+                <a href="views/auth/register.php" class="cta-btn">Book a Ride</a>
+                <a href="views/auth/login.php" class="cta-outline">Log In</a>
             </div>
         </div>
 
         <div class="hero-visual">
             <div class="hero-card">
                 <div class="hero-card-header">
-                    <span class="card-label">Available Routes Today</span>
-                    <span class="live-badge"><i class="fa-solid fa-circle"></i> Live</span>
+                    <span class="card-label">Routes </span>
                 </div>
                 <div class="route-list">
                     <div class="route-item">
@@ -265,12 +268,11 @@
             </p>
 
             <div class="cta-buttons">
-                <a href="register.php" class="cta-btn">Create an Account</a>
-                <a href="login.php" class="cta-outline">Log In</a>
+                <a href="views/auth/register.php" class="cta-btn">Create an Account</a>
+                <a href="views/auth/login.php" class="cta-outline">Log In</a>
             </div>
         </div>
     </section>
-
     <!-- FOOTER -->
     <footer class="footer">
         <div class="footer-container">
@@ -284,7 +286,6 @@
                 </p>
             </div>
 
-            <!-- System -->
             <div class="footer-box">
                 <h3>System</h3>
                 <p>Home</p>
@@ -304,7 +305,6 @@
 
         </div>
 
-        <!-- Bottom -->
         <div class="footer-bottom">
             <p>2026 GoraVan. All rights reserved. Southern Leyte, Philippines.</p>
         </div>
@@ -331,5 +331,3 @@
         });
     });
 </script>
-
-</html>
