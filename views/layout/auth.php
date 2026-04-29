@@ -31,13 +31,22 @@
 
     <!-- ERROR ALERT -->
     <?php if (isset($_SESSION['error'])): ?>
+
+        <?php
+        $errors = $_SESSION['error'];
+
+
+        $firstError = is_array($errors) ? $errors[0] : $errors;
+        ?>
+
         <script>
             Swal.fire({
                 title: "Error",
-                html: "<?= is_array($_SESSION['error']) ? implode('<br>', $_SESSION['error']) : $_SESSION['error'] ?>",
+                text: "<?= htmlspecialchars($firstError) ?>",
                 icon: "error"
             });
         </script>
+
         <?php unset($_SESSION['error']); ?>
     <?php endif; ?>
 

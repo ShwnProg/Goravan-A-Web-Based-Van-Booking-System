@@ -22,6 +22,9 @@ $left_features = [
         'desc' => 'Your data is protected and your booking is always confirmed.',
     ],
 ];
+
+$old = $_SESSION['old'] ?? [];
+unset($_SESSION['old']);
 ?>
 
 <section class="auth-container">
@@ -30,22 +33,26 @@ $left_features = [
 </section>
 
 <div class="auth-input">
-    <form action="../../controllers/users/RegisterController.php" method="POST" id="registerForm" enctype="multipart/form-data">
+    <form action="../../controllers/users/RegisterController.php" method="POST" id="registerForm"
+        enctype="multipart/form-data">
         <?= csrf_field() ?>
 
         <div class="input-group">
             <label for="fullname">Full Name</label>
-            <input type="text" name="fullname" id="fullname" placeholder="Enter your full name" Required>
+            <input type="text" name="fullname" id="fullname" value="<?= htmlspecialchars($old['fullname'] ?? '') ?>"
+                placeholder="Enter your full name" Required>
         </div>
 
         <div class="input-group">
             <label for="email">Email Address</label>
-            <input type="email" name="email" id="email" placeholder="example@gmail.com" Required>
+            <input type="email" name="email" id="email" value="<?= htmlspecialchars($old['email'] ?? '') ?>"
+                placeholder="example@gmail.com" Required>
         </div>
 
         <div class="input-group">
             <label for="contact">Contact Number</label>
-            <input type="text" name="contact" id="contact" placeholder="1234-567-8912" Required>
+            <input type="text" name="contact" id="contact" value="<?= htmlspecialchars($old['contact'] ?? '') ?>"
+                placeholder="1234-567-8912" Required>
         </div>
 
         <div class="password-group">
@@ -55,7 +62,8 @@ $left_features = [
             </div>
             <div class="pw-field">
                 <label for="confirm_password">Confirm Password</label>
-                <input type="password" name="confirm_password" id="confirm_password" placeholder="Re-enter password" Required>
+                <input type="password" name="confirm_password" id="confirm_password" placeholder="Re-enter password"
+                    Required>
             </div>
         </div>
 
@@ -63,10 +71,15 @@ $left_features = [
             <label for="type">Passenger Type</label>
             <select name="type" id="type">
                 <option value="">Select passenger type</option>
-                <option value="regular">Regular</option>
-                <option value="student">Student</option>
-                <option value="senior">Senior Citizen</option>
-                <option value="pwd">Person With Disability (PWD)</option>
+
+                <option value="regular" <?= ($old['type'] ?? '') == 'regular' ? 'selected' : '' ?>>Regular</option>
+
+                <option value="student" <?= ($old['type'] ?? '') == 'student' ? 'selected' : '' ?>>Student</option>
+
+                <option value="senior" <?= ($old['type'] ?? '') == 'senior' ? 'selected' : '' ?>>Senior Citizen</option>
+
+                <option value="pwd" <?= ($old['type'] ?? '') == 'pwd' ? 'selected' : '' ?>>Person With Disability (PWD)
+                </option>
             </select>
         </div>
 

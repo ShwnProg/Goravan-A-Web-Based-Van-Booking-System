@@ -13,7 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $errors = [];
     $is_created = false;
 
-    // INPUTS
+    // INPUTSW
     $fullname = ucwords(trim($_POST['fullname'] ?? ''));
     $email = trim($_POST['email'] ?? '');
     $contact = trim($_POST['contact'] ?? '');
@@ -75,7 +75,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = 'Please upload the required document for non-regular passengers.';
     }
 
-    // ERROR HANDLING
     if (!empty($errors)) {
 
         $_SESSION['error'] = $errors;
