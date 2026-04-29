@@ -25,7 +25,7 @@
             <a href="#home" class="nav-link">Home</a>
             <a href="#features" class="nav-link">Features</a>
             <a href="#how" class="nav-link">How It Works</a>
-            <a href="#routes" class="nav-link">Routes</a>
+            <!-- <a href="#routes" class="nav-link">Routes</a> -->
             <div class="btn-group">
                 <a href="views/auth/login.php" class="btn login-btn">Log In</a>
                 <a href="views/auth/register.php" class="btn register-btn">Get Started</a>
@@ -39,7 +39,7 @@
         <a href="#home" class="nav-link">Home</a>
         <a href="#features" class="nav-link">Features</a>
         <a href="#how" class="nav-link">How It Works</a>
-        <a href="#routes" class="nav-link">Routes</a>
+        <!-- <a href="#routes" class="nav-link">Routes</a> -->
         <div class="mobile-divider"></div>
         <div class="btn-group">
             <a href="views/auth/login.php" class="btn login-btn">Log In</a>
@@ -229,14 +229,14 @@
             <div class="how-card">
                 <div class="how-step">4</div>
                 <h3>Board & Travel</h3>
-                <p>Receive your reference code and present it at the terminal. That's it!</p>
+                <p>Receive your reference code and present it. That's it!</p>
             </div>
 
         </div>
     </section>
 
     <!-- ROUTES SECTION -->
-    <section class="routes" id="routes">
+    <!-- <section class="routes" id="routes">
         <div class="routes-header">
             <div class="badge-light">Service Area</div>
             <h2>Covering <span>Southern Leyte</span></h2>
@@ -257,10 +257,10 @@
             <div class="route-card">Sogod → San Juan</div>
 
         </div>
-    </section>
+    </section> -->
 
     <!-- CTA SECTION -->
-    <section class="cta-section">
+    <!-- <section class="cta-section">
         <div class="cta-card">
             <h2>Ready to book your next trip?</h2>
             <p>
@@ -272,38 +272,38 @@
                 <a href="views/auth/login.php" class="cta-outline">Log In</a>
             </div>
         </div>
-    </section>
+    </section> -->
     <!-- FOOTER -->
     <footer class="footer">
-        <div class="footer-container">
+        <!-- <div class="footer-container"> -->
 
             <!-- Brand -->
-            <div class="footer-brand">
+            <!-- <div class="footer-brand">
                 <h2>GoraVan</h2>
                 <p>
                     A web-based van booking system for Southern Leyte commuters.
                     Organized, reliable, and easy to use.
                 </p>
-            </div>
+            </div> -->
 
-            <div class="footer-box">
+            <!-- <div class="footer-box">
                 <h3>System</h3>
                 <p>Home</p>
                 <p>Login</p>
                 <p>Register</p>
                 <p>Dashboard</p>
-            </div>
+            </div> -->
 
             <!-- Routes -->
-            <div class="footer-box">
+            <!-- <div class="footer-box">
                 <h3>Routes</h3>
                 <p>Sogod — Maasin</p>
                 <p>Maasin — Sogod</p>
                 <p>Sogod — Liloan</p>
                 <p>All Routes</p>
-            </div>
+            </div> -->
 
-        </div>
+        <!-- </div> -->
 
         <div class="footer-bottom">
             <p>2026 GoraVan. All rights reserved. Southern Leyte, Philippines.</p>
