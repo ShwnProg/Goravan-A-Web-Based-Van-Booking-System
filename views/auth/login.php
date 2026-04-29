@@ -2,11 +2,31 @@
 require_once "../../autoload.php";
 ob_start();
 $title = "Login";
+
+$left_headline  = "Your seat is<br><em>waiting.</em>";
+$left_desc      = "Sign back in to GoraVan ands manage bookings, check schedules, and travel across Southern Leyte with ease.";
+$left_features  = [
+    [
+        'icon'  => 'fas fa-couch',
+        'title' => 'Pick Your Seat',
+        'desc'  => 'Choose your preferred seat from a visual van layout before confirming.',
+    ],
+    [
+        'icon'  => 'fas fa-ticket',
+        'title' => 'Manage Bookings',
+        'desc'  => 'Track the status of all your reservations in one place.',
+    ],
+    [
+        'icon'  => 'fas fa-location-dot',
+        'title' => 'Live Trip Status',
+        'desc'  => 'Know when your van is boarding, departed, or has arrived.',
+    ],
+];
 ?>
 
 <section class="auth-container">
     <h2>Welcome <span>back</span></h2>
-    <span class = 'sub-header'>Sign in to your GoraVan account to continue.</span>
+    <span class="sub-header">Sign in to your GoraVan account to continue.</span>
 </section>
 
 <div class="auth-input">
