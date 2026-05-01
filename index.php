@@ -5,12 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= $title ?? 'GoraVan' ?></title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"
-        rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link rel="stylesheet" href="/assets/css/style.css">
+    <?php include '../includes/shared/head.php'; ?>
+
 </head>
 
 <body>
@@ -277,8 +273,8 @@
     <footer class="footer">
         <!-- <div class="footer-container"> -->
 
-            <!-- Brand -->
-            <!-- <div class="footer-brand">
+        <!-- Brand -->
+        <!-- <div class="footer-brand">
                 <h2>GoraVan</h2>
                 <p>
                     A web-based van booking system for Southern Leyte commuters.
@@ -286,7 +282,7 @@
                 </p>
             </div> -->
 
-            <!-- <div class="footer-box">
+        <!-- <div class="footer-box">
                 <h3>System</h3>
                 <p>Home</p>
                 <p>Login</p>
@@ -294,8 +290,8 @@
                 <p>Dashboard</p>
             </div> -->
 
-            <!-- Routes -->
-            <!-- <div class="footer-box">
+        <!-- Routes -->
+        <!-- <div class="footer-box">
                 <h3>Routes</h3>
                 <p>Sogod — Maasin</p>
                 <p>Maasin — Sogod</p>

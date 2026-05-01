@@ -30,7 +30,7 @@ $left_features  = [
 </section>
 
 <div class="auth-input">
-    <form id="loginForm">
+    <form id="loginForm" method = "POST" action="../../controllers/LoginController.php">
         <?= csrf_field() ?>
 
         <div class="input-group">

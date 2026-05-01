@@ -19,6 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $contact = trim($_POST['contact'] ?? '');
     $password = trim($_POST['password'] ?? '');
     $confirm_password = trim($_POST['confirm_password'] ?? '');
+    $birthdate = trim($_POST['birthdate'] ?? '');
     $type = trim($_POST['type'] ?? '');
 
     // FILE UPLOAD 
@@ -56,6 +57,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = "Please enter a valid 11-digit contact number";
     }
 
+    // BIRTHDATE
+
+    //CALCULATE AGE FROM BIRTHDATE
+    $age = date('Y') - date('Y', strtotime($birthdate));
+
+    if ($type == 'senior' && $age < 60) {
+        $errors[] = "You must be 60+ to register as Senior";
+    }
+    if ($birthdate > date('Y-m-d')) {
+        $errors[] = "Birthdate cannot be in the future";
+    }
+    if ($age <= 0) {
+        $errors[] = "Invalid birthdate";
+    }
+
     // PASSWORD
     if (strlen($password) < 8) {
         $errors[] = 'Password must be at least 8 characters';
@@ -86,6 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $user->email = $email;
         $user->contact = $contact;
         $user->password = password_hash($password, PASSWORD_DEFAULT);
+        $user->birthdate = $birthdate;
 
         $user_id = $user->AddUser();
 
@@ -120,6 +137,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($is_created) {
         $_SESSION['success'] = 'Account Created Successfully';
         $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+
+
+        header("Location: ../../views/auth/login.php");
+        exit;
     }
 
     // OLD INPUTS

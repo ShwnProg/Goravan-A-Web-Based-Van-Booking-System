@@ -54,7 +54,10 @@ unset($_SESSION['old']);
             <input type="text" name="contact" id="contact" value="<?= htmlspecialchars($old['contact'] ?? '') ?>"
                 placeholder="1234-567-8912" Required>
         </div>
-
+        <div class="input-group">
+            <label for="birthdate">Birthdate</label>
+            <input type="date" name="birthdate" id="birthdate" required>
+        </div>
         <div class="password-group">
             <div class="pw-field">
                 <label for="password">Password</label>

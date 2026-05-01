@@ -10,7 +10,7 @@ html {
     --color-hover-bg: #95b7ee33;
     --color-white: #ffffff;
 
-    --font-base: 'Poppins', sans-serif;
+    --font-base: 'Inter', 'Roboto', sans-serif;
     --font-size-base: 16px;
     --font-size-logo: 20px;
 
@@ -94,10 +94,12 @@ body {
     font-weight: 500;
     transition: var(--transition);
 }
-.btn-group{
+
+.btn-group {
     display: flex;
     gap: 5px;
 }
+
 .login-btn {
     color: var(--color-brand);
     border: 2px solid var(--color-primary);
