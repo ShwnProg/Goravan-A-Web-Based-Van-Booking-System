@@ -6,7 +6,7 @@
     padding: 0;
 }
 
-/* :root {
+:root {
     --color-primary: #2E3A4D;
     --color-accent: #F97316;
     --color-brand: #3e5272;
@@ -23,7 +23,7 @@
     --transition: 0.25s ease;
 
     --input-height: 46px;
-} */
+}
 
 html,
 body {

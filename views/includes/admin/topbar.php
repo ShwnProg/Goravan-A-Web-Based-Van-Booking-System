@@ -18,7 +18,7 @@ $initials = strtoupper(substr($adminName, 0, 1));
         </button>
         <div class="topbar-title">
             <p class="page-title"><?= htmlspecialchars(strtoupper($title ?? 'Dashboard')) ?></p>
-            <p class="topbar-greeting"><?= $greeting ?>, <?= htmlspecialchars($adminName) ?> 👋</p>
+            <p class="topbar-greeting"><?= $greeting ?>, <?= htmlspecialchars($adminName) ?></p>
         </div>
     </div>
 

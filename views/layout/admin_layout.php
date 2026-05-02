@@ -28,6 +28,18 @@ if (empty($_SESSION['is_login'])) {
         <?php unset($_SESSION['success']); ?>
     <?php endif; ?>
 
+    <?php if (isset($_SESSION['no_changes'])): ?>
+        <script>
+            Swal.fire({
+                title: "No Changes",
+                text: "<?= $_SESSION['no_changes'] ?>",
+                icon: "info",
+            });
+        </script>
+        <?php unset($_SESSION['no_changes']); ?>
+    <?php endif; ?>
+
+
     <?php if (isset($_SESSION['error'])): ?>
 
         <?php

@@ -360,9 +360,9 @@ $routes = $route->GetAllRoutes();
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="../../assets/js/routes.js"></script>
+<!-- <script src="../../assets/js/routes.js"></script> -->
 
 <?php
 $content = ob_get_clean();
 include '../layout/admin_layout.php';
-?>
+?>  

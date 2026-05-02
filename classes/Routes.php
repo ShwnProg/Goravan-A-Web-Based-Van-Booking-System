@@ -48,7 +48,37 @@ class Routes
 
         return $routes;
     }
+    public function GetRouteByID()
+    {
+        $routes = $this->conn->prepare("
+            SELECT * FROM $this->table WHERE route_id_pk = :id
+        ");
 
+        $routes->execute([":id" => $this->id]);
+
+        $routes = $routes->fetchAll(PDO::FETCH_ASSOC);
+
+        if (empty($routes))
+            return [];
+
+        $allStops = $this->conn->prepare("
+            SELECT * FROM route_stops WHERE route_id_fk = :id
+        ");
+        $allStops->execute([":id" => $this->id]);
+
+        $allStops = $allStops->fetchAll(PDO::FETCH_ASSOC);
+
+        $grouped = [];
+        foreach ($allStops as $stop) {
+            $grouped[$stop['route_id_fk']][] = $stop;
+        }
+
+        foreach ($routes as &$r) {
+            $r['stops'] = $grouped[$r['route_id_pk']] ?? [];
+        }
+
+        return $routes;
+    }
     public function IsRouteExist(): bool
     {
         $stmt = $this->conn->prepare("
