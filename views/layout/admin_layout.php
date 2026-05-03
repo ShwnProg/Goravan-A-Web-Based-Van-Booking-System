@@ -15,10 +15,10 @@ if (empty($_SESSION['is_login'])) {
     <title><?= htmlspecialchars(ucfirst(strtolower($title ?? 'GoraVan'))) ?></title>
 
     <?php include '../includes/shared/head.php'; ?>
-
+<!-- 
     <?php if (!empty($page_css)): ?>
         <link rel="stylesheet" href="<?= $page_css ?>">
-    <?php endif; ?>
+    <?php endif; ?> -->
 </head>
 
 <body>
@@ -69,6 +69,7 @@ if (empty($_SESSION['is_login'])) {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="../../assets/js/nav.js"></script>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script> -->
 
     <!-- ── Page-specific script ───────────────── -->
     <?php if (!empty($page_js)): ?>

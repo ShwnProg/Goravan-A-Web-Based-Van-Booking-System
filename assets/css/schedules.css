@@ -475,5 +475,98 @@
     }
 }
 
+@media (max-width: 600px) {
+    .toolbar {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .search-box {
+        min-width: 100%;
+        order: -1;
+    }
+
+    .search-box input {
+        font-size: 12px;
+        padding: 8px 12px;
+    }
+
+    .filter-group {
+        min-width: auto;
+        width: 100%;
+    }
+
+    .filter-group select {
+        font-size: 12px;
+        padding: 8px 10px;
+    }
+
+    .schedules-table {
+        min-width: 700px;
+        font-size: 11px;
+    }
+
+    .schedules-table thead th {
+        padding: 8px;
+        font-size: 11px;
+    }
+
+    .schedules-table tbody td {
+        padding: 6px;
+    }
+
+    .icon-btn {
+        width: 26px;
+        height: 26px;
+        font-size: 10px;
+    }
+
+    .schedule-card {
+        padding: 10px;
+    }
+
+    .schedule-card h4 {
+        font-size: 13px;
+    }
+
+    .schedule-card p {
+        font-size: 12px;
+    }
+
+    .modal-md {
+        max-width: 95vw !important;
+        margin: 10px auto;
+    }
+
+    .modal-dialog {
+        margin: 10px auto;
+    }
+
+    .modal-header {
+        padding: 12px;
+        min-height: auto;
+    }
+
+    .modal-body {
+        padding: 14px;
+        font-size: 13px;
+    }
+
+    .details-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .empty-state {
+        padding: 20px;
+        font-size: 13px;
+    }
+
+    .empty-state svg {
+        width: 60px;
+        height: 60px;
+    }
+}
+
 /* INHERIT FROM BASE.Css + DRIVERS */
 

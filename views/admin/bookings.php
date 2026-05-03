@@ -1,9 +1,4 @@
 <?php
-/**
- * Admin Bookings View
- * File: /GROAVAN/views/admin/bookings.php
- */
-
 require_once "../../autoload.php";
 
 $title    = 'Bookings';
@@ -14,40 +9,12 @@ ob_start();
 
 $bookingObj = new Bookings($conn);
 $bookings   = $bookingObj->GetAllBookings();
-
-$statusCounts = ['pending' => 0, 'approved' => 0, 'rejected' => 0, 'cancelled' => 0];
-foreach ($bookings as $b) {
-    if (isset($statusCounts[$b['status']])) {
-        $statusCounts[$b['status']]++;
-    }
-}
-
-$flashSuccess = $_SESSION['success'] ?? '';
-$flashError   = $_SESSION['error']   ?? '';
-unset($_SESSION['success'], $_SESSION['error']);
-
-// BASE_URL is '/GROAVAN' — defined in autoload.php
-$actionUrl = BASE_URL . '/controllers/Bookings/UpdateStatus.php';
 ?>
 
-<!-- Data carrier: flash messages + controller URL for JS -->
-<div id="page-flash"
-     data-flash-success="<?= htmlspecialchars($flashSuccess, ENT_QUOTES) ?>"
-     data-flash-error="<?= htmlspecialchars($flashError, ENT_QUOTES) ?>"
-     data-action-url="<?= htmlspecialchars($actionUrl, ENT_QUOTES) ?>"
-     style="display:none">
-</div>
-
-<?= csrf_field() ?>
-
-<!-- ── TOOLBAR ──────────────────────────────────────────────────────── -->
 <div class="toolbar">
     <div class="search-box">
         <i class="fas fa-search"></i>
-        <input type="text"
-               id="booking-search"
-               placeholder="Search by reference code or passenger name…"
-               autocomplete="off">
+        <input type="text" id="booking-search" placeholder="Search bookings...">
     </div>
     <div class="filter-group">
         <select id="booking-filter-status" class="filter-select">
@@ -60,56 +27,25 @@ $actionUrl = BASE_URL . '/controllers/Bookings/UpdateStatus.php';
     </div>
 </div>
 
+<?= csrf_field() ?>
+
 <div class="bookings-wrapper">
 
-    <!-- ── STATS CARDS ──────────────────────────────────────────────── -->
-    <div class="stats-row">
-        <div class="stat-card pending">
-            <div class="stat-icon"><i class="fas fa-hourglass-half"></i></div>
-            <div class="stat-content">
-                <span class="stat-label">Pending</span>
-                <span class="stat-number"><?= $statusCounts['pending'] ?></span>
-            </div>
-        </div>
-        <div class="stat-card approved">
-            <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
-            <div class="stat-content">
-                <span class="stat-label">Approved</span>
-                <span class="stat-number"><?= $statusCounts['approved'] ?></span>
-            </div>
-        </div>
-        <div class="stat-card rejected">
-            <div class="stat-icon"><i class="fas fa-times-circle"></i></div>
-            <div class="stat-content">
-                <span class="stat-label">Rejected</span>
-                <span class="stat-number"><?= $statusCounts['rejected'] ?></span>
-            </div>
-        </div>
-        <div class="stat-card cancelled">
-            <div class="stat-icon"><i class="fas fa-ban"></i></div>
-            <div class="stat-content">
-                <span class="stat-label">Cancelled</span>
-                <span class="stat-number"><?= $statusCounts['cancelled'] ?></span>
-            </div>
-        </div>
-    </div>
-
-    <!-- ── TABLE CARD ───────────────────────────────────────────────── -->
+    <!-- ── TABLE CARD ──────────────────────────────────────────────── -->
     <div class="bookings-card">
         <div class="bookings-card-header">
             <h2>
-                <i class="fas fa-ticket-alt" style="color:var(--color-accent)"></i>
+                <i class="fas fa-ticket-alt" style="margin-right:7px;color:var(--color-accent)"></i>
                 All Bookings
             </h2>
             <span id="booking-count"></span>
         </div>
-
         <div class="bookings-table-wrap">
             <table class="bookings-table">
                 <thead>
                     <tr>
                         <th>#</th>
-                        <th>Reference</th>
+                        <th>Reference Code</th>
                         <th>Passenger</th>
                         <th>Route</th>
                         <th>Seat</th>
@@ -120,7 +56,6 @@ $actionUrl = BASE_URL . '/controllers/Bookings/UpdateStatus.php';
                     </tr>
                 </thead>
                 <tbody id="bookings-tbody">
-
                     <?php if (empty($bookings)): ?>
                         <tr>
                             <td colspan="9">
@@ -130,12 +65,10 @@ $actionUrl = BASE_URL . '/controllers/Bookings/UpdateStatus.php';
                                 </div>
                             </td>
                         </tr>
-
                     <?php else: ?>
                         <?php foreach ($bookings as $i => $b):
-                            $isExpired    = Bookings::IsPaymentExpired($b['payment_deadline']);
-                            $paymentDue   = date('M d, Y g:i A', strtotime($b['payment_deadline']));
-                            $departure    = date('M d, Y g:i A', strtotime($b['departure_date'] . ' ' . $b['departure_time']));
+                            $isExpired = Bookings::IsPaymentExpired($b['payment_deadline']);
+                            $paymentDue = date('M d, Y g:i A', strtotime($b['payment_deadline']));
                         ?>
                             <tr class="booking-row"
                                 data-id="<?= (int) $b['book_id_pk'] ?>"
@@ -149,82 +82,72 @@ $actionUrl = BASE_URL . '/controllers/Bookings/UpdateStatus.php';
                                 data-payment-deadline="<?= htmlspecialchars($b['payment_deadline'], ENT_QUOTES) ?>"
                                 data-driver="<?= htmlspecialchars($b['driver_name'] ?? 'N/A', ENT_QUOTES) ?>"
                                 data-van="<?= htmlspecialchars($b['van_plate'] ?? 'N/A', ENT_QUOTES) ?>"
-                                data-departure="<?= htmlspecialchars($departure, ENT_QUOTES) ?>"
+                                data-departure="<?= date('M d g:i A', strtotime($b['departure_date'] . ' ' . $b['departure_time'])) ?>"
                                 data-created="<?= htmlspecialchars($b['created_at'], ENT_QUOTES) ?>"
                                 data-is-expired="<?= $isExpired ? '1' : '0' ?>">
 
                                 <td class="text-muted-sm"><?= $i + 1 ?></td>
-
                                 <td>
                                     <span class="ref-code"><?= htmlspecialchars($b['reference_code']) ?></span>
                                 </td>
-
                                 <td>
                                     <div class="passenger-info">
                                         <span class="name"><?= htmlspecialchars($b['user_name'] ?? 'Unknown') ?></span>
-                                        <span class="email"><?= htmlspecialchars($b['user_email'] ?? '') ?></span>
+                                        <span class="email text-muted-sm"><?= htmlspecialchars($b['user_email'] ?? '') ?></span>
                                     </div>
                                 </td>
-
                                 <td>
                                     <div class="route-info">
-                                        <i class="fas fa-route" style="color:var(--color-accent);font-size:11px;flex-shrink:0"></i>
+                                        <i class="fas fa-route" style="color:var(--color-accent);font-size:11px"></i>
                                         <span><?= htmlspecialchars($b['route_display'] ?? 'N/A') ?></span>
                                     </div>
                                 </td>
-
                                 <td>
                                     <span class="seat-badge">
                                         <i class="fas fa-chair" style="font-size:10px"></i>
                                         <?= htmlspecialchars($b['seat_number'] ?? 'N/A') ?>
                                     </span>
                                 </td>
-
                                 <td>
-                                    <span class="badge <?= htmlspecialchars($b['status']) ?><?= ($isExpired && $b['status'] === 'pending') ? ' expired' : '' ?>">
+                                    <span class="badge <?= $b['status'] ?> <?= $isExpired ? 'expired' : '' ?>">
                                         <?= ucfirst($b['status']) ?>
                                         <?php if ($isExpired && $b['status'] === 'pending'): ?>
-                                            <i class="fas fa-exclamation-triangle" style="font-size:9px"></i>
+                                            <i class="fas fa-exclamation-triangle" style="font-size:9px;margin-left:3px"></i>
                                         <?php endif; ?>
                                     </span>
                                 </td>
-
-                                <td class="<?= $isExpired ? 'text-danger' : 'text-muted-sm' ?>">
+                                <td class="<?= $isExpired ? 'text-danger' : '' ?>">
                                     <small><?= $paymentDue ?></small>
                                     <?php if ($isExpired): ?>
                                         <div class="expired-label">EXPIRED</div>
                                     <?php endif; ?>
                                 </td>
-
                                 <td class="text-muted-sm">
                                     <small><?= date('M d, Y', strtotime($b['created_at'])) ?></small>
                                 </td>
-
                                 <td>
                                     <div class="row-actions">
-                                        <button class="icon-btn view" title="View Details" type="button">
+                                        <button class="icon-btn view" title="View Details">
                                             <i class="fas fa-eye"></i>
                                         </button>
                                         <?php if ($b['status'] === 'pending'): ?>
-                                            <button class="icon-btn approve" title="Approve" type="button">
+                                            <button class="icon-btn approve" title="Approve">
                                                 <i class="fas fa-check"></i>
                                             </button>
-                                            <button class="icon-btn reject" title="Reject" type="button">
+                                            <button class="icon-btn reject" title="Reject">
                                                 <i class="fas fa-times"></i>
                                             </button>
                                         <?php endif; ?>
-                                        <?php if (in_array($b['status'], ['pending', 'approved'], true)): ?>
-                                            <button class="icon-btn cancel" title="Cancel" type="button">
+                                        <?php if (in_array($b['status'], ['pending', 'approved'])): ?>
+                                            <button class="icon-btn cancel" title="Cancel">
                                                 <i class="fas fa-ban"></i>
                                             </button>
                                         <?php endif; ?>
                                     </div>
                                 </td>
-
                             </tr>
                         <?php endforeach; ?>
                     <?php endif; ?>
-
                 </tbody>
             </table>
         </div>
@@ -232,34 +155,30 @@ $actionUrl = BASE_URL . '/controllers/Bookings/UpdateStatus.php';
 
 </div><!-- /.bookings-wrapper -->
 
-
 <!-- ── DETAILS MODAL ────────────────────────────────────────────────── -->
-<div class="modal fade" id="detailsModal" tabindex="-1" aria-labelledby="detailsModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content rmodal">
-
-            <div class="rmodal-header">
-                <div class="rmodal-icon"><i class="fas fa-file-invoice"></i></div>
-                <div style="flex:1;min-width:0">
-                    <h6 class="rmodal-title" id="detailsModalLabel">Booking Details</h6>
-                    <p class="rmodal-sub">Complete booking information</p>
-                </div>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+<div class="modal fade" id="detailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title">
+                    <i class="fas fa-file-invoice" style="margin-right:8px;color:var(--color-accent)"></i>
+                    Booking Details
+                </h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-
-            <div class="rmodal-body">
+            <div class="modal-body">
                 <div class="details-grid">
-
+                    <!-- Left column -->
                     <div class="details-col">
                         <div class="detail-section">
                             <h4 class="section-title">Booking Info</h4>
                             <div class="detail-row">
-                                <span class="detail-label">Reference</span>
-                                <span id="detail-ref-code" class="detail-value ref-code">—</span>
+                                <span class="detail-label">Reference Code</span>
+                                <span id="detail-ref-code" class="detail-value">—</span>
                             </div>
                             <div class="detail-row">
                                 <span class="detail-label">Status</span>
-                                <span id="detail-status" class="detail-value badge">—</span>
+                                <span id="detail-status" class="detail-value">—</span>
                             </div>
                             <div class="detail-row">
                                 <span class="detail-label">Created</span>
@@ -288,6 +207,7 @@ $actionUrl = BASE_URL . '/controllers/Bookings/UpdateStatus.php';
                         </div>
                     </div>
 
+                    <!-- Right column -->
                     <div class="details-col">
                         <div class="detail-section">
                             <h4 class="section-title">Trip Info</h4>
@@ -312,21 +232,16 @@ $actionUrl = BASE_URL . '/controllers/Bookings/UpdateStatus.php';
                         <div class="detail-section">
                             <h4 class="section-title">Seat Assignment</h4>
                             <div class="detail-row">
-                                <span class="detail-label">Seat No.</span>
-                                <span id="detail-seat" class="detail-value seat-badge">—</span>
+                                <span class="detail-label">Seat Number</span>
+                                <span id="detail-seat" class="detail-value">—</span>
                             </div>
                         </div>
                     </div>
-
                 </div>
             </div>
-
-            <div class="rmodal-footer">
-                <button type="button" class="rbtn rbtn-ghost" data-bs-dismiss="modal">
-                    <i class="fas fa-times"></i> Close
-                </button>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
-
         </div>
     </div>
 </div>

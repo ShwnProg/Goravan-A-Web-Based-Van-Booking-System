@@ -1,342 +1,302 @@
-if (!window._ssReady) {
-    window._ssReady = true;
+window.initVansPage = function () {
 
-    (function () {
+    var tbody = document.getElementById('vans-tbody');
+    var countBadge = document.getElementById('van-count');
+    var searchInput = document.getElementById('van-search');
+    var statusFilter = document.getElementById('van-status-filter');
+    var openAddBtn = document.getElementById('open-add-modal');
 
-        function closeAll() {
-            document.querySelectorAll('.ss-panel.is-open').forEach(p => p.classList.remove('is-open'));
-            document.querySelectorAll('.ss-btn.is-open').forEach(b => b.classList.remove('is-open'));
-        }
+    if (!tbody) return;
 
-        function buildSS(select) {
-            if (select._ssBuilt) return;
-            select._ssBuilt = true;
-
-            const ph   = select.dataset.placeholder || '— Select —';
-            const wrap = document.createElement('div');
-            wrap.className = 'ss-wrap';
-            select.parentNode.insertBefore(wrap, select);
-            wrap.appendChild(select);
-
-            const btn = document.createElement('button');
-            btn.type      = 'button';
-            btn.className = 'ss-btn';
-
-            const txt     = document.createElement('span');
-            txt.className = 'ss-btn-txt';
-            const current = select.options[select.selectedIndex];
-            if (current?.value) {
-                txt.textContent = current.text;
-            } else {
-                txt.textContent = ph;
-                btn.classList.add('is-placeholder');
-            }
-            btn.appendChild(txt);
-            btn.appendChild(Object.assign(document.createElement('i'), {
-                className: 'fas fa-chevron-down ss-btn-arr'
-            }));
-            wrap.insertBefore(btn, select);
-
-            const panel = document.createElement('div');
-            panel.className = 'ss-panel';
-
-            const ul = document.createElement('ul');
-            ul.className = 'ss-list';
-
-            const noResults = Object.assign(document.createElement('li'), {
-                className: 'ss-no-results', textContent: 'No results found'
-            });
-            noResults.style.display = 'none';
-            ul.appendChild(noResults);
-
-            Array.from(select.options).forEach(opt => {
-                const li = Object.assign(document.createElement('li'), {
-                    className: 'ss-item'
-                        + (!opt.value ? ' is-placeholder' : '')
-                        + (opt.selected && opt.value ? ' is-sel' : ''),
-                    textContent: opt.text
-                });
-                li.dataset.val  = opt.value;
-                li.dataset.text = opt.text;
-                ul.appendChild(li);
-            });
-
-            panel.appendChild(ul);
-            wrap.insertBefore(panel, select);
-
-            btn.addEventListener('click', e => {
-                e.stopPropagation();
-                const wasOpen = panel.classList.contains('is-open');
-                closeAll();
-                if (!wasOpen) {
-                    panel.classList.add('is-open');
-                    btn.classList.add('is-open');
-                }
-            });
-
-            ul.addEventListener('click', e => {
-                const li = e.target.closest('.ss-item');
-                if (!li) return;
-                select.value = li.dataset.val;
-                txt.textContent = li.dataset.val ? li.dataset.text : ph;
-                btn.classList.toggle('is-placeholder', !li.dataset.val);
-                ul.querySelectorAll('.ss-item.is-sel').forEach(x => x.classList.remove('is-sel'));
-                if (li.dataset.val) li.classList.add('is-sel');
-                closeAll();
-                select.dispatchEvent(new Event('change', { bubbles: true }));
-            });
-        }
-
-        document.addEventListener('click', closeAll);
-        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAll(); });
-
-        window.buildSearchableSelects = function (root) {
-            (root || document).querySelectorAll('select.ss').forEach(buildSS);
-        };
-
-        window.syncSS = function (selectEl, value) {
-            if (!selectEl?._ssBuilt) return;
-            selectEl.value = value;
-            const wrap = selectEl.closest('.ss-wrap');
-            if (!wrap) return;
-            const btn = wrap.querySelector('.ss-btn');
-            const txt = wrap.querySelector('.ss-btn-txt');
-            const ul  = wrap.querySelector('.ss-list');
-            const ph  = selectEl.dataset.placeholder || '— Select —';
-            const opt = selectEl.options[selectEl.selectedIndex];
-            if (opt?.value) {
-                txt.textContent = opt.text;
-                btn.classList.remove('is-placeholder');
-            } else {
-                txt.textContent = ph;
-                btn.classList.add('is-placeholder');
-            }
-            ul?.querySelectorAll('.ss-item').forEach(li => {
-                li.classList.toggle('is-sel', li.dataset.val === value && value !== '');
-            });
-        };
-
-    })();
-}
-
-/**
- * Renders the seat grid in the side card.
- * seats = array of { seat_number, seat_row, seat_col } from PHP json_encode.
- * Strict layout: 3 columns, front row with driver and 2 seats, back rows 3x3 grid.
- */
-function showSeatPreview(row) {
-    const seatEmpty   = document.getElementById('seat-empty');
-    const seatPreview = document.getElementById('seat-preview');
-    const seatGrid    = document.getElementById('seat-grid');
-    const vanPanel    = document.getElementById('van-info-panel');
-    const seatLabel   = document.getElementById('seat-label');
-    if (!seatEmpty || !seatPreview || !seatGrid) return;
-
-    const plate    = row.dataset.plate    || '—';
-    const model    = row.dataset.model    || '—';
-    const capacity = row.dataset.capacity || '—';
-    const status   = row.dataset.status   || '—';
-    const seats    = row.dataset.seats ? JSON.parse(row.dataset.seats) : [];
-
-    // Header
-    if (seatLabel) seatLabel.textContent = plate;
-
-    // Info panel
-    document.getElementById('info-plate').textContent    = plate;
-    document.getElementById('info-model').textContent    = model;
-    document.getElementById('info-capacity').textContent = capacity + ' seats';
-    document.getElementById('info-status').textContent   = status.charAt(0).toUpperCase() + status.slice(1);
-
-    // Build grid
-    seatGrid.innerHTML = '';
-
-    if (seats.length === 0) {
-        seatGrid.innerHTML = '<p style="font-size:12px;color:#9ca3af;padding:12px;text-align:center;">No seats found.</p>';
-    } else {
-        // Always 3 columns
-        seatGrid.style.gridTemplateColumns = 'repeat(3, 1fr)';
-
-        // Add driver seat
-        const driver = document.createElement('div');
-        driver.className = 'seat-box available';
-        driver.style.gridRow = 1;
-        driver.style.gridColumn = 1;
-        driver.innerHTML = `<i class="fas fa-steering-wheel seat-icon"></i><span class="seat-code">DR</span>`;
-        seatGrid.appendChild(driver);
-
-        // Add passenger seats in strict order
-        seats.forEach((s, i) => {
-            let row, col;
-            if (i === 0) {
-                // Front passenger 1
-                row = 1;
-                col = 2;
-            } else if (i === 1) {
-                // Front passenger 2
-                row = 1;
-                col = 3;
-            } else {
-                // Back seats: start from row 2, 3 per row
-                const backIndex = i - 2;
-                row = Math.floor(backIndex / 3) + 2;
-                col = (backIndex % 3) + 1;
-            }
-            const seat = document.createElement('div');
-            seat.className = 'seat-box available';
-            seat.style.gridRow = row;
-            seat.style.gridColumn = col;
-            seat.innerHTML = `<i class="fas fa-chair seat-icon"></i><span class="seat-code">${s.seat_number}</span>`;
-            seatGrid.appendChild(seat);
-        });
+    /* ── Bootstrap modal helpers ──────────────── */
+    function getModal(id) {
+        var el = document.getElementById(id);
+        return el ? new bootstrap.Modal(el) : null;
     }
 
-    seatEmpty.style.display   = 'none';
-    seatPreview.style.display = 'block';
-    vanPanel?.classList.add('visible');
-}
+    var addModal = getModal('addModal');
+    var editModal = getModal('editModal');
+    var seatModal = getModal('seatModal');
 
-function getCsrfToken() {
-    const tokenInput = document.getElementById('page-csrf-token') || document.querySelector('input[name="csrf_token"]');
-    return tokenInput?.value?.trim() || '';
-}
+    /* ── Add van button ───────────────────────── */
+    if (openAddBtn && addModal) {
+        openAddBtn.addEventListener('click', function () { addModal.show(); });
+    }
 
-function buildHiddenForm(action, fields) {
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = action;
-    form.style.display = 'none';
+    /* ── Row count badge ──────────────────────── */
+    function updateCount() {
+        var rows = tbody.querySelectorAll('tr.van-row');
+        var visible = 0;
+        rows.forEach(function (r) {
+            if (r.style.display !== 'none') visible++;
+        });
+        if (countBadge) {
+            countBadge.textContent = visible + ' van' + (visible !== 1 ? 's' : '');
+        }
+    }
+    updateCount();
 
-    Object.entries(fields).forEach(([name, value]) => {
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = name;
-        input.value = value;
-        form.appendChild(input);
+    /* ── Search + status filter ───────────────── */
+    function applyFilters() {
+        var q = searchInput ? searchInput.value.toLowerCase().trim() : '';
+        var status = statusFilter ? statusFilter.value : '';
+
+        tbody.querySelectorAll('tr.van-row').forEach(function (row) {
+            var matchQ = !q
+                || (row.dataset.plate || '').toLowerCase().includes(q)
+                || (row.dataset.model || '').toLowerCase().includes(q);
+            var matchS = !status || row.dataset.status === status;
+            row.style.display = (matchQ && matchS) ? '' : 'none';
+        });
+        updateCount();
+    }
+
+    if (searchInput) searchInput.addEventListener('input', applyFilters);
+    if (statusFilter) statusFilter.addEventListener('change', applyFilters);
+
+    /* ── Row highlight on click ───────────────── */
+    tbody.addEventListener('click', function (e) {
+        if (e.target.closest('.row-actions')) return;
+        var row = e.target.closest('tr.van-row');
+        if (!row) return;
+        tbody.querySelectorAll('tr.van-row.selected').forEach(function (r) {
+            r.classList.remove('selected');
+        });
+        row.classList.add('selected');
     });
 
-    document.body.appendChild(form);
-    return form;
-}
+    /* ── Edit button ──────────────────────────── */
+    tbody.addEventListener('click', function (e) {
+        var btn = e.target.closest('.icon-btn.edit');
+        if (!btn || !editModal) return;
 
-function handleVanActionClick(e) {
+        document.getElementById('edit-id').value = btn.dataset.id || '';
+        document.getElementById('edit-plate').value = btn.dataset.plate || '';
+        document.getElementById('edit-model').value = btn.dataset.model || '';
+        document.getElementById('edit-capacity').value = btn.dataset.passengerCapacity || '';
 
-    // Edit
-    const editBtn = e.target.closest('.icon-btn.edit');
-    if (editBtn) {
-        e.stopPropagation();
+        var sel = document.getElementById('edit-status');
+        if (sel) sel.value = btn.dataset.status || 'active';
 
-        document.getElementById('edit-id').value       = editBtn.dataset.id;
-        document.getElementById('edit-plate').value    = editBtn.dataset.plate;
-        document.getElementById('edit-model').value    = editBtn.dataset.model;
-        document.getElementById('edit-capacity').value = editBtn.dataset.capacity;
-        window.syncSS(document.getElementById('edit-status'), editBtn.dataset.status);
+        editModal.show();
+    });
 
-        bootstrap.Modal.getOrCreateInstance(document.getElementById('editModal')).show();
-        return;
-    }
+    /* ── Toggle status ────────────────────────── */
+    tbody.addEventListener('click', function (e) {
+        var btn = e.target.closest('.icon-btn.toggle');
+        if (!btn) return;
 
-    // Delete
-    const delBtn = e.target.closest('.icon-btn.delete');
-    if (delBtn) {
+        var id = btn.dataset.id;
+        var status = btn.dataset.status;
+        var next = status === 'active' ? 'inactive' : 'active';
+
         Swal.fire({
-            title: 'Delete Van?',
-            text: `Van "${delBtn.dataset.plate}" and all its seats will be permanently removed.`,
+            title: 'Toggle Status?',
+            text: 'Set this van to ' + next + '?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, toggle',
+            confirmButtonColor: '#2e3a4d',
+        }).then(function (res) {
+            if (!res.isConfirmed) return;
+            post('../../controllers/vans/ToggleVan.php', {
+                van_id: id, csrf_token: getCsrf()
+            }).then(function (d) {
+                if (d.success) location.reload();
+                else Swal.fire('Error', d.message || 'Toggle failed.', 'error');
+            }).catch(function () {
+                Swal.fire('Error', 'Network error.', 'error');
+            });
+        });
+    });
+
+    /* ── Delete button ────────────────────────── */
+    tbody.addEventListener('click', function (e) {
+        var btn = e.target.closest('.icon-btn.delete');
+        if (!btn) return;
+
+        var id = btn.dataset.id;
+        var plate = btn.dataset.plate;
+
+        Swal.fire({
+            title: 'Delete ' + plate + '?',
+            text: 'This will permanently remove the van and all its seats.',
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#ef4444',
-            cancelButtonColor: '#6b7280',
             confirmButtonText: 'Yes, delete',
-            cancelButtonText: 'Cancel',
-            reverseButtons: true
-        }).then(result => {
-            if (!result.isConfirmed) return;
-            const csrfToken = getCsrfToken();
-            if (!csrfToken) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Missing security token',
-                    text: 'Please refresh the page and try again.'
-                });
-                return;
-            }
-
-            const form = buildHiddenForm('../../controllers/vans/DeleteVan.php', {
-                csrf_token: csrfToken,
-                van_id: delBtn.dataset.id
+            confirmButtonColor: '#ef4444',
+        }).then(function (res) {
+            if (!res.isConfirmed) return;
+            post('../../controllers/vans/DeleteVan.php', {
+                van_id: id, csrf_token: getCsrf()
+            }).then(function (d) {
+                if (d.success) {
+                    Swal.fire('Deleted!', plate + ' has been removed.', 'success')
+                        .then(function () { location.reload(); });
+                } else {
+                    Swal.fire('Error', d.message || 'Delete failed.', 'error');
+                }
+            }).catch(function () {
+                Swal.fire('Error', 'Network error.', 'error');
             });
-            form.submit();
         });
-        return;
-    }
+    });
 
-    // Toggle
-    const toggleBtn = e.target.closest('.icon-btn.toggle');
-    if (toggleBtn) {
-        e.stopPropagation();
-        const csrfToken = getCsrfToken();
-        if (!csrfToken) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Missing security token',
-                text: 'Please refresh the page and try again.'
-            });
+    /* ── View seat layout button ──────────────── */
+    tbody.addEventListener('click', function (e) {
+        var btn = e.target.closest('.icon-btn.view');
+        if (!btn || !seatModal) return;
+
+        var plate = btn.dataset.plate || '';
+        var model = btn.dataset.model || '';
+        var passengerCapacity = parseInt(btn.dataset.capacity, 10) || 0;
+        var seats = [];
+
+        try { seats = JSON.parse(btn.dataset.seats || '[]'); } catch (_) { }
+
+        var titleEl = document.getElementById('seat-modal-title');
+        var subEl = document.getElementById('seat-modal-sub');
+        if (titleEl) titleEl.textContent = model || 'Seat Layout';
+        if (subEl) subEl.textContent = plate + ' · ' + passengerCapacity + ' passenger seats';
+
+        renderSeatLayout(seats, passengerCapacity);
+        seatModal.show();
+    });
+
+    /* ════════════════════════════════════════════
+       SEAT LAYOUT RENDERER  (read-only)
+
+       Grid: 3 columns × up to 5 rows
+       Position [row=0, col=0] = DRIVER seat
+       Remaining seats fill left→right, top→bottom
+
+       DB seats array: [{ seat_number, seat_row, seat_col }, ...]
+       seat_row / seat_col are 1-based from PHP.
+
+       Mapping to grid (0-based internally):
+         seat_row 1, seat_col 1 → grid row 0, col 0  (DRIVER)
+         seat_row 1, seat_col 2 → grid row 0, col 1  (passenger 1)
+         seat_row 1, seat_col 3 → grid row 0, col 2  (passenger 2)
+         seat_row 2, seat_col 1 → grid row 1, col 0  (passenger 3)
+         … and so on
+    ═════════════════════════════════════════════ */
+    function renderSeatLayout(seats, capacity) {
+        var grid = document.getElementById('vsv-grid');
+        if (!grid) return;
+        grid.innerHTML = '';
+
+        /* Build a flat ordered list of seat objects:
+           index 0 = driver, index 1–13 = passengers */
+        var ordered = buildOrderedSeats(seats, capacity);
+
+        if (!ordered.length) {
+            grid.innerHTML = '<p class="vsv-empty-msg">No seats configured.</p>';
             return;
         }
 
-        const newStatus = toggleBtn.dataset.status === 'active' ? 'inactive' : 'active';
-        const form = buildHiddenForm('../../controllers/vans/ToggleVan.php', {
-            csrf_token: csrfToken,
-            van_id: toggleBtn.dataset.id,
-            status: newStatus
-        });
-        form.submit();
-        return;
+        /* Render 3 cols × ceil(ordered.length / 3) rows */
+        var totalCells = Math.ceil(ordered.length / 3) * 3; // pad to full rows
+
+        for (var i = 0; i < totalCells; i++) {
+            var seat = ordered[i] || null;
+            var el = document.createElement('div');
+
+            if (!seat) {
+                /* Empty trailing cell — keep grid shape */
+                el.className = 'vsv-seat vsv-empty-slot';
+            } else if (i === 0) {
+                /* Driver seat */
+                el.className = 'vsv-seat driver';
+                el.innerHTML = '<i class="fas fa-steering-wheel"></i><span>DRIVER</span>';
+                el.title = 'Driver';
+            } else {
+                /* Passenger seat */
+                var state = seat.occupied ? 'occupied' : 'available';
+                el.className = 'vsv-seat ' + state;
+                el.innerHTML = '<i class="fas fa-chair"></i><span>' + esc(seat.label) + '</span>';
+                el.title = 'Seat ' + seat.label;
+            }
+
+            grid.appendChild(el);
+        }
     }
-}
-document.addEventListener('DOMContentLoaded', () => {
 
-    window.buildSearchableSelects(document);
+    /**
+     * Returns a flat array of seat objects ordered by position.
+     * Index 0 = driver, 1–13 = passengers in reading order.
+     * Each object: { label: string, occupied: bool }
+     */
+    function buildOrderedSeats(seats, passengerCapacity) {
 
-    // Van count badge
-    const rows    = document.querySelectorAll('.van-row');
-    const countEl = document.getElementById('van-count');
-    if (countEl) countEl.textContent = `${rows.length} van${rows.length !== 1 ? 's' : ''}`;
+        // If DB has seat records
+        if (seats && seats.length > 0) {
 
-    // Search filter — plate, model
-    document.getElementById('van-search')?.addEventListener('input', function () {
-        const q = this.value.toLowerCase();
-        rows.forEach(row => {
-            const match =
-                row.dataset.plate.toLowerCase().includes(q) ||
-                row.dataset.model.toLowerCase().includes(q);
-            row.style.display = match ? '' : 'none';
+            var sorted = seats.slice().sort(function (a, b) {
+                var rA = parseInt(a.seat_row, 10) || 0;
+                var rB = parseInt(b.seat_row, 10) || 0;
+                var cA = parseInt(a.seat_col, 10) || 0;
+                var cB = parseInt(b.seat_col, 10) || 0;
+                return rA !== rB ? rA - rB : cA - cB;
+            });
+
+            var result = [];
+
+            // ALWAYS FIRST = DRIVER (not from DB, not counted)
+            result.push({ label: 'DRIVER', occupied: false });
+
+            sorted.forEach(function (s) {
+                result.push({
+                    label: (s.seat_number || '').toString(),
+                    occupied: (s.status || '') === 'occupied'
+                });
+            });
+
+            return result;
+        }
+
+        // Fallback generation (NO driver in capacity)
+        var result = [];
+        result.push({ label: 'DRIVER', occupied: false });
+
+        var labels = generateLabels(passengerCapacity);
+
+        labels.forEach(function (lbl) {
+            result.push({ label: lbl, occupied: false });
         });
-    });
 
-    // Row click → seat preview
-    rows.forEach(row => {
-        row.addEventListener('click', function (e) {
-            if (e.target.closest('.row-actions')) return;
-            rows.forEach(r => r.classList.remove('selected'));
-            this.classList.add('selected');
-            showSeatPreview(this);
-        });
-    });
+        return result;
+    }
+    /** Generate seat labels: 1, 2, 3 … n */
+    function generateLabels(count) {
+        var labels = [];
+        for (var i = 1; i <= count; i++) labels.push(String(i));
+        return labels;
+    }
 
-    // Action buttons via event delegation
-    document.getElementById('page-content')?.addEventListener('click', handleVanActionClick);
+    function esc(str) {
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+    }
 
-    // Add modal open
-    document.getElementById('open-add-modal')?.addEventListener('click', () => {
-        bootstrap.Modal.getOrCreateInstance(document.getElementById('addModal')).show();
-    });
+    function getCsrf() {
+        var el = document.getElementById('page-csrf-token');
+        return el ? el.value : '';
+    }
 
-    // Auto-uppercase plate inputs
-    document.querySelectorAll('input[name="plate_number"]').forEach(input => {
-        input.addEventListener('input', function () {
-            const pos = this.selectionStart;
-            this.value = this.value.toUpperCase();
-            this.setSelectionRange(pos, pos);
-        });
-    });
-});
+    function post(url, data) {
+        var body = Object.keys(data).map(function (k) {
+            return encodeURIComponent(k) + '=' + encodeURIComponent(data[k]);
+        }).join('&');
+        return fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: body,
+        }).then(function (r) { return r.json(); });
+    }
+
+}; // end initVansPage
+
+/* Auto-init for direct (non-AJAX) page loads */
+document.addEventListener('DOMContentLoaded', window.initVansPage);

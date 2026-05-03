@@ -1,11 +1,3 @@
-<?php
-/**
- * shared/head.php
- * Included inside <head> on every admin layout.
- * CDN order matters: CSS first, then preconnects.
- */
-?>
-
 <!-- Fonts -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -20,14 +12,20 @@
 <!-- Leaflet CSS (used on map pages; harmless to load globally) -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 
-<!-- App CSS (load order base  layout page) ── -->
-<link rel="stylesheet" href="../../assets/css/auth.css">
+<!-- App CSS (load order: base → layout → common → page-specific → auth) ── -->
 <link rel="stylesheet" href="../../assets/css/base.css">
-<link rel="stylesheet" href="../../assets/css/dashboard.css">
+<link rel="stylesheet" href="../../assets/css/admin-layout.css">
+<link rel="stylesheet" href="../../assets/css/admin-common.css">
 <link rel="stylesheet" href="../../assets/css/vans.css">
 <link rel="stylesheet" href="../../assets/css/drivers.css">
 <link rel="stylesheet" href="../../assets/css/routes.css">
 <link rel="stylesheet" href="../../assets/css/schedules.css">
+<link rel="stylesheet" href="../../assets/css/dashboard.css">
+<link rel="stylesheet" href="../../assets/css/bookings.css">
+<link rel="stylesheet" href="../../assets/css/auth.css">
+<link rel="stylesheet" href="../../assets/css/style.css">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
 <!-- <?php if ($page_css): ?>
 <link rel="stylesheet" href="<?= $page_css ?>">
