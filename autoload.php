@@ -1,5 +1,16 @@
 <?php
-session_start();
+/**
+ * autoload.php
+ * 
+ * FIX: session_start() called ONCE here, with session_status() guard.
+ * Controllers must NOT call session_start() again — doing so wipes $_SESSION
+ * in some PHP configs, causing csrf_check() to fail and the auth check
+ * ($SESSION['user_id']) to appear missing → redirect to login.
+ */
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 define('BASE_URL', '/GROAVAN');
 define('LOCATIONS', [
     'Maasin City'   => [10.1322, 124.8426],
@@ -23,19 +34,20 @@ define('LOCATIONS', [
     'Bato'          => [10.3333, 124.9667],
     'Pintuyan'      => [10.0833, 125.1833],
 ]);
+
+// Generate CSRF token once per session
 if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
 require_once __DIR__ . "/config/database.php";
 require_once __DIR__ . "/helpers/csrf_helper.php";
-require_once __DIR__ .'/helpers/encryption.php';
+require_once __DIR__ . '/helpers/encryption.php';
 
 spl_autoload_register(function ($class) {
     $paths = [
         __DIR__ . "/classes/",
     ];
-
     foreach ($paths as $path) {
         $file = $path . $class . ".php";
         if (file_exists($file)) {
@@ -43,14 +55,8 @@ spl_autoload_register(function ($class) {
             return;
         }
     }
-
     die("Class $class not found.");
 });
 
 $database = new Database();
 $conn = $database->GetConnection();
-
-// if($conn){
-//     echo "Connected";
-// }
-?>

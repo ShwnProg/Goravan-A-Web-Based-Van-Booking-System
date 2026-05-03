@@ -22,9 +22,6 @@
             <a href="schedules.php" class="menu-btn <?= $current == 'schedules.php' ? 'active' : '' ?>">
                 <i class="fas fa-calendar"></i><span>Schedules</span>
             </a>
-            <a href="trips.php" class="menu-btn <?= $current == 'trips.php' ? 'active' : '' ?>">
-                <i class="fas fa-traffic-light"></i><span>Trips</span>
-            </a>
             <a href="payments.php" class="menu-btn <?= $current == 'payments.php' ? 'active' : '' ?>">
                 <i class="fas fa-credit-card"></i><span>Payments</span>
             </a>

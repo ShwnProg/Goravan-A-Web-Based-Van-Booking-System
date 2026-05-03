@@ -1,21 +1,19 @@
+// Guard so rebuilding the SS system never runs twice on the page
 if (!window._ssReady) {
     window._ssReady = true;
 
-    (function buildSearchableSelectSystem() {
+    (function () {
 
         function closeAll() {
-            document.querySelectorAll('.ss-panel.is-open')
-                .forEach(p => p.classList.remove('is-open'));
-            document.querySelectorAll('.ss-btn.is-open')
-                .forEach(b => b.classList.remove('is-open'));
+            document.querySelectorAll('.ss-panel.is-open').forEach(p => p.classList.remove('is-open'));
+            document.querySelectorAll('.ss-btn.is-open').forEach(b => b.classList.remove('is-open'));
         }
 
         function buildSS(select) {
             if (select._ssBuilt) return;
             select._ssBuilt = true;
 
-            const ph = select.dataset.placeholder || '— Select —';
-
+            const ph   = select.dataset.placeholder || '— Select —';
             const wrap = document.createElement('div');
             wrap.className = 'ss-wrap';
             select.parentNode.insertBefore(wrap, select);
@@ -25,7 +23,7 @@ if (!window._ssReady) {
             btn.type      = 'button';
             btn.className = 'ss-btn';
 
-            const txt = document.createElement('span');
+            const txt     = document.createElement('span');
             txt.className = 'ss-btn-txt';
             const current = select.options[select.selectedIndex];
             if (current?.value) {
@@ -67,9 +65,9 @@ if (!window._ssReady) {
 
             Array.from(select.options).forEach(opt => {
                 const li = Object.assign(document.createElement('li'), {
-                    className: 'ss-item' +
-                        (!opt.value ? ' is-placeholder' : '') +
-                        (opt.selected && opt.value ? ' is-sel' : ''),
+                    className: 'ss-item'
+                        + (!opt.value ? ' is-placeholder' : '')
+                        + (opt.selected && opt.value ? ' is-sel' : ''),
                     textContent: opt.text
                 });
                 li.dataset.val  = opt.value;
@@ -95,8 +93,8 @@ if (!window._ssReady) {
                 }
             });
 
-            sinput?.addEventListener('input',  function () { filterList(this.value.toLowerCase()); });
-            sinput?.addEventListener('click',  e => e.stopPropagation());
+            sinput?.addEventListener('input', function () { filterList(this.value.toLowerCase()); });
+            sinput?.addEventListener('click', e => e.stopPropagation());
 
             ul.addEventListener('click', e => {
                 const li = e.target.closest('.ss-item');
@@ -157,10 +155,6 @@ if (!window._ssReady) {
     })();
 }
 
-
-
-//  STATIC COORDINATES
-
 const ROUTE_COORDS = {
     "Maasin City"  : [10.1322, 124.8426],
     "Bontoc"       : [10.2167, 124.8833],
@@ -186,18 +180,10 @@ const ROUTE_COORDS = {
 
 const MAX_STOPS = 3;
 
-//  MAP STATE
-let _map      = null;
-let _markers  = [];
-let _polyline = null;
+let _map = null, _markers = [], _polyline = null;
 
 function destroyMap() {
-    if (_map) {
-        _map.remove();
-        _map      = null;
-        _markers  = [];
-        _polyline = null;
-    }
+    if (_map) { _map.remove(); _map = null; _markers = []; _polyline = null; }
 }
 
 function initMap() {
@@ -209,7 +195,7 @@ function initMap() {
 
 function clearLayers() {
     _markers.forEach(m => _map.removeLayer(m));
-    _markers  = [];
+    _markers = [];
     if (_polyline) { _map.removeLayer(_polyline); _polyline = null; }
 }
 
@@ -220,7 +206,6 @@ function showRoute(origin, destination, stops) {
 
     emptyEl.style.display = 'none';
     mapEl.style.display   = 'block';
-
     if (!_map) initMap();
 
     setTimeout(() => {
@@ -232,9 +217,9 @@ function showRoute(origin, destination, stops) {
             mapLabel.innerHTML =
                 `<span style="display:inline-flex;align-items:center;gap:6px;white-space:nowrap;">
                     <span>${origin}</span>
-                    <i class="fas fa-arrow-right" style="font-size:10px;opacity:.6;"></i>
+                    <i class="fas fa-arrow-right" style="font-size:10px;opacity:.6"></i>
                     <span>${destination}</span>
-                 </span>`;
+                </span>`;
         }
 
         const originLbl = document.getElementById('map-origin-label');
@@ -248,8 +233,8 @@ function showRoute(origin, destination, stops) {
                 `<div class="map-stop">
                     <div class="stop-dot via"></div>
                     <div><div class="stop-label">Via</div><span>${stop}</span></div>
-                 </div>
-                 <div style="margin-left:4px"><div class="stop-connector"></div></div>`
+                </div>
+                <div style="margin-left:4px"><div class="stop-connector"></div></div>`
             ).join('');
         }
 
@@ -273,20 +258,15 @@ function showRoute(origin, destination, stops) {
             const isFirst = i === 0;
             const isLast  = i === allPoints.length - 1;
             const color   = isFirst ? '#16a34a' : isLast ? '#ef4444' : '#3b82f6';
-            const label   = isFirst ? `<b>From:</b> ${name}` :
-                            isLast  ? `<b>To:</b> ${name}`   : `<b>Via:</b> ${name}`;
+            const label   = isFirst ? `<b>From:</b> ${name}` : isLast ? `<b>To:</b> ${name}` : `<b>Via:</b> ${name}`;
 
             const icon = L.divIcon({
                 className: '',
-                html: `<div style="width:13px;height:13px;background:${color};
-                              border:2.5px solid #fff;border-radius:50%;
-                              box-shadow:0 2px 6px rgba(0,0,0,.3)"></div>`,
+                html: `<div style="width:13px;height:13px;background:${color};border:2.5px solid #fff;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,.3)"></div>`,
                 iconAnchor: [6, 6]
             });
 
-            _markers.push(
-                L.marker(latLngs[i], { icon }).addTo(_map).bindPopup(label)
-            );
+            _markers.push(L.marker(latLngs[i], { icon }).addTo(_map).bindPopup(label));
         });
 
         _polyline = L.polyline(latLngs, {
@@ -297,13 +277,18 @@ function showRoute(origin, destination, stops) {
     }, 80);
 }
 
-
-//  STOP ROW HELPERS
 function buildLocationOptions() {
     return '<option value="">None</option>' +
-        Object.keys(ROUTE_COORDS)
-            .map(name => `<option value="${name}">${name}</option>`)
-            .join('');
+        Object.keys(ROUTE_COORDS).map(n => `<option value="${n}">${n}</option>`).join('');
+}
+
+function updateStopsUI(container, addBtn, counterEl) {
+    const count = container.querySelectorAll('.stop-row').length;
+    if (counterEl) counterEl.textContent = `${count} / ${MAX_STOPS}`;
+    if (addBtn) {
+        addBtn.disabled = count >= MAX_STOPS;
+        addBtn.classList.toggle('btn-add-stop--disabled', count >= MAX_STOPS);
+    }
 }
 
 function addStopRow(container, addBtn, counterEl, value = '') {
@@ -324,28 +309,13 @@ function addStopRow(container, addBtn, counterEl, value = '') {
     container.appendChild(row);
     window.buildSearchableSelects(row);
     if (value) window.syncSS(row.querySelector('select.ss'), value);
-
     updateStopsUI(container, addBtn, counterEl);
 
     row.querySelector('.btn-remove-stop').addEventListener('click', () => {
         row.remove();
-        renumberStops(container);
+        container.querySelectorAll('.stop-row .stop-num').forEach((el, i) => el.textContent = i + 1);
         updateStopsUI(container, addBtn, counterEl);
     });
-}
-
-function renumberStops(container) {
-    container.querySelectorAll('.stop-row .stop-num')
-        .forEach((el, i) => { el.textContent = i + 1; });
-}
-
-function updateStopsUI(container, addBtn, counterEl) {
-    const count = container.querySelectorAll('.stop-row').length;
-    if (counterEl) counterEl.textContent = `${count} / ${MAX_STOPS}`;
-    if (addBtn) {
-        addBtn.disabled = count >= MAX_STOPS;
-        addBtn.classList.toggle('btn-add-stop--disabled', count >= MAX_STOPS);
-    }
 }
 
 function clearStops(container, addBtn, counterEl) {
@@ -353,83 +323,14 @@ function clearStops(container, addBtn, counterEl) {
     updateStopsUI(container, addBtn, counterEl);
 }
 
-function getModal(id) {
-    const el = document.getElementById(id);
-    if (!el) return null;
-    return bootstrap.Modal.getOrCreateInstance(el);
-}
 
-window.initRoutesPage = function () {
+// ── CLICK HANDLER (edit / delete / toggle) ────────────────────
+function handleActionClick(e) {
 
-    if (!document.getElementById('route-search')) return;
-
-    const content = document.getElementById('page-content');
-    if (content && !content._routesListenerAttached) {
-        content._routesListenerAttached = true;
-        content.addEventListener('click', handleContentClick);
-    }
-
-    destroyMap();
-    window.buildSearchableSelects(document);
-
-    // ROUTE COUNT BADGE 
-    const rows    = document.querySelectorAll('.route-row');
-    const countEl = document.getElementById('route-count');
-    if (countEl) {
-        countEl.textContent = `${rows.length} route${rows.length !== 1 ? 's' : ''}`;
-    }
-
-    // SEARCH 
-    document.getElementById('route-search')?.addEventListener('input', function () {
-        const q = this.value.toLowerCase();
-        rows.forEach(row => {
-            const match =
-                row.dataset.origin.toLowerCase().includes(q) ||
-                row.dataset.destination.toLowerCase().includes(q);
-            row.style.display = match ? '' : 'none';
-        });
-    });
-
-    // sCLICK ROW to SHOW MAP 
-    rows.forEach(row => {
-        row.addEventListener('click', function (e) {
-            if (e.target.closest('.row-actions')) return;
-            rows.forEach(r => r.classList.remove('selected'));
-            this.classList.add('selected');
-            const stops = this.dataset.stops ? JSON.parse(this.dataset.stops) : [];
-            showRoute(this.dataset.origin, this.dataset.destination, stops);
-        });
-    });
-
-    // ADD MODAL
-    const addContainer = document.getElementById('stops-container');
-    const addBtn       = document.getElementById('add-stop-btn');
-    const addCounter   = document.getElementById('add-stops-counter');
-
-    document.getElementById('open-add-modal')?.addEventListener('click', () => {
-        clearStops(addContainer, addBtn, addCounter);
-        getModal('addModal')?.show();
-    });
-
-    addBtn?.addEventListener('click', () => addStopRow(addContainer, addBtn, addCounter));
-
-    // EDIT MODAL 
-    const editContainer = document.getElementById('edit-stops-container');
-    const editAddBtn    = document.getElementById('edit-add-stop-btn');
-    const editCounter   = document.getElementById('edit-stops-counter');
-
-    editAddBtn?.addEventListener('click', () => addStopRow(editContainer, editAddBtn, editCounter));
-
-};  
-
-
-function handleContentClick(e) {
-
-    // Edit 
+    // Edit
     const editBtn = e.target.closest('.icon-btn.edit');
     if (editBtn) {
         e.stopPropagation();
-
         const editContainer = document.getElementById('edit-stops-container');
         const editAddBtn    = document.getElementById('edit-add-stop-btn');
         const editCounter   = document.getElementById('edit-stops-counter');
@@ -444,42 +345,35 @@ function handleContentClick(e) {
         (editBtn.dataset.stops ? JSON.parse(editBtn.dataset.stops) : [])
             .forEach(stop => addStopRow(editContainer, editAddBtn, editCounter, stop));
 
-        getModal('editModal')?.show();
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('editModal')).show();
         return;
     }
 
-    // Delete 
+    // Delete
     const delBtn = e.target.closest('.icon-btn.delete');
     if (delBtn) {
         Swal.fire({
-            title: 'Delete Route?',  text: delBtn.dataset.route,
-            icon: 'warning',         showCancelButton: true,
+            title: 'Delete Route?', text: delBtn.dataset.route,
+            icon: 'warning', showCancelButton: true,
             confirmButtonColor: '#ef4444', cancelButtonColor: '#6b7280',
             confirmButtonText: 'Yes, delete', cancelButtonText: 'Cancel',
             reverseButtons: true
         }).then(result => {
             if (!result.isConfirmed) return;
-            Swal.fire({
-                title: 'Deleting…', text: 'Please wait',
-                allowOutsideClick: false, allowEscapeKey: false,
-                didOpen: () => Swal.showLoading()
-            });
-            setTimeout(() => {
-                const csrf = document.querySelector('input[name="csrf_token"]');
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = '../../controllers/routes/DeleteRoute.php';
-                form.innerHTML =
-                    `<input type="hidden" name="csrf_token" value="${csrf?.value ?? ''}">
-                     <input type="hidden" name="route_id"   value="${delBtn.dataset.id}">`;
-                document.body.appendChild(form);
-                form.submit();
-            }, 700);
+            const csrf = document.querySelector('input[name="csrf_token"]');
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '../../controllers/routes/DeleteRoute.php';
+            form.innerHTML =
+                `<input type="hidden" name="csrf_token" value="${csrf?.value ?? ''}">
+                 <input type="hidden" name="route_id"   value="${delBtn.dataset.id}">`;
+            document.body.appendChild(form);
+            form.submit();
         });
         return;
     }
 
-
+    // Toggle
     const toggleBtn = e.target.closest('.icon-btn.toggle');
     if (toggleBtn) {
         e.stopPropagation();
@@ -493,3 +387,60 @@ function handleContentClick(e) {
         form.submit();
     }
 }
+
+
+// ── INIT (runs once when this script is loaded) ───────────────
+document.addEventListener('DOMContentLoaded', () => {
+
+    destroyMap();
+    window.buildSearchableSelects(document);
+
+    // Route count badge
+    const rows    = document.querySelectorAll('.route-row');
+    const countEl = document.getElementById('route-count');
+    if (countEl) countEl.textContent = `${rows.length} route${rows.length !== 1 ? 's' : ''}`;
+
+    // Search filter
+    document.getElementById('route-search')?.addEventListener('input', function () {
+        const q = this.value.toLowerCase();
+        rows.forEach(row => {
+            const match =
+                row.dataset.origin.toLowerCase().includes(q) ||
+                row.dataset.destination.toLowerCase().includes(q);
+            row.style.display = match ? '' : 'none';
+        });
+    });
+
+    // Click row → show map
+    rows.forEach(row => {
+        row.addEventListener('click', function (e) {
+            if (e.target.closest('.row-actions')) return;
+            rows.forEach(r => r.classList.remove('selected'));
+            this.classList.add('selected');
+            const stops = this.dataset.stops ? JSON.parse(this.dataset.stops) : [];
+            showRoute(this.dataset.origin, this.dataset.destination, stops);
+        });
+    });
+
+    // Action buttons (edit / delete / toggle) via event delegation
+    document.getElementById('page-content')?.addEventListener('click', handleActionClick);
+
+    // Add modal
+    const addContainer = document.getElementById('stops-container');
+    const addBtn       = document.getElementById('add-stop-btn');
+    const addCounter   = document.getElementById('add-stops-counter');
+
+    document.getElementById('open-add-modal')?.addEventListener('click', () => {
+        clearStops(addContainer, addBtn, addCounter);
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('addModal')).show();
+    });
+
+    addBtn?.addEventListener('click', () => addStopRow(addContainer, addBtn, addCounter));
+
+    // Edit modal stop add button
+    const editContainer = document.getElementById('edit-stops-container');
+    const editAddBtn    = document.getElementById('edit-add-stop-btn');
+    const editCounter   = document.getElementById('edit-stops-counter');
+
+    editAddBtn?.addEventListener('click', () => addStopRow(editContainer, editAddBtn, editCounter));
+});

@@ -1,47 +1,16 @@
-*,
-*::before,
-*::after {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
-
-:root {
-    --color-primary: #2E3A4D;
-    --color-accent: #F97316;
-    --color-brand: #3e5272;
-    --color-white: #ffffff;
-    --color-hover-bg: rgba(249, 115, 22, 0.10);
-    --border: #e2e8f0;
-    --text-muted: #64748b;
-    --input-bg: #f8fafc;
-    
-    --font-base: 'Inter', 'Roboto', sans-serif;
-    --radius-sm: 6px;
-    --radius-md: 10px;
-    --radius-lg: 14px;
-    --transition: 0.25s ease;
-
-    --input-height: 46px;
-}
-
-html,
-body {
-    height: 100%;
-    font-family: var(--font-base);
-    -webkit-font-smoothing: antialiased;
-}
+/* ══════════════════════════════════════════════
+   AUTH.CSS — login / register pages
+   Requires: base.css loaded before this file.
+   ══════════════════════════════════════════════ */
 
 /*  Page shell  */
-
 .auth-page {
     display: flex;
     min-height: 100vh;
     align-items: flex-start;
 }
 
-/*  Left panel  */
-
+/* ── LEFT PANEL ───────────────────────────────── */
 .left-panel {
     position: sticky;
     top: 0;
@@ -67,8 +36,7 @@ body {
     pointer-events: none;
 }
 
-/*  Brand  */
-
+/* Brand */
 .left-panel__brand {
     display: flex;
     align-items: center;
@@ -96,8 +64,7 @@ body {
     color: var(--color-accent);
 }
 
-/*  Left content  */
-
+/* Left content */
 .left-panel__content {
     position: relative;
     z-index: 1;
@@ -124,8 +91,7 @@ body {
     max-width: 380px;
 }
 
-/*  Feature list  */
-
+/* Feature list */
 .left-panel__features {
     list-style: none;
     display: flex;
@@ -171,8 +137,7 @@ body {
     line-height: 1.55;
 }
 
-/*  Right panel  */
-
+/* ── RIGHT PANEL ──────────────────────────────── */
 .right-panel {
     width: 50%;
     min-height: 100vh;
@@ -184,8 +149,7 @@ body {
     flex-direction: column;
 }
 
-/*  Auth card */
-
+/* Auth card */
 .auth-container {
     width: 100%;
     max-width: 440px;
@@ -213,15 +177,13 @@ body {
     line-height: 1.6;
 }
 
-/*  Auth input wrapper  */
-
+/* Auth input wrapper */
 .auth-input {
     width: 100%;
     max-width: 440px;
 }
 
-/*  Input group (single field) */
-
+/* Input group */
 .input-group {
     margin-bottom: 18px;
 }
@@ -262,8 +224,7 @@ body {
     font-size: .835rem;
 }
 
-/*  Password group  */
-
+/* Password group */
 .password-group {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -312,8 +273,7 @@ body {
     font-size: .835rem;
 }
 
-/*  Passenger  dropdown */
-
+/* Passenger dropdown */
 .select-type {
     margin-bottom: 18px;
 }
@@ -359,8 +319,7 @@ body {
     color: #b8c5d0;
 }
 
-/*  File upload */
-
+/* File upload */
 .upload {
     margin-bottom: 22px;
 }
@@ -396,8 +355,7 @@ body {
     background: #fff9f5;
 }
 
-/*  Forgot link  */
-
+/* Forgot link */
 .forgot-link {
     display: block;
     text-align: right;
@@ -414,8 +372,7 @@ body {
     color: var(--color-accent);
 }
 
-/*  Buttons  */
-
+/* Buttons */
 .btn-login,
 .btn-register {
     width: 100%;
@@ -430,8 +387,7 @@ body {
     font-weight: 600;
     cursor: pointer;
     letter-spacing: .01em;
-    transition: background var(--transition),
-        transform var(--transition);
+    transition: background var(--transition), transform var(--transition);
 }
 
 .btn-login:hover,
@@ -444,7 +400,6 @@ body {
 .btn-register:active {
     transform: scale(.99);
 }
-
 
 .auth-divider {
     height: 1px;
@@ -470,7 +425,7 @@ body {
     text-decoration: underline;
 }
 
-
+/* ── RESPONSIVE ───────────────────────────────── */
 @media (max-width: 900px) {
 
     .left-panel,

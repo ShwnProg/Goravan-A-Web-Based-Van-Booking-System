@@ -14,6 +14,6 @@ $route->id     = $routeId;
 $route->status = $isActive;
 
 $route->ToggleRoute();
-
+$_SESSION["success"] = "Status Updated Successfully";
 header('Location: ../../views/admin/routes.php');
 exit;

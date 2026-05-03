@@ -1,12 +1,13 @@
 /* ══════════════════════════════════════════════
-   ROUTES PAGE — routes.css
+   VANS PAGE — vans.css
+   Extends the routes design system.
    Requires: base.css loaded before this file.
    ══════════════════════════════════════════════ */
 
 /* ── LAYOUT ──────────────────────────────────── */
-.routes-wrapper {
+.vans-wrapper {
     display: grid;
-    grid-template-columns: 1fr 360px;
+    grid-template-columns: 1fr 300px;
     gap: 20px;
     align-items: start;
 }
@@ -73,12 +74,11 @@
 
 .btn-add:hover {
     background: var(--color-brand);
-    /* was: #3e5272 */
     box-shadow: 0 4px 12px rgba(46, 58, 77, .2);
 }
 
-/* ── ROUTES CARD ─────────────────────────────── */
-.routes-card {
+/* ── VANS CARD ───────────────────────────────── */
+.vans-card {
     background: #fff;
     border: 1px solid rgba(0, 0, 0, .07);
     border-radius: 12px;
@@ -86,7 +86,7 @@
     box-shadow: 0 1px 6px rgba(0, 0, 0, .05);
 }
 
-.routes-card-header {
+.vans-card-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -94,14 +94,16 @@
     border-bottom: 1px solid rgba(0, 0, 0, .06);
 }
 
-.routes-card-header h2 {
-    font-size: 13px;
-    font-weight: 700;
+.vans-card-header h2 {
+    font-size: var(--text-xl);
+    font-weight: var(--fw-bold);
+    line-height: var(--lh-tight);
     color: var(--color-primary);
     margin: 0;
+    letter-spacing: var(--ls-tight);
 }
 
-.routes-card-header span {
+.vans-card-header span {
     font-size: 11px;
     color: var(--text-muted);
     background: rgba(0, 0, 0, .04);
@@ -109,17 +111,17 @@
     border-radius: 20px;
 }
 
-.routes-table-wrap {
+.vans-table-wrap {
     overflow-x: auto;
 }
 
-.routes-table {
+.vans-table {
     width: 100%;
     border-collapse: collapse;
     font-size: 13px;
 }
 
-.routes-table thead th {
+.vans-table thead th {
     text-align: left;
     padding: 10px 16px;
     font-size: 10.5px;
@@ -132,80 +134,102 @@
     white-space: nowrap;
 }
 
-.routes-table tbody tr {
+.vans-table tbody tr {
     border-bottom: 1px solid rgba(0, 0, 0, .04);
     transition: background .15s;
     cursor: pointer;
 }
 
-.routes-table tbody tr:last-child {
+.vans-table tbody tr:last-child {
     border-bottom: none;
 }
 
-.routes-table tbody tr:hover {
+.vans-table tbody tr:hover {
     background: #fafafa;
 }
 
-.routes-table tbody tr.selected {
+.vans-table tbody tr.selected {
     background: rgba(249, 115, 22, .04);
     border-left: 3px solid var(--color-accent);
 }
 
-.routes-table td,
-.routes-table th {
+.vans-table td,
+.vans-table th {
     padding: 14px 12px;
     white-space: nowrap;
 }
 
-.routes-table tbody td {
+.vans-table tbody td {
     color: #374151;
     vertical-align: middle;
 }
 
-/* Route display */
-.route-display {
-    display: flex;
+/* ── PLATE DISPLAY ───────────────────────────── */
+.plate-display {
+    display: inline-flex;
     align-items: center;
-    gap: 10px;
+    gap: 7px;
 }
 
-.route-point {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-
-.route-point .label {
-    font-size: 9px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: .5px;
-    color: #9ca3af;
-}
-
-.route-point .value {
+.plate-number {
     font-size: 13px;
-    font-weight: 500;
+    font-weight: 700;
     color: var(--color-primary);
+    letter-spacing: .5px;
+    font-family: 'Courier New', monospace;
+    background: rgba(46, 58, 77, .06);
+    padding: 3px 8px;
+    border-radius: 5px;
+    border: 1px solid rgba(46, 58, 77, .1);
 }
 
-.route-arrow {
+/* ── MODEL DISPLAY ───────────────────────────── */
+.model-display {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: #374151;
+}
+
+/* ── CAPACITY BADGE ──────────────────────────── */
+.capacity-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #6b7280;
+    background: rgba(107, 114, 128, .07);
+    padding: 3px 9px;
+    border-radius: 20px;
+}
+
+/* ── MINI SEAT GRID (table column preview) ───── */
+.mini-seat-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+    max-width: 140px;
+}
+
+.mini-seat {
+    width: 24px;
+    height: 20px;
     display: flex;
     align-items: center;
     justify-content: center;
+    font-size: 9px;
+    font-weight: 700;
+    border-radius: 4px;
+    background: rgba(249, 115, 22, .07);
+    border: 1px solid rgba(249, 115, 22, .22);
     color: var(--color-accent);
-    flex-shrink: 0;
-    opacity: .7;
-    height: 100%;
+    cursor: default;
+    user-select: none;
 }
 
-.route-arrow i {
-    font-size: 12px;
-    display: inline-block;
-    transform: translateY(2px);
-}
-
-/* Badges */
+/* ── STATUS BADGES ───────────────────────────── */
 .badge {
     display: inline-flex;
     align-items: center;
@@ -241,26 +265,7 @@
     background: #ef4444;
 }
 
-/* Stops pills */
-.stops-pills {
-    display: flex;
-    gap: 6px;
-    overflow-x: auto;
-    white-space: nowrap;
-}
-
-.stop-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 11px;
-    color: #6b7280;
-    background: rgba(0, 0, 0, .04);
-    padding: 2px 8px;
-    border-radius: 20px;
-}
-
-/* Row actions */
+/* ── ROW ACTIONS ─────────────────────────────── */
 .row-actions {
     display: flex;
     align-items: center;
@@ -288,7 +293,7 @@
 
 .icon-btn.edit {
     background: rgba(249, 115, 22, .08);
-    color: var(--color-accent); 
+    color: var(--color-accent);
 }
 
 .icon-btn.edit:hover {
@@ -299,11 +304,12 @@
     background: rgba(239, 68, 68, .08);
     color: #ef4444;
 }
+
 .icon-btn.delete:hover {
     transform: translateY(-1px);
 }
 
-.icon-btn.toggle{
+.icon-btn.toggle {
     background: rgba(22, 163, 74, .08);
     color: #16a34a;
 }
@@ -312,7 +318,7 @@
     transform: translateY(-1px);
 }
 
-/* Empty state */
+/* ── EMPTY STATE ─────────────────────────────── */
 .empty-state {
     padding: 48px 20px;
     text-align: center;
@@ -335,8 +341,8 @@
     color: #9ca3af;
 }
 
-/* ── MAP CARD ─────────────────────────────────── */
-.map-card {
+/* ── SEAT PREVIEW CARD ───────────────────────── */
+.seat-card {
     background: #fff;
     border: 1px solid rgba(0, 0, 0, .07);
     border-radius: 12px;
@@ -347,7 +353,7 @@
     isolation: isolate;
 }
 
-.map-card-header {
+.seat-card-header {
     padding: 14px 16px;
     border-bottom: 1px solid rgba(0, 0, 0, .06);
     display: flex;
@@ -355,12 +361,12 @@
     gap: 10px;
 }
 
-.map-card-header i {
+.seat-card-header i {
     font-size: 13px;
     color: var(--color-accent);
 }
 
-.map-card-header p {
+.seat-card-header p {
     margin: 0;
     font-size: 13px;
     font-weight: 700;
@@ -368,21 +374,20 @@
     flex: 1;
 }
 
-.map-card-header span {
+.seat-card-header span {
     font-size: 11px;
-    color: var(--text-muted);
-    max-width: 140px;
+    font-weight: 600;
+    color: var(--color-primary);
+    max-width: 120px;
     text-align: right;
-    line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-#route-map {
-    height: 300px;
-    width: 100%;
-}
-
-.map-empty {
-    height: 300px;
+/* Empty state */
+.seat-empty {
+    height: 240px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -391,74 +396,151 @@
     color: #d1d5db;
 }
 
-.map-empty i {
+.seat-empty i {
     font-size: 32px;
 }
 
-.map-empty p {
+.seat-empty p {
     font-size: 13px;
     margin: 0;
 }
 
-.map-route-info {
-    padding: 14px 16px;
+/* Van body wrapper */
+#seat-preview {
+    padding: 14px;
+}
+
+.van-body {
+    background: #f9fafb;
+    border: 1.5px solid rgba(0, 0, 0, .07);
+    border-radius: 12px;
+    overflow: hidden;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    width: 100%;
+}
+
+.van-front {
+    background: linear-gradient(135deg, var(--color-primary) 0%, #3e5272 100%);
+    padding: 9px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
+
+.steering-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: #fff;
+    opacity: .95;
+    font-size: 12px;
+    font-weight: 600;
+    width: 100%;
+}
+
+.steering-wrap i {
+    font-size: 16px;
+}
+
+/* Seat grid — actual grid positions come from CSS grid-row/grid-column */
+.seat-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    justify-items: stretch;
+    align-items: stretch;
+    gap: 10px;
+    padding: 14px;
+    grid-auto-rows: 70px;
+    width: 100%;
+}
+
+.seat-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 8px 6px;
+    border-radius: 10px;
+    border: 1.5px solid;
+    cursor: default;
+    user-select: none;
+    transition: transform .15s ease;
+    min-height: 70px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.seat-box.available {
+    background: rgba(249, 115, 22, .06);
+    border-color: rgba(249, 115, 22, .25);
+    color: var(--color-accent);
+}
+
+.seat-icon {
+    font-size: 14px;
+}
+
+.seat-code {
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: .2px;
+}
+
+/* Legend */
+.seat-legend {
+    display: flex;
+    gap: 14px;
+    padding: 8px 14px 4px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: #6b7280;
+}
+
+.legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+    border: 1.5px solid;
+}
+
+.legend-dot.available {
+    background: rgba(249, 115, 22, .1);
+    border-color: rgba(249, 115, 22, .4);
+}
+
+/* Van info panel */
+.van-info-panel {
+    padding: 12px 16px;
     border-top: 1px solid rgba(0, 0, 0, .06);
     display: none;
 }
 
-.map-route-info.visible {
+.van-info-panel.visible {
     display: block;
 }
 
-.map-route-stops {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.map-stop {
-    display: flex;
-    align-items: center;
+.van-info-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: 10px;
 }
 
-.stop-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    border: 2px solid;
-    flex-shrink: 0;
+.van-info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
 }
 
-.stop-dot.origin {
-    border-color: #16a34a;
-    background: rgba(22, 163, 74, .15);
-}
-
-.stop-dot.dest {
-    border-color: #ef4444;
-    background: rgba(239, 68, 68, .15);
-}
-
-.stop-dot.via {
-    border-color: #3b82f6;
-    background: rgba(59, 130, 246, .15);
-}
-
-.stop-connector {
-    width: 2px;
-    height: 14px;
-    background: rgba(249, 115, 22, .3);
-    margin-left: 4px;
-}
-
-.map-stop span {
-    font-size: 12.5px;
-    color: #374151;
-    font-weight: 500;
-}
-
-.map-stop .stop-label {
+.van-info-label {
     font-size: 9.5px;
     color: #9ca3af;
     text-transform: uppercase;
@@ -466,7 +548,13 @@
     letter-spacing: .4px;
 }
 
-/* ── FARE INPUT ───────────────────────────────── */
+.van-info-item span {
+    font-size: 12.5px;
+    font-weight: 500;
+    color: #374151;
+}
+
+/* ── FARE INPUT ──────────────────────────────── */
 .rinput {
     width: 100%;
     height: 38px;
@@ -496,7 +584,14 @@
     box-shadow: 0 0 0 3px rgba(249, 115, 22, .08);
 }
 
-/* ── SEARCHABLE SELECT ────────────────────────── */
+/* Field hint text */
+.rfield-hint {
+    font-size: 10.5px;
+    color: #bbb;
+    font-style: italic;
+}
+
+/* ── SEARCHABLE SELECT ───────────────────────── */
 select.ss {
     display: none !important;
 }
@@ -577,38 +672,11 @@ select.ss {
     display: block;
 }
 
-.ss-search-wrap {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    padding: 8px 10px;
-    border-bottom: 1px solid rgba(0, 0, 0, .06);
-}
-
-.ss-search-wrap i {
-    font-size: 11px;
-    color: #bbb;
-}
-
-.ss-search {
-    border: none;
-    outline: none;
-    font-size: 12.5px;
-    width: 100%;
-    background: transparent;
-    color: #333;
-    font-family: inherit;
-}
-
-.ss-search::placeholder {
-    color: #bbb;
-}
-
 .ss-list {
     list-style: none;
     margin: 0;
     padding: 4px 0;
-    max-height: 200px;
+    max-height: 180px;
     overflow-y: auto;
 }
 
@@ -631,9 +699,6 @@ select.ss {
     color: #374151;
     cursor: pointer;
     transition: background .12s;
-    display: flex;
-    align-items: center;
-    gap: 8px;
 }
 
 .ss-item:hover {
@@ -652,7 +717,8 @@ select.ss {
     font-family: 'Font Awesome 6 Free';
     font-weight: 900;
     font-size: 10px;
-    margin-left: auto;
+    float: right;
+    margin-top: 1px;
 }
 
 .ss-item.is-placeholder {
@@ -667,7 +733,7 @@ select.ss {
     text-align: center;
 }
 
-/* ── MODAL ────────────────────────────────────── */
+/* ── MODAL ───────────────────────────────────── */
 .rmodal {
     border: 0 !important;
     border-radius: var(--radius-lg) !important;
@@ -767,121 +833,7 @@ select.ss {
     font-size: 10.5px;
 }
 
-.stops-counter {
-    margin-left: auto;
-    font-size: 10px;
-    font-weight: 600;
-    color: #bbb;
-    background: rgba(0, 0, 0, .04);
-    padding: 2px 8px;
-    border-radius: 20px;
-    letter-spacing: 0;
-    text-transform: none;
-    font-style: normal;
-}
-
-.stops-list {
-    display: flex;
-    flex-direction: column;
-    gap: 7px;
-    min-height: 0;
-}
-
-.dynamic-stop-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    animation: stopRowIn .18s ease;
-}
-
-@keyframes stopRowIn {
-    from {
-        opacity: 0;
-        transform: translateY(-4px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.dynamic-stop-row .stop-num {
-    width: 22px;
-    height: 22px;
-    flex-shrink: 0;
-    background: rgba(249, 115, 22, .09);
-    color: var(--color-accent);
-    border-radius: 50%;
-    font-size: 10px;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.dynamic-stop-row .ss-wrap {
-    flex: 1;
-    min-width: 0;
-}
-
-.btn-remove-stop {
-    flex-shrink: 0;
-    width: 28px;
-    height: 28px;
-    border: 1px solid rgba(239, 68, 68, .2);
-    background: rgba(239, 68, 68, .05);
-    color: #ef4444;
-    border-radius: 7px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    font-size: 10px;
-    transition: background .15s, border-color .15s, transform .1s;
-}
-
-.btn-remove-stop:hover {
-    background: rgba(239, 68, 68, .12);
-    border-color: rgba(239, 68, 68, .4);
-    transform: scale(1.08);
-}
-
-.btn-add-stop {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    margin-top: 4px;
-    padding: 7px 13px;
-    background: rgba(249, 115, 22, .06);
-    border: 1px dashed rgba(249, 115, 22, .35);
-    border-radius: var(--radius-sm);
-    color: var(--color-accent);
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    font-family: inherit;
-    transition: background .18s, border-color .18s, color .18s;
-    align-self: flex-start;
-}
-
-.btn-add-stop i {
-    font-size: 10px;
-}
-
-.btn-add-stop:hover {
-    background: rgba(249, 115, 22, .12);
-    border-color: rgba(249, 115, 22, .55);
-}
-
-.btn-add-stop--disabled,
-.btn-add-stop:disabled {
-    opacity: .45;
-    cursor: not-allowed;
-    pointer-events: none;
-}
-
-/* ── BUTTONS ──────────────────────────────────── */
+/* ── BUTTONS ─────────────────────────────────── */
 .rbtn {
     display: inline-flex;
     align-items: center;
@@ -914,68 +866,16 @@ select.ss {
 
 .rbtn-primary:hover {
     background: var(--color-brand);
-    /* was: #3e5272 */
     box-shadow: 0 4px 12px rgba(46, 58, 77, .2);
-}
-
-.rbtn-danger {
-    background: #ef4444;
-    color: #fff;
-}
-
-.rbtn-danger:hover {
-    background: #dc2626;
-    box-shadow: 0 4px 12px rgba(239, 68, 68, .25);
-}
-
-/* ── DELETE MODAL ─────────────────────────────── */
-.delete-modal {
-    text-align: center;
-}
-
-.delete-icon-wrap {
-    padding: 28px 20px 0;
-    display: flex;
-    justify-content: center;
-}
-
-.delete-icon-circle {
-    width: 56px;
-    height: 56px;
-    background: rgba(239, 68, 68, .08);
-    border-radius: var(--radius-md);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #ef4444;
-    font-size: 22px;
-}
-
-.delete-body {
-    padding: 14px 20px 4px;
-}
-
-.delete-title {
-    font-size: 15px;
-    font-weight: 700;
-    color: var(--color-primary);
-    margin: 0 0 6px;
-}
-
-.delete-msg {
-    font-size: 12.5px;
-    color: #9ca3af;
-    margin: 0;
-    line-height: 1.5;
 }
 
 /* ── RESPONSIVE ───────────────────────────────── */
 @media (max-width: 900px) {
-    .routes-wrapper {
+    .vans-wrapper {
         grid-template-columns: 1fr;
     }
 
-    .map-card {
+    .seat-card {
         position: static;
     }
 }
@@ -987,5 +887,9 @@ select.ss {
 
     .search-box {
         max-width: 100%;
+    }
+
+    .van-info-row {
+        grid-template-columns: 1fr;
     }
 }

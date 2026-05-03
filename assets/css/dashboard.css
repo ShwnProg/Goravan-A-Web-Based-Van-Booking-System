@@ -1,31 +1,7 @@
-*,
-*::before,
-*::after {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
-
-/* :root {
-    --color-primary: #2E3A4D;
-    --color-accent: #F97316;
-    --color-white: #ffffff;
-    --text-muted: #64748b;
-    --sidebar-bg: #ffffff;
-    --sidebar-border: rgba(0, 0, 0, 0.07);
-    --font-base: 'Inter', 'Roboto', sans-serif;
-} */
-
-html {
-    scroll-behavior: smooth;
-}
-
-html,
-body {
-    height: 100%;
-    font-family: var(--font-base);
-    -webkit-font-smoothing: antialiased;
-}
+/* ══════════════════════════════════════════════
+   DASHBOARD.CSS — admin shell (sidebar + topbar)
+   Requires: base.css loaded before this file.
+   ══════════════════════════════════════════════ */
 
 body {
     overflow-y: auto;
@@ -37,7 +13,7 @@ body {
     position: fixed;
     inset: 0;
     background: rgba(0, 0, 0, 0.35);
-    z-index: 950; /* above Leaflet's highest z-index (~800) */
+    z-index: 950;
     backdrop-filter: blur(3px);
     -webkit-backdrop-filter: blur(3px);
 }
@@ -51,11 +27,11 @@ body {
     position: fixed;
     width: 240px;
     height: 100%;
-    background: #ffffff;
+    background: var(--color-white);
     border-right: 1px solid rgba(0, 0, 0, 0.06);
     box-shadow: 2px 0 12px rgba(0, 0, 0, 0.04);
     display: flex;
-    z-index: 999; /* above overlay (950), below topbar (1000) */
+    z-index: 999;
     flex-direction: column;
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -108,7 +84,7 @@ body {
     font-weight: 700;
     letter-spacing: 1px;
     text-transform: uppercase;
-    color: #F97316;
+    color: var(--color-accent);
     padding: 12px 10px 6px;
     opacity: 0.8;
 }
@@ -138,14 +114,14 @@ body {
 
 .menu-btn:hover {
     background: rgba(249, 115, 22, 0.06);
-    color: #2E3A4D;
+    color: var(--color-primary);
     transform: translateX(2px);
 }
 
 .menu-btn.active {
     background: rgba(249, 115, 22, 0.10);
-    color: #F97316;
-    border-left: 3px solid #F97316;
+    color: var(--color-accent);
+    border-left: 3px solid var(--color-accent);
     font-weight: 600;
 }
 
@@ -178,7 +154,7 @@ body {
     border-bottom: 1px solid rgba(0, 0, 0, 0.06);
     position: sticky;
     top: 0;
-    z-index: 1000; /* highest — always on top */
+    z-index: 1000;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
@@ -627,7 +603,7 @@ body {
     margin-left: 240px;
     width: calc(100% - 240px);
     min-height: 100vh;
-    background-color: #f8f8f8;
+    background-color: var(--page-bg);
     transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
