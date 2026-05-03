@@ -32,7 +32,7 @@ class Schedules
             LEFT JOIN routes r ON s.route_id_fk = r.route_id_pk
             LEFT JOIN drivers d ON s.driver_id_fk = d.driver_id_pk
             LEFT JOIN vans v ON s.van_id_fk = v.van_id_pk
-            ORDER BY s.departure_date DESC, s.departure_time ASC
+            ORDER BY s.created_at DESC
         ");
         $stmt->execute();
         $schedules = $stmt->fetchAll(PDO::FETCH_ASSOC);

@@ -1,33 +1,46 @@
 <?php
 require_once '../../autoload.php';
 
+header('Content-Type: application/json');
+
+/* ── CSRF CHECK ───────────────────────── */
 if (!csrf_check()) {
-    $_SESSION['error'] = 'Invalid CSRF token.';
-    header('Location: ../../views/admin/vans.php');
+    echo json_encode([
+        'success' => false,
+        'message' => 'Invalid CSRF token.'
+    ]);
     exit;
 }
 
-$van_id       = (int)   ($_POST['van_id']       ?? 0);
+/* ── INPUTS ───────────────────────────── */
+$van_id       = (int)($_POST['van_id'] ?? 0);
 $plate_number = strtoupper(trim($_POST['plate_number'] ?? ''));
-$model        = trim(   ($_POST['model']         ?? ''));
-$capacity     = (int)   ($_POST['capacity']      ?? 0);
-$status       = trim(   ($_POST['status']        ?? 'active'));
+$model        = trim($_POST['model'] ?? '');
+$capacity     = (int)($_POST['capacity'] ?? 0);
+$status       = trim($_POST['status'] ?? 'active');
 
+/* ── VALIDATION ───────────────────────── */
 if (!$van_id || !$plate_number || !$model) {
-    $_SESSION['error'] = 'Missing required fields.';
-    header('Location: ../../views/admin/vans.php');
+    echo json_encode([
+        'success' => false,
+        'message' => 'Missing required fields.'
+    ]);
     exit;
 }
 
 if (!preg_match('/^[A-Z0-9\- ]{3,20}$/', $plate_number)) {
-    $_SESSION['error'] = 'Invalid plate number format.';
-    header('Location: ../../views/admin/vans.php');
+    echo json_encode([
+        'success' => false,
+        'message' => 'Invalid plate number format.'
+    ]);
     exit;
 }
 
 if ($capacity <= 0 || $capacity > 30) {
-    $_SESSION['error'] = 'Capacity must be between 1 and 30.';
-    header('Location: ../../views/admin/vans.php');
+    echo json_encode([
+        'success' => false,
+        'message' => 'Capacity must be between 1 and 30.'
+    ]);
     exit;
 }
 
@@ -35,45 +48,64 @@ if (!in_array($status, ['active', 'inactive'])) {
     $status = 'active';
 }
 
-$van               = new Vans($conn);
-$van->id           = $van_id;
-$van->plate_number = $plate_number;
-$van->model        = $model;
-$van->capacity     = $capacity;
-$van->status       = $status;
+/* ── LOAD VAN ─────────────────────────── */
+$van = new Vans($conn);
+$van->id = $van_id;
 
 $van_info = $van->GetVanByID();
 
 if (empty($van_info)) {
-    $_SESSION['error'] = 'Van not found.';
-    header('Location: ../../views/admin/vans.php');
+    echo json_encode([
+        'success' => false,
+        'message' => 'Van not found.'
+    ]);
     exit;
 }
 
 $existing = $van_info[0];
 
+/* ── NO CHANGES CHECK ─────────────────── */
 $samePlate    = strtolower($existing['plate_number']) === strtolower($plate_number);
-$sameModel    = strtolower($existing['model'])        === strtolower($model);
-$sameCapacity = (int) $existing['capacity']           === $capacity;
-$sameStatus   = $existing['status']                   === $status;
+$sameModel    = strtolower($existing['model']) === strtolower($model);
+$sameCapacity = (int)$existing['capacity'] === $capacity;
+$sameStatus   = $existing['status'] === $status;
 
 if ($samePlate && $sameModel && $sameCapacity && $sameStatus) {
-    $_SESSION['no_changes'] = 'No changes were made.';
-    header('Location: ../../views/admin/vans.php');
+    echo json_encode([
+        'no_changes' => true,
+        'message' => 'No changes were made.'
+    ]);
     exit;
 }
 
+/* ── DUPLICATE PLATE CHECK ────────────── */
 if (!$samePlate && $van->IsPlateExistExcept()) {
-    $_SESSION['error'] = 'A van with that plate number already exists.';
-    header('Location: ../../views/admin/vans.php');
+    echo json_encode([
+        'success' => false,
+        'message' => 'A van with that plate number already exists.'
+    ]);
     exit;
 }
+
+/* ── UPDATE ───────────────────────────── */
+$van->plate_number = $plate_number;
+$van->model        = $model;
+$van->capacity     = $capacity;
+$van->status       = $status;
 
 $result = $van->EditVan();
 
-$_SESSION[$result['success'] ? 'success' : 'error'] = $result['success']
-    ? 'Van updated successfully.'
-    : 'Failed to update van: ' . ($result['error'] ?? 'Unknown error.');
+/* ── RESPONSE ─────────────────────────── */
+if ($result['success']) {
+    echo json_encode([
+        'success' => true,
+        'message' => 'Van updated successfully.'
+    ]);
+} else {
+    echo json_encode([
+        'success' => false,
+        'message' => $result['error'] ?? 'Update failed.'
+    ]);
+}
 
-header('Location: ../../views/admin/vans.php');
 exit;

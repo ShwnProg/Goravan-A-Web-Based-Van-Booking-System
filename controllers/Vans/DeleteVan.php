@@ -1,28 +1,35 @@
 <?php
 require_once '../../autoload.php';
 
+header('Content-Type: application/json');
+
 if (!csrf_check()) {
-    $_SESSION['error'] = 'Invalid CSRF token.';
-    header('Location: ../../views/admin/vans.php');
+    echo json_encode([
+        'success' => false,
+        'message' => 'Invalid CSRF token.'
+    ]);
     exit;
 }
 
 $van_id = (int) ($_POST['van_id'] ?? 0);
 
 if (!$van_id) {
-    $_SESSION['error'] = 'Invalid van.';
-    header('Location: ../../views/admin/vans.php');
+    echo json_encode([
+        'success' => false,
+        'message' => 'Invalid van.'
+    ]);
     exit;
 }
 
-$van     = new Vans($conn);
+$van = new Vans($conn);
 $van->id = $van_id;
 
 $result = $van->DeleteVan();
 
-$_SESSION[$result['success'] ? 'success' : 'error'] = $result['success']
-    ? 'Van deleted successfully.'
-    : 'Failed to delete van.';
-
-header('Location: ../../views/admin/vans.php');
+echo json_encode([
+    'success' => $result['success'],
+    'message' => $result['success']
+        ? 'Van deleted successfully.'
+        : 'Failed to delete van.'
+]);
 exit;

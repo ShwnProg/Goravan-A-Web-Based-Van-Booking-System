@@ -1,25 +1,32 @@
 <?php
 require_once '../../autoload.php';
 
-$driver_id = (int) ($_POST['driver_id'] ?? 0);
-$status = trim($_POST['status'] ?? 'active');
+header('Content-Type: application/json');
 
-if (!$driver_id) {
-    header('Location: ../../views/admin/drivers.php');
+if (!csrf_check()) {
+    echo json_encode(['success' => false, 'message' => 'Invalid CSRF token']);
     exit;
 }
 
-if (!in_array($status, ['active', 'inactive'])) {
-    $status = 'active';
+$driver_id = (int)($_POST['driver_id'] ?? 0);
+$status    = $_POST['status'] ?? '';
+
+if (!$driver_id || !in_array($status, ['active', 'inactive'])) {
+    echo json_encode(['success' => false, 'message' => 'Invalid request']);
+    exit;
 }
 
-$driver         = new Drivers($conn);
-$driver->id     = $driver_id;
+$driver = new Drivers($conn);
+$driver->id = $driver_id;
 $driver->status = $status;
 
-$driver->ToggleDriver();
+$result = $driver->ToggleDriver();
 
-$_SESSION['success'] = 'Status updated successfully.';
-header('Location: ../../views/admin/drivers.php');
+echo json_encode([
+    'success' => $result['success'],
+    'message' => $result['success']
+        ? 'Status updated'
+        : 'Failed to update status'
+]);
+
 exit;
-?>

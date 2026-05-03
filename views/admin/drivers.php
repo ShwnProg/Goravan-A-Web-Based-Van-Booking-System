@@ -229,7 +229,7 @@ $drivers   = $driverObj->GetAllDrivers();
                 </div>
                 <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal"></button>
             </div>
-            <form method="POST" action="../../controllers/Drivers/EditDriver.php">
+            <form id="editDriverForm">
                 <div class="rmodal-body">
                     <?= csrf_field() ?>
                     <input type="hidden" name="driver_id" id="edit-id">

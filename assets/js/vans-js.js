@@ -65,6 +65,47 @@ window.initVansPage = function () {
         row.classList.add('selected');
     });
 
+    document.querySelector('#addModal form').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const form = this;
+        const formData = new FormData(form);
+
+        formData.append('csrf_token', getCsrf());
+
+        fetch('../../controllers/vans/AddVan.php', {
+            method: 'POST',
+            body: formData
+        })
+            .then(res => res.json())
+            .then(data => {
+
+                if (data.success) {
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: data.message
+                    }).then(() => {
+                        location.reload(); // or append row dynamically later
+                    });
+
+                } else {
+
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.message
+                    });
+
+                }
+
+            })
+            .catch(() => {
+                Swal.fire('Error', 'Network error', 'error');
+            });
+    });
+
     /* ── Edit button ──────────────────────────── */
     tbody.addEventListener('click', function (e) {
         var btn = e.target.closest('.icon-btn.edit');
@@ -73,37 +114,144 @@ window.initVansPage = function () {
         document.getElementById('edit-id').value = btn.dataset.id || '';
         document.getElementById('edit-plate').value = btn.dataset.plate || '';
         document.getElementById('edit-model').value = btn.dataset.model || '';
-        document.getElementById('edit-capacity').value = btn.dataset.passengerCapacity || '';
+        document.getElementById('edit-capacity').value = btn.dataset.capacity || '';
 
         var sel = document.getElementById('edit-status');
         if (sel) sel.value = btn.dataset.status || 'active';
 
         editModal.show();
     });
+    document.querySelector('#editModal form').addEventListener('submit', function (e) {
+        e.preventDefault();
 
+        const form = this;
+        const formData = new FormData(form);
+        formData.append('csrf_token', getCsrf());
+
+        fetch('../../controllers/vans/EditVan.php', {
+            method: 'POST',
+            body: formData
+        })
+            .then(res => res.json())
+            .then(data => {
+
+                if (data.no_changes) {
+
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'No Changes',
+                        text: data.message
+                    });
+
+                    return;
+                }
+
+                if (data.success) {
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: data.message
+                    }).then(() => {
+                        location.reload();
+                    });
+
+                } else {
+
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.message
+                    });
+
+                }
+
+            })
+            .catch(() => {
+                Swal.fire('Error', 'Network error', 'error');
+            });
+    });
     /* ── Toggle status ────────────────────────── */
-    tbody.addEventListener('click', function (e) {
-        var btn = e.target.closest('.icon-btn.toggle');
-        if (!btn) return;
+    // tbody.addEventListener('click', function (e) {
+    //     var btn = e.target.closest('.icon-btn.toggle');
+    //     if (!btn) return;
 
-        var id = btn.dataset.id;
-        var status = btn.dataset.status;
-        var next = status === 'active' ? 'inactive' : 'active';
+    //     var id = btn.dataset.id;
+    //     var status = btn.dataset.status;
+    //     var next = status === 'active' ? 'inactive' : 'active';
+
+    //     Swal.fire({
+    //         title: 'Toggle Status?',
+    //         text: 'Set this van to ' + next + '?',
+    //         icon: 'question',
+    //         showCancelButton: true,
+    //         confirmButtonText: 'Yes, toggle',
+    //         confirmButtonColor: '#2e3a4d',
+    //     }).then(function (res) {
+    //         if (!res.isConfirmed) return;
+    //         post('../../controllers/vans/ToggleVan.php', {
+    //             van_id: id, csrf_token: getCsrf()
+    //         }).then(function (d) {
+    //             if (d.success) location.reload();
+    //             else Swal.fire('Error', d.message || 'Toggle failed.', 'error');
+    //         }).catch(function () {
+    //             Swal.fire('Error', 'Network error.', 'error');
+    //         });
+    //     });
+    // });
+
+    tbody.addEventListener('click', function (e) {
+
+        const toggleBtn = e.target.closest('.icon-btn.toggle');
+        if (!toggleBtn) return;
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        const currentStatus = toggleBtn.dataset.status;
+        const nextStatus = currentStatus === 'active' ? 'inactive' : 'active';
+
+        const csrf = getCsrf();
 
         Swal.fire({
             title: 'Toggle Status?',
-            text: 'Set this van to ' + next + '?',
+            text: 'Set this van to ' + nextStatus + '?',
             icon: 'question',
             showCancelButton: true,
             confirmButtonText: 'Yes, toggle',
             confirmButtonColor: '#2e3a4d',
         }).then(function (res) {
             if (!res.isConfirmed) return;
+
             post('../../controllers/vans/ToggleVan.php', {
-                van_id: id, csrf_token: getCsrf()
+                van_id: toggleBtn.dataset.id,
+                status: nextStatus,
+                csrf_token: csrf
             }).then(function (d) {
-                if (d.success) location.reload();
-                else Swal.fire('Error', d.message || 'Toggle failed.', 'error');
+
+                if (d.success) {
+
+                    // update UI instantly (no reload)
+                    toggleBtn.dataset.status = nextStatus;
+
+                    const badge = toggleBtn.closest('tr').querySelector('.badge');
+                    if (badge) {
+                        badge.className = 'badge ' + nextStatus;
+                        badge.textContent = nextStatus.charAt(0).toUpperCase() + nextStatus.slice(1);
+                    }
+
+                    // update icon
+                    const icon = toggleBtn.querySelector('i');
+                    if (icon) {
+                        icon.className = 'fas fa-' + (nextStatus === 'active' ? 'toggle-on' : 'toggle-off');
+                    }
+
+                    Swal.fire('Success', 'Status updated!', 'success');
+
+                } else {
+                    Swal.fire('Error', d.message || 'Toggle failed.', 'error');
+                }
+
             }).catch(function () {
                 Swal.fire('Error', 'Network error.', 'error');
             });
@@ -128,14 +276,26 @@ window.initVansPage = function () {
         }).then(function (res) {
             if (!res.isConfirmed) return;
             post('../../controllers/vans/DeleteVan.php', {
-                van_id: id, csrf_token: getCsrf()
+                van_id: id,
+                csrf_token: getCsrf()
             }).then(function (d) {
+
                 if (d.success) {
-                    Swal.fire('Deleted!', plate + ' has been removed.', 'success')
-                        .then(function () { location.reload(); });
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Deleted!',
+                        text: d.message
+                    }).then(() => {
+                        location.reload();
+                    });
                 } else {
-                    Swal.fire('Error', d.message || 'Delete failed.', 'error');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: d.message
+                    });
                 }
+
             }).catch(function () {
                 Swal.fire('Error', 'Network error.', 'error');
             });

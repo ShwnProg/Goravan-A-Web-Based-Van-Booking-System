@@ -1,39 +1,37 @@
 <?php
 require_once '../../autoload.php';
 
+header('Content-Type: application/json');
+
 if (!csrf_check()) {
-    $_SESSION['error'] = 'Invalid CSRF token.';
-    header('Location: ../../views/admin/drivers.php');
+    echo json_encode(['success' => false, 'message' => 'Invalid CSRF token']);
     exit;
 }
 
-$driver_id = (int) ($_POST['driver_id'] ?? 0);
+$driver_id = (int)($_POST['driver_id'] ?? 0);
+
 if (!$driver_id) {
-    $_SESSION['error'] = 'Invalid driver ID.';
-    header('Location: ../../views/admin/drivers.php');
+    echo json_encode(['success' => false, 'message' => 'Invalid driver ID']);
     exit;
 }
 
-$full_name     = trim($_POST['full_name'] ?? '');
+$full_name      = trim($_POST['full_name'] ?? '');
 $license_number = strtoupper(trim($_POST['license_number'] ?? ''));
 $contact_number = trim($_POST['contact_number'] ?? '');
-$status        = trim($_POST['status'] ?? 'active');
+$status         = $_POST['status'] ?? 'active';
 
 if (!$full_name || !$license_number || !$contact_number) {
-    $_SESSION['error'] = 'All fields are required.';
-    header('Location: ../../views/admin/drivers.php');
+    echo json_encode(['success' => false, 'message' => 'All fields required']);
     exit;
 }
 
 if (!preg_match('/^[A-Z0-9\-]{3,30}$/', $license_number)) {
-    $_SESSION['error'] = 'Invalid license number format.';
-    header('Location: ../../views/admin/drivers.php');
+    echo json_encode(['success' => false, 'message' => 'Invalid license format']);
     exit;
 }
 
 if (!preg_match('/^09\d{9}$/', $contact_number)) {
-    $_SESSION['error'] = 'Invalid contact number format.';
-    header('Location: ../../views/admin/drivers.php');
+    echo json_encode(['success' => false, 'message' => 'Invalid contact number']);
     exit;
 }
 
@@ -41,26 +39,46 @@ if (!in_array($status, ['active', 'inactive'])) {
     $status = 'active';
 }
 
-$driver               = new Drivers($conn);
-$driver->id           = $driver_id;
-$driver->full_name     = $full_name;
+$driver = new Drivers($conn);
+$driver->id = $driver_id;
+$driver->full_name = $full_name;
 $driver->license_number = $license_number;
 $driver->contact_number = $contact_number;
-$driver->status        = $status;
+$driver->status = $status;
+
+/* =========================================================
+   🔥 NO CHANGES CHECK (IMPORTANT ADDITION)
+========================================================= */
+
+$current = $driver->GetDriverById(); // kailangan meron ka nito sa class mo
+
+if ($current &&
+    $current['full_name'] === $full_name &&
+    $current['license_number'] === $license_number &&
+    $current['contact_number'] === $contact_number &&
+    $current['status'] === $status
+) {
+    echo json_encode([
+        'no_changes' => true,
+        'message' => 'No changes were made'
+    ]);
+    exit;
+}
+
+/* ========================================================= */
 
 if ($driver->IsLicenseExistExcept()) {
-    $_SESSION['error'] = 'A driver with that license number already exists.';
-    header('Location: ../../views/admin/drivers.php');
+    echo json_encode(['success' => false, 'message' => 'License already exists']);
     exit;
 }
 
 $result = $driver->EditDriver();
 
-$_SESSION[$result['success'] ? 'success' : 'error'] = $result['success']
-    ? 'Driver updated successfully.'
-    : 'Failed to update driver: ' . ($result['error'] ?? 'Unknown error.');
+echo json_encode([
+    'success' => $result['success'],
+    'message' => $result['success']
+        ? 'Driver updated successfully'
+        : 'Update failed'
+]);
 
-header('Location: ../../views/admin/drivers.php');
 exit;
-?>
-

@@ -1,16 +1,23 @@
 <?php
 require_once '../../autoload.php';
 
+header('Content-Type: application/json');
+
 if (!csrf_check()) {
-    $_SESSION['error'] = 'Invalid CSRF token.';
-    header('Location: ../../views/admin/drivers.php');
+    echo json_encode([
+        'success' => false,
+        'message' => 'Invalid CSRF token'
+    ]);
     exit;
 }
 
-$driver_id = (int) ($_POST['driver_id'] ?? 0);
+$driver_id = (int)($_POST['driver_id'] ?? 0);
+
 if (!$driver_id) {
-    $_SESSION['error'] = 'Invalid driver ID.';
-    header('Location: ../../views/admin/drivers.php');
+    echo json_encode([
+        'success' => false,
+        'message' => 'Invalid driver ID'
+    ]);
     exit;
 }
 
@@ -19,11 +26,11 @@ $driver->id = $driver_id;
 
 $result = $driver->DeleteDriver();
 
-$_SESSION[$result['success'] ? 'success' : 'error'] = $result['success']
-    ? 'Driver deleted successfully.'
-    : 'Failed to delete driver: ' . ($result['error'] ?? 'Unknown error.');
+echo json_encode([
+    'success' => $result['success'],
+    'message' => $result['success']
+        ? 'Driver deleted successfully'
+        : 'Failed to delete driver'
+]);
 
-header('Location: ../../views/admin/drivers.php');
 exit;
-?>
-

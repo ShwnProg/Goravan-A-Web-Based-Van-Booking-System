@@ -12,17 +12,17 @@ if (!window._ssReady) {
             if (select._ssBuilt) return;
             select._ssBuilt = true;
 
-            const ph   = select.dataset.placeholder || '— Select —';
+            const ph = select.dataset.placeholder || '— Select —';
             const wrap = document.createElement('div');
             wrap.className = 'ss-wrap';
             select.parentNode.insertBefore(wrap, select);
             wrap.appendChild(select);
 
             const btn = document.createElement('button');
-            btn.type      = 'button';
+            btn.type = 'button';
             btn.className = 'ss-btn';
 
-            const txt     = document.createElement('span');
+            const txt = document.createElement('span');
             txt.className = 'ss-btn-txt';
             const current = select.options[select.selectedIndex];
             if (current?.value) {
@@ -56,7 +56,7 @@ if (!window._ssReady) {
                         + (opt.selected && opt.value ? ' is-sel' : ''),
                     textContent: opt.text
                 });
-                li.dataset.val  = opt.value;
+                li.dataset.val = opt.value;
                 li.dataset.text = opt.text;
                 ul.appendChild(li);
             });
@@ -101,8 +101,8 @@ if (!window._ssReady) {
             if (!wrap) return;
             const btn = wrap.querySelector('.ss-btn');
             const txt = wrap.querySelector('.ss-btn-txt');
-            const ul  = wrap.querySelector('.ss-list');
-            const ph  = selectEl.dataset.placeholder || '— Select —';
+            const ul = wrap.querySelector('.ss-list');
+            const ph = selectEl.dataset.placeholder || '— Select —';
             const opt = selectEl.options[selectEl.selectedIndex];
             if (opt?.value) {
                 txt.textContent = opt.text;
@@ -119,14 +119,14 @@ if (!window._ssReady) {
 }
 
 function showDriverPreview(row) {
-    const driverEmpty   = document.getElementById('driver-empty');
+    const driverEmpty = document.getElementById('driver-empty');
     const driverPreview = document.getElementById('driver-preview');
     if (!driverEmpty || !driverPreview) return;
 
     const fullname = row.dataset.fullname || '—';
-    const license  = row.dataset.license  || '—';
-    const contact  = row.dataset.contact  || '—';
-    const status   = row.dataset.status   || '—';
+    const license = row.dataset.license || '—';
+    const contact = row.dataset.contact || '—';
+    const status = row.dataset.status || '—';
 
     // Update details
     document.getElementById('preview-name').textContent = fullname;
@@ -137,7 +137,7 @@ function showDriverPreview(row) {
 
     document.getElementById('driver-label').textContent = fullname;
 
-    driverEmpty.style.display   = 'none';
+    driverEmpty.style.display = 'none';
     driverPreview.style.display = 'block';
 }
 
@@ -147,65 +147,183 @@ function handleDriverActionClick(e) {
     if (editBtn) {
         e.stopPropagation();
 
-        document.getElementById('edit-id').value       = editBtn.dataset.id;
+        document.getElementById('edit-id').value = editBtn.dataset.id;
         document.getElementById('edit-fullname').value = editBtn.dataset.fullname;
-        document.getElementById('edit-license').value  = editBtn.dataset.license;
-        document.getElementById('edit-contact').value  = editBtn.dataset.contact;
+        document.getElementById('edit-license').value = editBtn.dataset.license;
+        document.getElementById('edit-contact').value = editBtn.dataset.contact;
         window.syncSS(document.getElementById('edit-status'), editBtn.dataset.status);
 
         bootstrap.Modal.getOrCreateInstance(document.getElementById('editModal')).show();
         return;
     }
 
-    // Delete
+}
+
+function getCsrf() {
+    return document.getElementById('csrf_token')?.value;
+}
+
+/* =========================================================
+   SINGLE EVENT DELEGATION (EDIT / DELETE / TOGGLE)
+========================================================= */
+document.getElementById('drivers-tbody')?.addEventListener('click', function (e) {
+
+    /* ===================== EDIT ===================== */
+    const editBtn = e.target.closest('.icon-btn.edit');
+    if (editBtn) {
+
+        document.getElementById('edit-id').value = editBtn.dataset.id;
+        document.getElementById('edit-fullname').value = editBtn.dataset.fullname;
+        document.getElementById('edit-license').value = editBtn.dataset.license;
+        document.getElementById('edit-contact').value = editBtn.dataset.contact;
+
+        window.syncSS(
+            document.getElementById('edit-status'),
+            editBtn.dataset.status
+        );
+
+        bootstrap.Modal.getOrCreateInstance(
+            document.getElementById('editModal')
+        ).show();
+
+        return;
+    }
+
+    /* ===================== DELETE ===================== */
     const delBtn = e.target.closest('.icon-btn.delete');
     if (delBtn) {
+
         Swal.fire({
             title: 'Delete Driver?',
             text: `Driver "${delBtn.dataset.fullname}" will be permanently removed.`,
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#ef4444',
-            cancelButtonColor: '#6b7280',
-            confirmButtonText: 'Yes, delete',
-            cancelButtonText: 'Cancel',
-            reverseButtons: true
+            confirmButtonText: 'Yes, delete'
         }).then(result => {
             if (!result.isConfirmed) return;
-            const csrf = document.querySelector('input[name="csrf_token"]');
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = '../../controllers/Drivers/DeleteDriver.php';
-            form.innerHTML =
-                `<input type="hidden" name="csrf_token" value="${csrf?.value ?? ''}">
-                 <input type="hidden" name="driver_id" value="${delBtn.dataset.id}">`;
-            document.body.appendChild(form);
-            form.submit();
+
+            const formData = new FormData();
+            formData.append('driver_id', delBtn.dataset.id);
+            formData.append('csrf_token', getCsrf());
+
+            fetch('../../controllers/Drivers/DeleteDriver.php', {
+                method: 'POST',
+                body: formData
+            })
+                .then(r => r.json())
+                .then(res => {
+
+                    if (res.success) {
+                        Swal.fire('Deleted!', res.message, 'success')
+                            .then(() => location.reload());
+                    } else {
+                        Swal.fire('Error', res.message, 'error');
+                    }
+
+                })
+                .catch(() => {
+                    Swal.fire('Error', 'Network error', 'error');
+                });
         });
+
         return;
     }
 
-    // Toggle
+    /* ===================== TOGGLE ===================== */
     const toggleBtn = e.target.closest('.icon-btn.toggle');
     if (toggleBtn) {
-        e.stopPropagation();
-        const newStatus = toggleBtn.dataset.status === 'active' ? 'inactive' : 'active';
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = '../../controllers/Drivers/ToggleDriver.php';
-        form.innerHTML =
-            `<input type="hidden" name="driver_id" value="${toggleBtn.dataset.id}">
-             <input type="hidden" name="status" value="${newStatus}">`;
-        document.body.appendChild(form);
-        form.submit();
-    }
-}
 
+        const nextStatus =
+            toggleBtn.dataset.status === 'active'
+                ? 'inactive'
+                : 'active';
+
+        Swal.fire({
+            title: 'Toggle Status?',
+            text: 'Set this van to ' + nextStatus + '?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, toggle',
+            confirmButtonColor: '#2e3a4d',
+        }).then(result => {
+            if (!result.isConfirmed) return;
+
+            const formData = new FormData();
+            formData.append('driver_id', toggleBtn.dataset.id);
+            formData.append('status', nextStatus);
+            formData.append('csrf_token', getCsrf());
+
+            fetch('../../controllers/Drivers/ToggleDriver.php', {
+                method: 'POST',
+                body: formData
+            })
+                .then(r => r.json())
+                .then(res => {
+
+                    if (res.success) {
+                        Swal.fire('Updated!', res.message, 'success')
+                            .then(() => location.reload());
+                    } else {
+                        Swal.fire('Error', res.message, 'error');
+                    }
+
+                })
+                .catch(() => {
+                    Swal.fire('Error', 'Network error', 'error');
+                });
+        });
+
+        return;
+    }
+});
+document.getElementById('editDriverForm')?.addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    const formData = new FormData(this);
+    formData.append('csrf_token', getCsrf());
+
+    fetch('../../controllers/Drivers/EditDriver.php', {
+        method: 'POST',
+        body: formData
+    })
+        .then(r => r.json())
+        .then(res => {
+
+            if (res.no_changes) {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'No Changes',
+                    text: res.message
+                });
+                return;
+            }
+
+            if (res.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: res.message
+                }).then(() => location.reload());
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: res.message
+                });
+            }
+
+        })
+        .catch(err => {
+            console.log(err);
+            Swal.fire('Error', 'Network error', 'error');
+        });
+});
 document.addEventListener('DOMContentLoaded', () => {
     window.buildSearchableSelects(document);
 
     // Driver count badge
-    const rows    = document.querySelectorAll('.driver-row');
+    const rows = document.querySelectorAll('.driver-row');
     const countEl = document.getElementById('driver-count');
     if (countEl) countEl.textContent = `${rows.length} driver${rows.length !== 1 ? 's' : ''}`;
 

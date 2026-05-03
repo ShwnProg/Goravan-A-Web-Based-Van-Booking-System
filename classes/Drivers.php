@@ -1,13 +1,13 @@
 <?php
 class Drivers
 {
-    private $conn  = null;
+    private $conn = null;
     private $table = "drivers";
 
     public $id;
     public $full_name;
-public $license_number;
-public $contact_number;
+    public $license_number;
+    public $contact_number;
     public $status;
 
     public function __construct($db)
@@ -32,7 +32,7 @@ public $contact_number;
             SELECT * FROM {$this->table} WHERE driver_id_pk = :id
         ");
         $stmt->execute([':id' => $this->id]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $stmt->fetch(PDO::FETCH_ASSOC); 
     }
 
     public function IsLicenseExist(): bool
@@ -127,7 +127,7 @@ public $contact_number;
             ");
             $stmt->execute([
                 ':status' => $this->status,
-                ':id'     => $this->id,
+                ':id' => $this->id,
             ]);
             return ['success' => true];
         } catch (PDOException $e) {
