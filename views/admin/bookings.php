@@ -1,4 +1,9 @@
 <?php
+/**
+ * Admin Bookings View
+ * File: /GROAVAN/views/admin/bookings.php
+ */
+
 require_once "../../autoload.php";
 
 $title    = 'Bookings';
@@ -10,17 +15,39 @@ ob_start();
 $bookingObj = new Bookings($conn);
 $bookings   = $bookingObj->GetAllBookings();
 
-// Count by status
 $statusCounts = ['pending' => 0, 'approved' => 0, 'rejected' => 0, 'cancelled' => 0];
 foreach ($bookings as $b) {
-    $statusCounts[$b['status']]++;
+    if (isset($statusCounts[$b['status']])) {
+        $statusCounts[$b['status']]++;
+    }
 }
+
+$flashSuccess = $_SESSION['success'] ?? '';
+$flashError   = $_SESSION['error']   ?? '';
+unset($_SESSION['success'], $_SESSION['error']);
+
+// BASE_URL is '/GROAVAN' — defined in autoload.php
+$actionUrl = BASE_URL . '/controllers/Bookings/UpdateStatus.php';
 ?>
 
+<!-- Data carrier: flash messages + controller URL for JS -->
+<div id="page-flash"
+     data-flash-success="<?= htmlspecialchars($flashSuccess, ENT_QUOTES) ?>"
+     data-flash-error="<?= htmlspecialchars($flashError, ENT_QUOTES) ?>"
+     data-action-url="<?= htmlspecialchars($actionUrl, ENT_QUOTES) ?>"
+     style="display:none">
+</div>
+
+<?= csrf_field() ?>
+
+<!-- ── TOOLBAR ──────────────────────────────────────────────────────── -->
 <div class="toolbar">
     <div class="search-box">
         <i class="fas fa-search"></i>
-        <input type="text" id="booking-search" placeholder="Search by reference code or passenger...">
+        <input type="text"
+               id="booking-search"
+               placeholder="Search by reference code or passenger name…"
+               autocomplete="off">
     </div>
     <div class="filter-group">
         <select id="booking-filter-status" class="filter-select">
@@ -35,7 +62,7 @@ foreach ($bookings as $b) {
 
 <div class="bookings-wrapper">
 
-    <!-- ── STATS CARDS ──────────────────────────────────────────────────── -->
+    <!-- ── STATS CARDS ──────────────────────────────────────────────── -->
     <div class="stats-row">
         <div class="stat-card pending">
             <div class="stat-icon"><i class="fas fa-hourglass-half"></i></div>
@@ -67,21 +94,22 @@ foreach ($bookings as $b) {
         </div>
     </div>
 
-    <!-- ── TABLE CARD ──────────────────────────────────────────────────── -->
+    <!-- ── TABLE CARD ───────────────────────────────────────────────── -->
     <div class="bookings-card">
         <div class="bookings-card-header">
             <h2>
-                <i class="fas fa-ticket-alt" style="margin-right:7px;color:var(--color-accent)"></i>
+                <i class="fas fa-ticket-alt" style="color:var(--color-accent)"></i>
                 All Bookings
             </h2>
             <span id="booking-count"></span>
         </div>
+
         <div class="bookings-table-wrap">
             <table class="bookings-table">
                 <thead>
                     <tr>
                         <th>#</th>
-                        <th>Reference Code</th>
+                        <th>Reference</th>
                         <th>Passenger</th>
                         <th>Route</th>
                         <th>Seat</th>
@@ -92,6 +120,7 @@ foreach ($bookings as $b) {
                     </tr>
                 </thead>
                 <tbody id="bookings-tbody">
+
                     <?php if (empty($bookings)): ?>
                         <tr>
                             <td colspan="9">
@@ -101,10 +130,12 @@ foreach ($bookings as $b) {
                                 </div>
                             </td>
                         </tr>
+
                     <?php else: ?>
                         <?php foreach ($bookings as $i => $b):
-                            $isExpired = Bookings::IsPaymentExpired($b['payment_deadline']);
-                            $paymentDue = date('M d, Y g:i A', strtotime($b['payment_deadline']));
+                            $isExpired    = Bookings::IsPaymentExpired($b['payment_deadline']);
+                            $paymentDue   = date('M d, Y g:i A', strtotime($b['payment_deadline']));
+                            $departure    = date('M d, Y g:i A', strtotime($b['departure_date'] . ' ' . $b['departure_time']));
                         ?>
                             <tr class="booking-row"
                                 data-id="<?= (int) $b['book_id_pk'] ?>"
@@ -118,72 +149,82 @@ foreach ($bookings as $b) {
                                 data-payment-deadline="<?= htmlspecialchars($b['payment_deadline'], ENT_QUOTES) ?>"
                                 data-driver="<?= htmlspecialchars($b['driver_name'] ?? 'N/A', ENT_QUOTES) ?>"
                                 data-van="<?= htmlspecialchars($b['van_plate'] ?? 'N/A', ENT_QUOTES) ?>"
-                                data-departure="<?= date('M d g:i A', strtotime($b['departure_date'] . ' ' . $b['departure_time'])) ?>"
+                                data-departure="<?= htmlspecialchars($departure, ENT_QUOTES) ?>"
                                 data-created="<?= htmlspecialchars($b['created_at'], ENT_QUOTES) ?>"
                                 data-is-expired="<?= $isExpired ? '1' : '0' ?>">
 
                                 <td class="text-muted-sm"><?= $i + 1 ?></td>
+
                                 <td>
                                     <span class="ref-code"><?= htmlspecialchars($b['reference_code']) ?></span>
                                 </td>
+
                                 <td>
                                     <div class="passenger-info">
                                         <span class="name"><?= htmlspecialchars($b['user_name'] ?? 'Unknown') ?></span>
-                                        <span class="email text-muted-sm"><?= htmlspecialchars($b['user_email'] ?? '') ?></span>
+                                        <span class="email"><?= htmlspecialchars($b['user_email'] ?? '') ?></span>
                                     </div>
                                 </td>
+
                                 <td>
                                     <div class="route-info">
-                                        <i class="fas fa-route" style="color:var(--color-accent);font-size:11px"></i>
+                                        <i class="fas fa-route" style="color:var(--color-accent);font-size:11px;flex-shrink:0"></i>
                                         <span><?= htmlspecialchars($b['route_display'] ?? 'N/A') ?></span>
                                     </div>
                                 </td>
+
                                 <td>
                                     <span class="seat-badge">
                                         <i class="fas fa-chair" style="font-size:10px"></i>
                                         <?= htmlspecialchars($b['seat_number'] ?? 'N/A') ?>
                                     </span>
                                 </td>
+
                                 <td>
-                                    <span class="badge <?= $b['status'] ?> <?= $isExpired ? 'expired' : '' ?>">
+                                    <span class="badge <?= htmlspecialchars($b['status']) ?><?= ($isExpired && $b['status'] === 'pending') ? ' expired' : '' ?>">
                                         <?= ucfirst($b['status']) ?>
                                         <?php if ($isExpired && $b['status'] === 'pending'): ?>
-                                            <i class="fas fa-exclamation-triangle" style="font-size:9px;margin-left:3px"></i>
+                                            <i class="fas fa-exclamation-triangle" style="font-size:9px"></i>
                                         <?php endif; ?>
                                     </span>
                                 </td>
-                                <td class="<?= $isExpired ? 'text-danger' : '' ?>">
+
+                                <td class="<?= $isExpired ? 'text-danger' : 'text-muted-sm' ?>">
                                     <small><?= $paymentDue ?></small>
                                     <?php if ($isExpired): ?>
                                         <div class="expired-label">EXPIRED</div>
                                     <?php endif; ?>
                                 </td>
+
                                 <td class="text-muted-sm">
                                     <small><?= date('M d, Y', strtotime($b['created_at'])) ?></small>
                                 </td>
+
                                 <td>
                                     <div class="row-actions">
-                                        <button class="icon-btn view" title="View Details">
+                                        <button class="icon-btn view" title="View Details" type="button">
                                             <i class="fas fa-eye"></i>
                                         </button>
                                         <?php if ($b['status'] === 'pending'): ?>
-                                            <button class="icon-btn approve" title="Approve">
+                                            <button class="icon-btn approve" title="Approve" type="button">
                                                 <i class="fas fa-check"></i>
                                             </button>
-                                            <button class="icon-btn reject" title="Reject">
+                                            <button class="icon-btn reject" title="Reject" type="button">
                                                 <i class="fas fa-times"></i>
                                             </button>
                                         <?php endif; ?>
-                                        <?php if (in_array($b['status'], ['pending', 'approved'])): ?>
-                                            <button class="icon-btn cancel" title="Cancel">
+                                        <?php if (in_array($b['status'], ['pending', 'approved'], true)): ?>
+                                            <button class="icon-btn cancel" title="Cancel" type="button">
                                                 <i class="fas fa-ban"></i>
                                             </button>
                                         <?php endif; ?>
                                     </div>
                                 </td>
+
                             </tr>
                         <?php endforeach; ?>
                     <?php endif; ?>
+
                 </tbody>
             </table>
         </div>
@@ -191,29 +232,30 @@ foreach ($bookings as $b) {
 
 </div><!-- /.bookings-wrapper -->
 
-<?= csrf_field() ?>
 
-<!-- ── DETAILS MODAL ────────────────────────────────────────────────────── -->
-<div class="modal fade" id="detailsModal" tabindex="-1">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
+<!-- ── DETAILS MODAL ────────────────────────────────────────────────── -->
+<div class="modal fade" id="detailsModal" tabindex="-1" aria-labelledby="detailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content rmodal">
+
             <div class="rmodal-header">
                 <div class="rmodal-icon"><i class="fas fa-file-invoice"></i></div>
-                <div>
-                    <h6 class="rmodal-title">Booking Details</h6>
-                    <p class="rmodal-sub">View complete booking information</p>
+                <div style="flex:1;min-width:0">
+                    <h6 class="rmodal-title" id="detailsModalLabel">Booking Details</h6>
+                    <p class="rmodal-sub">Complete booking information</p>
                 </div>
-                <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
+
             <div class="rmodal-body">
                 <div class="details-grid">
-                    <!-- Left column -->
+
                     <div class="details-col">
                         <div class="detail-section">
                             <h4 class="section-title">Booking Info</h4>
                             <div class="detail-row">
-                                <span class="detail-label">Reference Code</span>
-                                <span id="detail-ref-code" class="detail-value">—</span>
+                                <span class="detail-label">Reference</span>
+                                <span id="detail-ref-code" class="detail-value ref-code">—</span>
                             </div>
                             <div class="detail-row">
                                 <span class="detail-label">Status</span>
@@ -246,7 +288,6 @@ foreach ($bookings as $b) {
                         </div>
                     </div>
 
-                    <!-- Right column -->
                     <div class="details-col">
                         <div class="detail-section">
                             <h4 class="section-title">Trip Info</h4>
@@ -271,16 +312,21 @@ foreach ($bookings as $b) {
                         <div class="detail-section">
                             <h4 class="section-title">Seat Assignment</h4>
                             <div class="detail-row">
-                                <span class="detail-label">Seat Number</span>
-                                <span id="detail-seat" class="detail-value badge seat-badge">—</span>
+                                <span class="detail-label">Seat No.</span>
+                                <span id="detail-seat" class="detail-value seat-badge">—</span>
                             </div>
                         </div>
                     </div>
+
                 </div>
             </div>
+
             <div class="rmodal-footer">
-                <button type="button" class="rbtn rbtn-ghost" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="rbtn rbtn-ghost" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i> Close
+                </button>
             </div>
+
         </div>
     </div>
 </div>
