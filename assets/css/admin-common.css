@@ -1,4 +1,3 @@
-/* Admin Common */
 html, body {
     background: #f9fafb;
     transition: background 0.2s ease;
@@ -98,7 +97,7 @@ body.admin-dark-mode-active {
     box-shadow: 0 4px 12px rgba(46, 58, 77, .2);
 }
 
-/* ── CARD CONTAINERS (Common to all pages) ────── */
+/* Card containers */
 .page-card,
 .vans-card,
 .drivers-card,
@@ -152,7 +151,7 @@ body.admin-dark-mode-active {
     border-radius: 20px;
 }
 
-/* ── TABLE WRAPPERS & COMMON TABLE STYLES ────── */
+/* Table wrappers */
 .page-table-wrap,
 .vans-table-wrap,
 .drivers-table-wrap,
@@ -256,7 +255,7 @@ body.admin-dark-mode-active {
     vertical-align: middle;
 }
 
-/* ── STATUS BADGES ───────────────────────────── */
+/* Status badges */
 .badge {
     display: inline-flex;
     align-items: center;

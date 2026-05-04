@@ -1,12 +1,4 @@
-/* ══════════════════════════════════════════════════════════════════
-   settings.css  ·  Admin Settings Page + Full Dark Mode System
-   
-   SCOPE RULES:
-     Shell dark mode  → body.admin-dark-mode-active  (sidebar, topbar)
-     Page dark mode   → #page-content.admin-dark-mode (all page views)
-   
-   Load order: base.css → admin-layout.css → admin-common.css → settings.css
-   ══════════════════════════════════════════════════════════════════ */
+/* settings.css - Admin Settings Page + Dark Mode System */
 
 .sidebar,
 .sidebar *,
@@ -34,10 +26,7 @@
 }
 
 
-/* ══════════════════════════════════════════════════════════════════
-   SETTINGS PAGE LAYOUT
-   ══════════════════════════════════════════════════════════════════ */
-
+/* Settings page layout */
 .settings-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -49,7 +38,7 @@
     grid-column: 1 / -1;
 }
 
-/* ── Settings Card ───────────────────────────── */
+/* Settings card */
 .settings-card {
     background: #fff;
     border: 1px solid rgba(0, 0, 0, .07);
@@ -101,7 +90,7 @@
     gap: 14px;
 }
 
-/* ── Dark Mode Toggle Row ────────────────────── */
+/* Dark mode toggle row */
 .settings-toggle-row {
     display: flex;
     align-items: center;
@@ -240,11 +229,7 @@
 }
 
 
-/* ══════════════════════════════════════════════════════════════════
-   DARK MODE — SHELL
-   Scope: body.admin-dark-mode-active
-   Covers: sidebar, topbar, dropdowns, overlays
-   ══════════════════════════════════════════════════════════════════ */
+/* Dark mode - shell (body.admin-dark-mode-active) */
 
 /* ── Sidebar ─────────────────────────────────── */
 body.admin-dark-mode-active .sidebar {
@@ -457,11 +442,7 @@ body.admin-dark-mode-active .main-content {
 }
 
 
-/* ══════════════════════════════════════════════════════════════════
-   DARK MODE — PAGE CONTENT
-   Scope: #page-content.admin-dark-mode
-   Covers ALL admin page views uniformly
-   ══════════════════════════════════════════════════════════════════ */
+/* Dark mode - page content (#page-content.admin-dark-mode) */
 
 #page-content.admin-dark-mode {
     background-color: #0f172a;

@@ -1,31 +1,22 @@
-/**
- * settings.js — Admin Settings Page
- *
- * Exposes: window.initSettingsPage()
- * Called automatically by admin_layout.php on DOMContentLoaded.
- *
- * Dark mode logic lives in nav.js (runs on ALL pages).
- * This file only handles: profile AJAX, password AJAX.
- */
-
+/* settings.js */
 (function () {
     'use strict';
 
-    // ── FEEDBACK HELPER ────────────────────────────────────────────────────
+    // Feedback helper
     function showFeedback(el, type, message) {
-        if (!el) return;
-        el.className = 'settings-feedback show ' + type;
-        el.innerHTML = '<i class="fas fa-' + (type === 'success' ? 'check-circle' : 'exclamation-circle') + '"></i> ' + message;
-        clearTimeout(el._timer);
-        el._timer = setTimeout(function () {
-            el.classList.remove('show');
-        }, 4000);
-    }
+    if (!el) return;
+    el.className = 'settings-feedback show ' + type;
+    el.innerHTML = '<i class="fas fa-' + (type === 'success' ? 'check-circle' : 'exclamation-circle') + '"></i> ' + message;
+    clearTimeout(el._timer);
+    el._timer = setTimeout(function () {
+        el.classList.remove('show');
+    }, 4000);
+}
 
-    // ── PROFILE FORM ───────────────────────────────────────────────────────
-    function initProfileForm() {
-        var form = document.getElementById('form-profile');
-        if (!form) return;
+// Profile form
+function initProfileForm() {
+    var form = document.getElementById('form-profile');
+    if (!form) return;
 
         form.addEventListener('submit', function (e) {
             e.preventDefault();
@@ -60,7 +51,6 @@
         });
     }
 
-    // ── PASSWORD FORM ──────────────────────────────────────────────────────
     function initPasswordForm() {
         var form = document.getElementById('form-password');
         if (!form) return;
@@ -112,7 +102,6 @@
         });
     }
 
-    // ── PUBLIC API ─────────────────────────────────────────────────────────
     window.initSettingsPage = function () {
         initProfileForm();
         initPasswordForm();

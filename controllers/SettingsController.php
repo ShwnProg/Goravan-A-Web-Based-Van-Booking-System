@@ -1,25 +1,15 @@
 <?php
-/**
- * SettingsController.php
- * Handles AJAX requests from the admin settings page.
- * 
- * Expects POST with JSON body:
- *   { action, csrf_token, ...fields }
- * 
- * Returns JSON:
- *   { success: bool, message: string }
- */
 require_once '../../autoload.php';
 
 header('Content-Type: application/json');
 
-// ── Auth guard ──────────────────────────────────────────────────────────────
+// Auth guard
 if (empty($_SESSION['is_login'])) {
     echo json_encode(['success' => false, 'message' => 'Unauthorized.']);
     exit;
 }
 
-// ── Parse JSON body ─────────────────────────────────────────────────────────
+// Parse JSON body
 $raw  = file_get_contents('php://input');
 $data = json_decode($raw, true);
 
@@ -28,7 +18,7 @@ if (!$data || !isset($data['action'])) {
     exit;
 }
 
-// ── CSRF check ──────────────────────────────────────────────────────────────
+// CSRF check
 if (empty($data['csrf_token']) || $data['csrf_token'] !== ($_SESSION['csrf_token'] ?? '')) {
     echo json_encode(['success' => false, 'message' => 'Security token mismatch. Please refresh and try again.']);
     exit;
@@ -38,7 +28,7 @@ $adminId = decrypt($_SESSION['id']);
 $admin   = new Admin($conn);
 $admin->id = $adminId;
 
-// ── Route ───────────────────────────────────────────────────────────────────
+// Route actions
 switch ($data['action']) {
 
     case 'update_profile':
@@ -54,7 +44,7 @@ switch ($data['action']) {
         break;
 }
 
-// ── HANDLERS ────────────────────────────────────────────────────────────────
+// Update profile handler
 
 function handleUpdateProfile(PDO $conn, int $adminId, array $data): void
 {

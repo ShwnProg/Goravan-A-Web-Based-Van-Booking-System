@@ -2,7 +2,7 @@ body {
     overflow-y: auto;
 }
 
-/* ── OVERLAY ──────────────────────────────────── */
+/* Sidebar overlay */
 .sidebar-overlay {
     display: none;
     position: fixed;
@@ -17,7 +17,7 @@ body {
     display: block;
 }
 
-/* ── SIDEBAR ──────────────────────────────────── */
+/* Sidebar */
 .sidebar {
     position: fixed;
     width: 240px;
@@ -138,7 +138,7 @@ body {
     background: rgba(239, 68, 68, 0.07);
 }
 
-/* ── TOPBAR ───────────────────────────────────── */
+/* Topbar */
 .topbar {
     display: flex;
     align-items: center;
@@ -330,7 +330,7 @@ body {
     transform: rotate(180deg);
 }
 
-/* ── PROFILE DROPDOWN ─────────────────────────── */
+/* Profile dropdown */
 .profile-dropdown-menu {
     display: none;
     position: absolute;
@@ -449,7 +449,7 @@ body {
     color: #dc2626;
 }
 
-/* ── NOTIFICATION DROPDOWN ────────────────────── */
+/* Notification dropdown */
 .notif-dropdown {
     display: none;
     position: absolute;

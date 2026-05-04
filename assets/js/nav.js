@@ -1,12 +1,4 @@
-// =============================================================
-//  nav.js  —  Admin shell UI  (single source of truth)
-//
-//  Dark mode contract:
-//    localStorage key  : 'admin_theme'
-//    localStorage value: 'dark' | 'light'
-//    Shell class       : body.admin-dark-mode-active
-//    Content class     : #page-content.admin-dark-mode
-// =============================================================
+// nav.js - Admin shell UI
 
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -19,12 +11,10 @@ document.addEventListener('DOMContentLoaded', function () {
         pageContent.classList.add('admin-dark-mode');
     }
 
-    // ── ELEMENT REFS ───────────────────────────────────────────
-
-    // ── ELEMENT REFS ───────────────────────────────────────────
-    var sidebar   = document.getElementById('sidebar');
-    var overlay   = document.getElementById('sidebar-overlay');
-    var burgerBtn = document.getElementById('burger-btn');
+// Element refs
+var sidebar   = document.getElementById('sidebar');
+var overlay   = document.getElementById('sidebar-overlay');
+var burgerBtn = document.getElementById('burger-btn');
 
     var notifToggle   = document.getElementById('notif-toggle');
     var notifDropdown = document.getElementById('notif-dropdown');
@@ -38,12 +28,12 @@ document.addEventListener('DOMContentLoaded', function () {
     var darkToggleBtn = document.getElementById('topbar-dark-toggle');
 
 
-    // ── SIDEBAR ────────────────────────────────────────────────
-    function openSidebar() {
-        sidebar   && sidebar.classList.add('open');
-        overlay   && overlay.classList.add('active');
-        burgerBtn && burgerBtn.classList.add('open');
-    }
+// Sidebar functions
+function openSidebar() {
+    sidebar   && sidebar.classList.add('open');
+    overlay   && overlay.classList.add('active');
+    burgerBtn && burgerBtn.classList.add('open');
+}
 
     function closeSidebar() {
         sidebar   && sidebar.classList.remove('open');
@@ -66,7 +56,6 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
 
-    // ── ACTIVE SIDEBAR LINK ────────────────────────────────────
     var currentPath = window.location.pathname.replace(/\/$/, '').toLowerCase();
 
     document.querySelectorAll('.menu-btn[href]').forEach(function (btn) {
@@ -79,7 +68,6 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
 
-    // ── NOTIFICATION DROPDOWN ──────────────────────────────────
     if (notifToggle) {
         notifToggle.addEventListener('click', function (e) {
             e.stopPropagation();
@@ -103,7 +91,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
 
-    // ── PROFILE DROPDOWN ──────────────────────────────────────
     if (profileToggle) {
         profileToggle.addEventListener('click', function (e) {
             e.stopPropagation();
@@ -117,7 +104,6 @@ document.addEventListener('DOMContentLoaded', function () {
         profileDropdown.addEventListener('click', function (e) { e.stopPropagation(); });
     }
 
-    // ── CLOSE ALL DROPDOWNS on outside click ──────────────────
     document.addEventListener('click', function () {
         notifDropdown   && notifDropdown.classList.remove('open');
         profileDropdown && profileDropdown.classList.remove('open');
@@ -125,10 +111,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
 
-    // ══════════════════════════════════════════════════════════
-    //  DARK MODE ENGINE — single source of truth
-    // ══════════════════════════════════════════════════════════
-
+// Dark mode engine
     var THEME_KEY = 'admin_theme';
     var DARK_VAL  = 'dark';
 

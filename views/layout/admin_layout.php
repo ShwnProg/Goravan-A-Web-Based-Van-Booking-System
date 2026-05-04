@@ -32,7 +32,7 @@ if (empty($_SESSION['is_login'])) {
 
 <body>
 
-    <!-- ── Flash messages ─────────────────────── -->
+    <!-- Flash messages -->
     <?php if (isset($_SESSION['success'])): ?>
         <script>
             document.addEventListener('DOMContentLoaded', () => {

@@ -15,7 +15,7 @@ $email     = htmlspecialchars($info['email']           ?? '');
 $contact   = htmlspecialchars($info['contact_number']  ?? '');
 ?>
 
-<!-- ── PAGE HEADER ────────────────────────────────────────────────── -->
+<!-- Page header -->
 <div class="toolbar">
     <div>
         <p style="margin:0;font-size:20px;font-weight:700;color:var(--color-primary);">Settings</p>
@@ -26,7 +26,7 @@ $contact   = htmlspecialchars($info['contact_number']  ?? '');
 <!-- ── SETTINGS GRID ─────────────────────────────────────────────── -->
 <div class="settings-grid">
 
-    <!-- ── PROFILE SETTINGS ──────────────────────────────────────── -->
+<!-- Profile settings -->
     <div class="settings-card">
         <div class="settings-card-header">
             <div class="settings-card-icon">
@@ -87,7 +87,7 @@ $contact   = htmlspecialchars($info['contact_number']  ?? '');
         </div>
     </div>
 
-    <!-- ── CHANGE PASSWORD ────────────────────────────────────────── -->
+<!-- Change password -->
     <div class="settings-card">
         <div class="settings-card-header">
             <div class="settings-card-icon">

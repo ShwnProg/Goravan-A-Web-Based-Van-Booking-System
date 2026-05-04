@@ -1,3 +1,6 @@
+<?php
+require_once "../../autoload.php";
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -5,17 +8,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($title ?? 'GoraVan') ?></title>
-    <?php include '../includes/shared/head.php';?>
+    <?php include '../includes/shared/head.php'; ?>
 </head>
 
 <body>
     <!-- SUCCESS ALERT -->
     <?php if (isset($_SESSION['success'])): ?>
         <script>
-            Swal.fire({
-                title: "Success",
-                text: "<?= $_SESSION['success'] ?>",
-                icon: "success"
+            document.addEventListener('DOMContentLoaded', () => {
+                Swal.fire({ title: 'Success', text: <?= json_encode($_SESSION['success']) ?>, icon: 'success' });
             });
         </script>
         <?php unset($_SESSION['success']); ?>
@@ -24,22 +25,12 @@
 
     <!-- ERROR ALERT -->
     <?php if (isset($_SESSION['error'])): ?>
-
-        <?php
-        $errors = $_SESSION['error'];
-
-
-        $firstError = is_array($errors) ? $errors[0] : $errors;
-        ?>
-
+        <?php $firstError = is_array($_SESSION['error']) ? $_SESSION['error'][0] : $_SESSION['error']; ?>
         <script>
-            Swal.fire({
-                title: "Error",
-                text: "<?= htmlspecialchars($firstError) ?>",
-                icon: "error"
+            document.addEventListener('DOMContentLoaded', () => {
+                Swal.fire({ title: 'Error', text: <?= json_encode($firstError) ?>, icon: 'error' });
             });
         </script>
-
         <?php unset($_SESSION['error']); ?>
     <?php endif; ?>
 
@@ -79,6 +70,8 @@
         </div>
 
     </main>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 </body>
 
 </html>
