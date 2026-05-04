@@ -1,37 +1,41 @@
 <?php
-
 require_once '../../autoload.php';
 
-// ── Auth guard ────────────────────────────────────────────────────────────────
-if (empty($_SESSION['is_login'])) {
-    header('Location: ../../views/auth/login.php');
+header('Content-Type: application/json');
+
+/* ── CSRF CHECK ───────────────────────────────────────────────────────────── */
+if (!csrf_check()) {
+    echo json_encode([
+        'success' => false,
+        'message' => 'Invalid CSRF token.'
+    ]);
     exit;
 }
 
-// ── Method & CSRF ─────────────────────────────────────────────────────────────
-if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !csrf_check()) {
-    $_SESSION['error'] = 'Invalid request or CSRF token.';
-    header('Location: ../../views/admin/schedules.php');
-    exit;
-}
-
-// ── Validate input ────────────────────────────────────────────────────────────
+/* ── INPUTS ───────────────────────────────────────────────────────────────── */
 $schedule_id = (int) ($_POST['schedule_id'] ?? 0);
 
+/* ── VALIDATION ───────────────────────────────────────────────────────────── */
 if (!$schedule_id) {
-    $_SESSION['error'] = 'Invalid schedule ID.';
-    header('Location: ../../views/admin/schedules.php');
+    echo json_encode([
+        'success' => false,
+        'message' => 'Invalid schedule ID.'
+    ]);
     exit;
 }
 
-// ── Delete ────────────────────────────────────────────────────────────────────
+/* ── DELETE ───────────────────────────────────────────────────────────────── */
 $schedule       = new Schedules($conn);
 $schedule->id   = $schedule_id;
 $result         = $schedule->DeleteSchedule();
 
-$_SESSION[$result['success'] ? 'success' : 'error'] = $result['success']
-    ? 'Schedule deleted successfully.'
-    : 'Failed to delete schedule.';
+/* ── RESPONSE ─────────────────────────────────────────────────────────────── */
+echo json_encode([
+    'success' => $result['success'],
+    'message' => $result['success']
+        ? 'Schedule deleted successfully.'
+        : 'Failed to delete schedule.'
+]);
 
-header('Location: ../../views/admin/schedules.php');
 exit;
+?>

@@ -15,10 +15,19 @@ if (empty($_SESSION['is_login'])) {
     <title><?= htmlspecialchars(ucfirst(strtolower($title ?? 'GoraVan'))) ?></title>
 
     <?php include '../includes/shared/head.php'; ?>
-<!-- 
+
     <?php if (!empty($page_css)): ?>
         <link rel="stylesheet" href="<?= $page_css ?>">
-    <?php endif; ?> -->
+    <?php endif; ?>
+<script>
+        (function () {
+            if (localStorage.getItem('admin_theme') === 'dark') {
+                document.documentElement.classList.add('dark-init');
+                document.body.classList.add('admin-dark-mode-active');
+            }
+        })();
+    </script>
+
 </head>
 
 <body>
@@ -32,15 +41,6 @@ if (empty($_SESSION['is_login'])) {
         </script>
         <?php unset($_SESSION['success']); ?>
     <?php endif; ?>
-
-    <!-- <?php if (isset($_SESSION['no_changes'])): ?>
-        <script>
-            document.addEventListener('DOMContentLoaded', () => {
-                Swal.fire({ title: 'No Changes', text: <?= json_encode($_SESSION['no_changes']) ?>, icon: 'info' });
-            });
-        </script>
-        <?php unset($_SESSION['no_changes']); ?>
-    <?php endif; ?> -->
 
     <?php if (isset($_SESSION['error'])): ?>
         <?php $firstError = is_array($_SESSION['error']) ? $_SESSION['error'][0] : $_SESSION['error']; ?>
@@ -69,13 +69,20 @@ if (empty($_SESSION['is_login'])) {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="../../assets/js/nav.js"></script>
-    <script src="bootstrap.bundle.min.js"></script>
-    <!-- <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script> -->
 
     <!-- ── Page-specific script ───────────────── -->
     <?php if (!empty($page_js)): ?>
         <script src="<?= $page_js ?>"></script>
     <?php endif; ?>
+
+    <script>
+        // AUTO-INIT SETTINGS PAGE
+        document.addEventListener('DOMContentLoaded', function () {
+            if (window.initSettingsPage && document.getElementById('page-content')) {
+                window.initSettingsPage();
+            }
+        });
+    </script>
 
 </body>
 

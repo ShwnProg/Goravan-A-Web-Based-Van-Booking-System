@@ -1,38 +1,53 @@
 <?php
-session_start();
 require_once '../../autoload.php';
 
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
-    header('Location: ../../views/auth/login.php');
+header('Content-Type: application/json');
+
+/* ── CSRF CHECK ───────────────────────────────────────────────────────────── */
+if (!csrf_check()) {
+    echo json_encode([
+        'success' => false,
+        'message' => 'Invalid CSRF token.'
+    ]);
     exit;
 }
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !csrf_check()) {
-    $_SESSION['error'] = 'Invalid CSRF token.';
-    header('Location: ../../views/admin/schedules.php');
-    exit;
-}
-
+/* ── INPUTS ───────────────────────────────────────────────────────────────── */
 $schedule_id = (int) ($_POST['schedule_id'] ?? 0);
 $new_status = trim($_POST['status'] ?? '');
 
-if (!$schedule_id || !in_array($new_status, ['boarding', 'departed', 'arrived', 'cancelled'])) {
-    $_SESSION['error'] = 'Invalid parameters.';
-    header('Location: ../../views/admin/schedules.php');
+/* ── VALIDATION ───────────────────────────────────────────────────────────── */
+if (!$schedule_id) {
+    echo json_encode([
+        'success' => false,
+        'message' => 'Invalid schedule ID.'
+    ]);
     exit;
 }
 
+if (!in_array($new_status, ['boarding', 'departed', 'arrived', 'cancelled'])) {
+    echo json_encode([
+        'success' => false,
+        'message' => 'Invalid status.'
+    ]);
+    exit;
+}
+
+/* ── UPDATE STATUS ────────────────────────────────────────────────────────── */
 $schedule = new Schedules($conn);
 $schedule->id = $schedule_id;
 $schedule->trip_status = $new_status;
 
-// $result = $schedule->ToggleSchedule();
+$result = $schedule->UpdateStatus();
 
-$_SESSION[$result['success'] ? 'success' : 'error'] = $result['success']
-    ? 'Schedule status updated.'
-    : 'Failed to update status: ' . ($result['error'] ?? 'Unknown error.');
+/* ── RESPONSE ─────────────────────────────────────────────────────────────── */
+echo json_encode([
+    'success' => $result['success'],
+    'message' => $result['success']
+        ? 'Schedule status updated successfully.'
+        : 'Failed to update schedule status.'
+]);
 
-header('Location: ../../views/admin/schedules.php');
 exit;
 ?>
 

@@ -324,7 +324,161 @@ function clearStops(container, addBtn, counterEl) {
 }
 
 
-// ── CLICK HANDLER (edit / delete / toggle) ────────────────────
+// ── AJAX Operations ──────────────────────────────────────────────────────── 
+
+/**
+ * Edit Route via AJAX
+ */
+function editRoute(routeId) {
+    const editForm = document.getElementById('editForm');
+    if (!editForm) return;
+
+    const stopsInputs = Array.from(document.querySelectorAll('#edit-stops-container select.ss'))
+        .map(select => select.value)
+        .filter(val => val !== '');
+
+    const formData = new FormData(editForm);
+    formData.set('route_id', routeId);
+    formData.delete('stops[]');
+    stopsInputs.forEach(stop => formData.append('stops[]', stop));
+    formData.append('csrf_token', getCsrf());
+
+    console.log('[Routes Edit] Sending:', Object.fromEntries(formData));
+
+    fetch('../../controllers/routes/EditRoute.php', {
+        method: 'POST',
+        body: formData
+    })
+        .then(res => res.json())
+        .then(data => {
+            console.log('[Routes Edit] Response:', data);
+
+            if (data.no_changes) {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'No Changes',
+                    text: data.message
+                });
+                return;
+            }
+
+            if (data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: data.message
+                }).then(() => {
+                    location.reload();
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.message
+                });
+            }
+        })
+        .catch(err => {
+            console.error('[Routes Edit] Fetch error:', err);
+            Swal.fire('Error', 'Network error. Please try again.', 'error');
+        });
+}
+
+/**
+ * Delete Route via AJAX
+ */
+function deleteRoute(routeId, routeName) {
+    Swal.fire({
+        title: 'Delete Route?',
+        text: routeName,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Yes, delete'
+    }).then(result => {
+        if (!result.isConfirmed) return;
+
+        const formData = new FormData();
+        formData.append('route_id', routeId);
+        formData.append('csrf_token', getCsrf());
+
+        console.log('[Routes Delete] Sending ID:', routeId);
+
+        fetch('../../controllers/routes/DeleteRoute.php', {
+            method: 'POST',
+            body: formData
+        })
+            .then(res => res.json())
+            .then(data => {
+                console.log('[Routes Delete] Response:', data);
+
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Deleted!',
+                        text: data.message
+                    }).then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.message
+                    });
+                }
+            })
+            .catch(err => {
+                console.error('[Routes Delete] Fetch error:', err);
+                Swal.fire('Error', 'Network error. Please try again.', 'error');
+            });
+    });
+}
+
+/**
+ * Toggle Route Status via AJAX
+ */
+function toggleRouteStatus(routeId, currentActive) {
+    const newActive = currentActive == 1 ? 0 : 1;
+    const formData = new FormData();
+    formData.append('route_id', routeId);
+    formData.append('is_active', newActive);
+    formData.append('csrf_token', getCsrf());
+
+    console.log('[Routes Toggle] Sending:', { routeId, newActive });
+
+    fetch('../../controllers/routes/ToggleRoute.php', {
+        method: 'POST',
+        body: formData
+    })
+        .then(res => res.json())
+        .then(data => {
+            console.log('[Routes Toggle] Response:', data);
+
+            if (data.success) {
+                Swal.fire('Success', 'Status updated!', 'success').then(() => {
+                    location.reload();
+                });
+            } else {
+                Swal.fire('Error', data.message || 'Failed to update status.', 'error');
+            }
+        })
+        .catch(err => {
+            console.error('[Routes Toggle] Fetch error:', err);
+            Swal.fire('Error', 'Network error. Please try again.', 'error');
+        });
+}
+
+/**
+ * Get CSRF token
+ */
+function getCsrf() {
+    const el = document.querySelector('input[name="csrf_token"]');
+    return el ? el.value : '';
+}
+
+
 function handleActionClick(e) {
 
     // Edit
@@ -352,24 +506,8 @@ function handleActionClick(e) {
     // Delete
     const delBtn = e.target.closest('.icon-btn.delete');
     if (delBtn) {
-        Swal.fire({
-            title: 'Delete Route?', text: delBtn.dataset.route,
-            icon: 'warning', showCancelButton: true,
-            confirmButtonColor: '#ef4444', cancelButtonColor: '#6b7280',
-            confirmButtonText: 'Yes, delete', cancelButtonText: 'Cancel',
-            reverseButtons: true
-        }).then(result => {
-            if (!result.isConfirmed) return;
-            const csrf = document.querySelector('input[name="csrf_token"]');
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = '../../controllers/routes/DeleteRoute.php';
-            form.innerHTML =
-                `<input type="hidden" name="csrf_token" value="${csrf?.value ?? ''}">
-                 <input type="hidden" name="route_id"   value="${delBtn.dataset.id}">`;
-            document.body.appendChild(form);
-            form.submit();
-        });
+        e.stopPropagation();
+        deleteRoute(delBtn.dataset.id, delBtn.dataset.route);
         return;
     }
 
@@ -377,14 +515,8 @@ function handleActionClick(e) {
     const toggleBtn = e.target.closest('.icon-btn.toggle');
     if (toggleBtn) {
         e.stopPropagation();
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = '../../controllers/routes/ToggleRoute.php';
-        form.innerHTML =
-            `<input type="hidden" name="route_id"  value="${toggleBtn.dataset.id}">
-             <input type="hidden" name="is_active" value="${toggleBtn.dataset.active == 1 ? 0 : 1}">`;
-        document.body.appendChild(form);
-        form.submit();
+        toggleRouteStatus(toggleBtn.dataset.id, toggleBtn.dataset.active);
+        return;
     }
 }
 
@@ -424,6 +556,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Action buttons (edit / delete / toggle) via event delegation
     document.getElementById('page-content')?.addEventListener('click', handleActionClick);
+
+    // Edit form submission (AJAX)
+    const editForm = document.getElementById('editForm');
+    if (editForm) {
+        editForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            const routeId = document.getElementById('edit-id').value;
+            if (routeId) {
+                editRoute(routeId);
+            }
+        });
+    }
 
     // Add modal
     const addContainer = document.getElementById('stops-container');

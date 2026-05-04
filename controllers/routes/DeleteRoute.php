@@ -1,28 +1,41 @@
 <?php
 require_once '../../autoload.php';
 
+header('Content-Type: application/json');
+
+/* ── CSRF CHECK ───────────────────────────────────────────────────────────── */
 if (!csrf_check()) {
-    $_SESSION['error'] = 'Invalid CSRF token.';
-    header('Location: ../../views/admin/routes.php');
+    echo json_encode([
+        'success' => false,
+        'message' => 'Invalid CSRF token.'
+    ]);
     exit;
 }
 
+/* ── INPUTS ───────────────────────────────────────────────────────────────── */
 $routeId = (int)($_POST['route_id'] ?? 0);
 
+/* ── VALIDATION ───────────────────────────────────────────────────────────── */
 if (!$routeId) {
-    $_SESSION['error'] = 'Invalid route.';
-    header('Location: ../../views/admin/routes.php');
+    echo json_encode([
+        'success' => false,
+        'message' => 'Invalid route.'
+    ]);
     exit;
 }
 
+/* ── DELETE ───────────────────────────────────────────────────────────────── */
 $route     = new Routes($conn);
 $route->id = $routeId;
+$result    = $route->DeleteRoute();
 
-$result = $route->DeleteRoute();
+/* ── RESPONSE ─────────────────────────────────────────────────────────────── */
+echo json_encode([
+    'success' => $result['success'],
+    'message' => $result['success']
+        ? 'Route deleted successfully.'
+        : 'Failed to delete route.'
+]);
 
-$_SESSION[$result['success'] ? 'success' : 'error'] = $result['success']
-    ? 'Route deleted successfully.'
-    : 'Failed to delete route.';
-
-header('Location: ../../views/admin/routes.php');
 exit;
+?>

@@ -1,4 +1,14 @@
 /* Admin Common */
+html, body {
+    background: #f9fafb;
+    transition: background 0.2s ease;
+}
+
+html.dark-init,
+body.admin-dark-mode-active {
+    background: #0f172a;
+}
+
 .toolbar {
     display: flex;
     align-items: center;

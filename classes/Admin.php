@@ -5,7 +5,7 @@ class Admin
     public $email;
     public $password;
     public $role = 'admin';
-    private $conn = null;
+    protected $conn = null;
     public function __construct($db)
     {
         $this->conn = $db;

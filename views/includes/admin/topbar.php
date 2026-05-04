@@ -23,6 +23,13 @@ $initials = strtoupper(substr($adminName, 0, 1));
     </div>
 
     <div class="topbar-right">
+
+        <!-- DARK MODE QUICK TOGGLE -->
+        <button class="topbar-icon-btn" id="topbar-dark-toggle" title="Dark Mode">
+            <i class="fas fa-moon"></i>
+        </button>
+
+        <!-- NOTIFICATIONS -->
         <button class="topbar-icon-btn" id="notif-toggle" title="Notifications">
             <i class="fas fa-bell"></i>
             <span class="notif-dot" id="notif-dot"></span>
@@ -35,7 +42,6 @@ $initials = strtoupper(substr($adminName, 0, 1));
                 <span id="mark-all-read">Mark all as read</span>
             </div>
             <div class="notif-list" id="notif-list">
-                <!-- hardcoded muna, replace with DB fetch later -->
                 <div class="notif-item unread">
                     <div class="notif-icon booking">
                         <i class="fas fa-calendar-check"></i>
@@ -112,5 +118,6 @@ $initials = strtoupper(substr($adminName, 0, 1));
                 </a>
             </div>
         </div>
+
     </div>
 </div>

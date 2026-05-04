@@ -1,699 +1,634 @@
-/* ════════════════════════════════════════════════════════════════════ */
-/* BOOKINGS ADMIN PAGE STYLES                                             */
-/* ════════════════════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════════════
+   bookings.css
+   Scoped entirely to .bookings-* and .booking-row selectors.
+   Does NOT override admin-common.css or base.css globals.
+   Load order: base.css → admin-layout.css → admin-common.css → bookings.css
+   ══════════════════════════════════════════════════════════════════ */
 
-/* ─── TOOLBAR ─────────────────────────────────────────────────────── */
-
-/* .toolbar {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 20px;
-    flex-wrap: wrap;
+/* ── STATUS TOKENS (booking-specific, not in admin-common) ───────── */
+:root {
+    --bk-pending-bg: rgba(249, 115, 22, .08);
+    --bk-pending-text: #f97316;
+    --bk-approved-bg: rgba(22, 163, 74, .08);
+    --bk-approved-txt: #16a34a;
+    --bk-rejected-bg: rgba(239, 68, 68, .08);
+    --bk-rejected-txt: #ef4444;
+    --bk-cancelled-bg: rgba(156, 163, 175, .08);
+    --bk-cancelled-txt: #9ca3af;
+    --bk-expired-bg: rgba(239, 68, 68, .06);
+    --bk-expired-txt: #dc2626;
 }
 
-.search-box {
-    flex: 1;
-    min-width: 240px;
-    position: relative;
-    display: flex;
-    align-items: center;
-}
-
-.search-box i {
-    position: absolute;
-    left: 12px;
-    color: var(--color-text-secondary);
-    pointer-events: none;
-}
-
-.search-box input {
-    width: 100%;
-    padding: 9px 12px 9px 35px;
-    border: 1px solid var(--color-border);
-    border-radius: 5px;
-    font-size: 13px;
-    transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-.search-box input:focus {
-    outline: none;
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
-} */
-
-/* .filter-group {
-    display: flex;
-    gap: 8px;
-}
-
-.filter-select {
-    padding: 9px 12px;
-    border: 1px solid var(--color-border);
-    border-radius: 5px;
-    font-size: 13px;
-    background-color: white;
-    cursor: pointer;
-    transition: border-color 0.2s;
-}
-
-.filter-select:focus {
-    outline: none;
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
-} */
-
-/* ─── BOOKINGS WRAPPER ────────────────────────────────────────────── */
-
+/* ══════════════════════════════════════════════════════════════════
+   WRAPPER
+══════════════════════════════════════════════════════════════════ */
 .bookings-wrapper {
     display: flex;
     flex-direction: column;
     gap: 0;
 }
 
-/* ─── BOOKINGS CARD ───────────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════════
+   CARD  — inherits base card from admin-common (.bookings-card)
+   Only override what is different from the common card.
+══════════════════════════════════════════════════════════════════ */
 
-.bookings-card {
-    background: white;
-    border: 1px solid var(--color-border);
-    border-radius: 6px;
-    overflow: hidden;
-}
-
+/* Tighten header padding slightly vs admin-common's 16px 18px */
 .bookings-card-header {
-    padding: 16px 20px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
+    padding: 13px 16px;
 }
 
 .bookings-card-header h2 {
-    margin: 0;
-    font-size: var(--text-lg);
-    font-weight: var(--fw-semibold);
+    font-size: 14px;
+    /* admin-common uses --text-xl (18px) — too large here */
+    font-weight: 700;
     color: var(--color-primary);
+    margin: 0;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     line-height: 1;
 }
 
-.bookings-card-header span {
-    font-size: var(--text-sm);
-    color: var(--text-muted);
-    font-weight: var(--fw-medium);
-    white-space: nowrap;
+/* Count pill — uses admin-common base, just reduce font */
+.bookings-card-header span#booking-count {
+    font-size: 11px;
 }
 
-/* ── TABLE ───────────────────────────────────────────────────────── */
-.bookings-table-wrap {
+/* ══════════════════════════════════════════════════════════════════
+   TABLE  — compact mode
+   Scoped to .bookings-card so it won't affect other pages.
+══════════════════════════════════════════════════════════════════ */
+.bookings-card .bookings-table-wrap {
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
-.bookings-table {
+.bookings-card .bookings-table {
     width: 100%;
     border-collapse: collapse;
+    font-size: 12.5px;
+    /* tighter than admin-common's 13px */
+    table-layout: auto;
 }
 
-.bookings-table thead {
-    background: var(--input-bg);
-}
-
-.bookings-table th {
-    padding: 11px 14px;
-    text-align: left;
-    font-size: var(--text-xs);
-    font-weight: var(--fw-semibold);
-    color: var(--text-muted);
+/* ── TH ──────────────────────────────────────── */
+.bookings-card .bookings-table thead th {
+    padding: 8px 12px;
+    font-size: 10px;
+    font-weight: 700;
+    color: #9ca3af;
     text-transform: uppercase;
-    letter-spacing: var(--ls-wider);
-    border-bottom: 1px solid var(--border);
+    letter-spacing: .5px;
+    background: #fafafa;
+    border-bottom: 1px solid rgba(0, 0, 0, .06);
+    white-space: nowrap;
+    text-align: left;
+}
+
+/* ── TD ──────────────────────────────────────── */
+.bookings-card .bookings-table tbody td {
+    padding: 9px 12px;
+    color: #374151;
+    vertical-align: middle;
+    border-bottom: 1px solid rgba(0, 0, 0, .04);
     white-space: nowrap;
 }
 
-.bookings-table td {
-    padding: 12px 14px;
-    font-size: var(--text-base);
-    color: var(--color-primary);
-    border-bottom: 1px solid var(--border);
-    vertical-align: middle;
-}
-
-.bookings-table tbody tr {
-    transition: background-color var(--transition);
-}
-
-.bookings-table tbody tr:last-child td {
+.bookings-card .bookings-table tbody tr:last-child td {
     border-bottom: none;
 }
 
-.bookings-table tbody tr:hover {
-    background: var(--color-hover-bg);
+/* ── ROW STATES ──────────────────────────────── */
+.bookings-card .bookings-table tbody tr.booking-row {
+    transition: background .13s;
+    cursor: pointer;
 }
 
-/* ── TABLE CELL HELPERS ──────────────────────────────────────────── */
-.text-muted-sm {
-    color: var(--text-muted);
-    font-size: var(--text-sm);
-    font-weight: var(--fw-medium);
+.bookings-card .bookings-table tbody tr.booking-row:hover {
+    background: #fafafa;
 }
 
-.text-danger {
-    color: var(--status-rejected-text);
+.bookings-card .bookings-table tbody tr.booking-row.selected {
+    background: rgba(249, 115, 22, .04);
+    border-left: 3px solid var(--color-accent);
 }
 
+/* ══════════════════════════════════════════════════════════════════
+   CELL CONTENT COMPONENTS
+══════════════════════════════════════════════════════════════════ */
+
+/* ── Row number ──────────────────────────────── */
+.bookings-card .bookings-table .text-muted-sm {
+    font-size: 11px;
+    color: #9ca3af;
+}
+
+/* ── Reference code ──────────────────────────── */
 .ref-code {
+    display: inline-block;
     font-family: var(--font-mono);
-    font-size: var(--text-sm);
-    font-weight: var(--fw-semibold);
-    color: var(--color-brand);
-    background: var(--input-bg);
-    border: 1px solid var(--border);
-    padding: 3px 8px;
-    border-radius: var(--radius-sm);
-    letter-spacing: var(--ls-wide);
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--color-primary);
+    background: rgba(46, 58, 77, .05);
+    border: 1px solid rgba(46, 58, 77, .1);
+    padding: 2px 7px;
+    border-radius: 5px;
+    letter-spacing: .4px;
+    white-space: nowrap;
 }
 
+/* ── Passenger info ──────────────────────────── */
 .passenger-info {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 1px;
     min-width: 0;
 }
 
 .passenger-info .name {
-    font-weight: var(--fw-medium);
+    font-size: 12.5px;
+    font-weight: 600;
     color: var(--color-primary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    max-width: 140px;
 }
 
 .passenger-info .email {
-    font-size: var(--text-xs);
-    color: var(--text-muted);
+    font-size: 10.5px;
+    color: #9ca3af;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    max-width: 140px;
 }
 
+/* ── Route info ──────────────────────────────── */
 .route-info {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
+    font-size: 12.5px;
+    color: #374151;
     white-space: nowrap;
 }
 
+/* ── Seat badge ──────────────────────────────── */
 .seat-badge {
     display: inline-flex;
     align-items: center;
-    gap: 5px;
-    background: #eff6ff;
-    color: var(--color-brand);
-    border: 1px solid #bfdbfe;
-    padding: 3px 10px;
-    border-radius: var(--radius-sm);
-    font-size: var(--text-sm);
-    font-weight: var(--fw-semibold);
+    gap: 4px;
+    background: rgba(46, 58, 77, .05);
+    color: var(--color-primary);
+    border: 1px solid rgba(46, 58, 77, .12);
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
     white-space: nowrap;
 }
 
-/* ── STATUS BADGES ───────────────────────────────────────────────── */
-/*
- * Standard:
- *   pending  → orange  (--color-accent)
- *   approved → green
- *   rejected → red
- *   cancelled→ gray (--text-muted)
- */
-.badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 4px 10px;
-    border-radius: var(--radius-sm);
-    font-size: var(--text-xs);
-    font-weight: var(--fw-semibold);
-    text-transform: uppercase;
-    letter-spacing: var(--ls-wide);
-    white-space: nowrap;
+/* ── Payment due ─────────────────────────────── */
+.bookings-card .bookings-table td small {
+    font-size: 11px;
+    color: #6b7280;
+    display: block;
     line-height: 1.4;
-    width: fit-content;
-}
-
-.badge.pending {
-    background: var(--status-pending-bg);
-    color: var(--status-pending-text);
-    border: 1px solid #fed7aa;
-}
-
-.badge.approved {
-    background: var(--status-approved-bg);
-    color: var(--status-approved-text);
-    border: 1px solid #bbf7d0;
-}
-
-.badge.rejected {
-    background: var(--status-rejected-bg);
-    color: var(--status-rejected-text);
-    border: 1px solid #fecaca;
-}
-
-.badge.cancelled {
-    background: var(--status-cancelled-bg);
-    color: var(--status-cancelled-text);
-    border: 1px solid var(--border);
-}
-
-.badge.expired,
-.badge.pending.expired {
-    background: var(--status-expired-bg);
-    color: var(--status-expired-text);
-    border: 1px solid #fca5a5;
 }
 
 .expired-label {
-    display: block;
-    font-size: 9px;
-    font-weight: var(--fw-bold);
-    color: var(--status-expired-text);
-    letter-spacing: var(--ls-wider);
-    text-transform: uppercase;
+    display: inline-block;
     margin-top: 2px;
+    font-size: 9px;
+    font-weight: 800;
+    color: var(--bk-expired-txt);
+    letter-spacing: .6px;
+    text-transform: uppercase;
 }
 
-/* ── ROW ACTION BUTTONS ──────────────────────────────────────────── */
-.row-actions {
+.text-danger {
+    color: var(--bk-expired-txt) !important;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   STATUS BADGES
+   Override admin-common .badge only inside .bookings-card
+   to use booking-specific colours without dot indicator.
+══════════════════════════════════════════════════════════════════ */
+.bookings-card .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 9px;
+    border-radius: 20px;
+    font-size: 10.5px;
+    font-weight: 600;
+    white-space: nowrap;
+    line-height: 1.5;
+    letter-spacing: .2px;
+}
+
+/* Remove the dot pseudo-element admin-common adds */
+.bookings-card .badge::before {
+    display: none;
+}
+
+.bookings-card .badge.pending {
+    background: var(--bk-pending-bg);
+    color: var(--bk-pending-text);
+}
+
+.bookings-card .badge.approved {
+    background: var(--bk-approved-bg);
+    color: var(--bk-approved-txt);
+}
+
+.bookings-card .badge.rejected {
+    background: var(--bk-rejected-bg);
+    color: var(--bk-rejected-txt);
+}
+
+.bookings-card .badge.cancelled {
+    background: var(--bk-cancelled-bg);
+    color: var(--bk-cancelled-txt);
+}
+
+.bookings-card .badge.expired,
+.bookings-card .badge.pending.expired {
+    background: var(--bk-expired-bg);
+    color: var(--bk-expired-txt);
+    border: 1px solid rgba(239, 68, 68, .15);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   ACTION BUTTONS  — compact, scoped
+══════════════════════════════════════════════════════════════════ */
+.bookings-card .row-actions {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 4px;
     flex-wrap: nowrap;
 }
 
-/*
- * icon-btn is a square 30×30 icon button.
- * Color variants follow the status system above.
- */
-.icon-btn {
-    width: 30px;
-    height: 30px;
-    padding: 0;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    background: var(--color-white);
-    cursor: pointer;
+/* Reset admin-common .icon-btn then re-apply compact size */
+.bookings-card .icon-btn {
+    width: 27px;
+    height: 27px;
+    border: none;
+    border-radius: 6px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: var(--text-sm);
-    color: var(--text-muted);
-    transition:
-        background-color var(--transition),
-        border-color var(--transition),
-        color var(--transition),
-        box-shadow var(--transition);
+    cursor: pointer;
+    font-size: 11.5px;
+    transition: background .13s, transform .1s;
     flex-shrink: 0;
 }
 
-.icon-btn:focus-visible {
-    outline: 2px solid var(--color-brand);
-    outline-offset: 2px;
+.bookings-card .icon-btn:hover {
+    transform: translateY(-1px);
+}
+
+.bookings-card .icon-btn:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+    pointer-events: none;
+    transform: none;
 }
 
 /* view */
-.icon-btn.view {
-    color: var(--color-brand);
+.bookings-card .icon-btn.view {
+    background: rgba(46, 58, 77, .07);
+    color: var(--color-primary);
 }
 
-.icon-btn.view:hover {
-    background: var(--color-brand);
-    border-color: var(--color-brand);
-    color: var(--color-white);
+.bookings-card .icon-btn.view:hover {
+    background: rgba(46, 58, 77, .14);
 }
 
 /* approve */
-.icon-btn.approve {
-    color: var(--status-approved-text);
+.bookings-card .icon-btn.approve {
+    background: rgba(22, 163, 74, .08);
+    color: #16a34a;
 }
 
-.icon-btn.approve:hover {
-    background: var(--status-approved-icon);
-    border-color: var(--status-approved-icon);
-    color: var(--color-white);
+.bookings-card .icon-btn.approve:hover {
+    background: rgba(22, 163, 74, .16);
 }
 
 /* reject */
-.icon-btn.reject {
-    color: var(--status-rejected-text);
+.bookings-card .icon-btn.reject {
+    background: rgba(239, 68, 68, .08);
+    color: #ef4444;
 }
 
-.icon-btn.reject:hover {
-    background: var(--status-rejected-icon);
-    border-color: var(--status-rejected-icon);
-    color: var(--color-white);
+.bookings-card .icon-btn.reject:hover {
+    background: rgba(239, 68, 68, .16);
 }
 
 /* cancel */
-.icon-btn.cancel {
-    color: var(--status-pending-text);
+.bookings-card .icon-btn.cancel {
+    background: rgba(249, 115, 22, .08);
+    color: var(--color-accent);
 }
 
-.icon-btn.cancel:hover {
-    background: var(--status-pending-icon);
-    border-color: var(--status-pending-icon);
-    color: var(--color-white);
+.bookings-card .icon-btn.cancel:hover {
+    background: rgba(249, 115, 22, .16);
 }
 
-/* disabled / loading state (set by JS) */
-.icon-btn:disabled {
-    opacity: 0.55;
-    cursor: not-allowed;
-    pointer-events: none;
+/* ══════════════════════════════════════════════════════════════════
+   DETAILS MODAL
+   Uses Bootstrap's .modal-content — just add a few tweaks.
+══════════════════════════════════════════════════════════════════ */
+#detailsModal .modal-content {
+    border: none;
+    border-radius: var(--radius-lg);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, .14);
+    overflow: hidden;
 }
 
-/* ─── MODAL STYLES ────────────────────────────────────────────────── */
-
-.modal-header {
-    padding: 16px 18px;
-    border-bottom: 1px solid var(--color-border);
+#detailsModal .modal-header {
+    padding: 14px 18px;
+    border-bottom: 1px solid rgba(0, 0, 0, .06);
+    background: #fafafa;
 }
 
-.modal-title {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--color-text);
+#detailsModal .modal-title {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--color-primary);
     margin: 0;
     display: flex;
     align-items: center;
+    gap: 7px;
 }
 
-.modal-body {
-    padding: 20px 18px;
+#detailsModal .modal-body {
+    padding: 18px;
 }
 
-.modal-footer {
-    padding: 14px 18px;
-    border-top: 1px solid var(--color-border);
+#detailsModal .modal-footer {
+    padding: 12px 18px;
+    border-top: 1px solid rgba(0, 0, 0, .06);
     display: flex;
     justify-content: flex-end;
     gap: 8px;
 }
 
-.modal .btn {
-    padding: 7px 14px;
-    font-size: 13px;
-    font-weight: 500;
-}
-
-.modal .btn-secondary {
-    background-color: white;
-    border-color: var(--color-border);
-    color: var(--color-text);
-}
-
-.modal .btn-secondary:hover {
-    background-color: var(--color-bg-secondary);
-}
-
-/* ─── DETAILS GRID ────────────────────────────────────────────────── */
-
+/* ── Details grid ────────────────────────────── */
 .details-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 20px;
+    gap: 18px;
 }
 
 .details-col {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 14px;
 }
 
 .detail-section {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
 }
 
 .section-title {
-    margin: 0 0 8px;
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--color-text-secondary);
+    font-size: 10px;
+    font-weight: 800;
+    color: var(--color-accent);
     text-transform: uppercase;
-    letter-spacing: 0.4px;
-    padding-bottom: 7px;
-    border-bottom: 2px solid var(--color-primary);
+    letter-spacing: .8px;
+    padding-bottom: 6px;
+    border-bottom: 1.5px solid rgba(249, 115, 22, .15);
+    margin: 0 0 4px;
 }
 
 .detail-row {
     display: grid;
-    grid-template-columns: 110px 1fr;
-    gap: 12px;
-    align-items: center;
+    grid-template-columns: 100px 1fr;
+    gap: 10px;
+    align-items: start;
 }
 
 .detail-label {
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--color-text-secondary);
+    font-size: 10.5px;
+    font-weight: 700;
+    color: #9ca3af;
     text-transform: uppercase;
-    letter-spacing: 0.3px;
+    letter-spacing: .4px;
+    padding-top: 1px;
 }
 
 .detail-value {
-    font-size: 13px;
-    color: var(--color-text);
+    font-size: 12.5px;
+    color: #374151;
     font-weight: 500;
     word-break: break-word;
+    line-height: 1.4;
 }
 
-.detail-value.badge {
-    width: fit-content;
-}
-
-/* ─── EMPTY STATE ─────────────────────────────────────────────────── */
-
-.empty-state {
+/* Badge inside modal */
+#detailsModal .badge {
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 50px 20px;
-    color: var(--color-text-secondary);
+    padding: 2px 9px;
+    border-radius: 20px;
+    font-size: 10.5px;
+    font-weight: 600;
+}
+
+#detailsModal .badge::before {
+    display: none;
+}
+
+#detailsModal .badge.pending {
+    background: var(--bk-pending-bg);
+    color: var(--bk-pending-text);
+}
+
+#detailsModal .badge.approved {
+    background: var(--bk-approved-bg);
+    color: var(--bk-approved-txt);
+}
+
+#detailsModal .badge.rejected {
+    background: var(--bk-rejected-bg);
+    color: var(--bk-rejected-txt);
+}
+
+#detailsModal .badge.cancelled {
+    background: var(--bk-cancelled-bg);
+    color: var(--bk-cancelled-txt);
+}
+
+#detailsModal .badge.expired {
+    background: var(--bk-expired-bg);
+    color: var(--bk-expired-txt);
+}
+
+/* ── Modal close button ──────────────────────── */
+#detailsModal .modal-footer .btn {
+    height: 34px;
+    padding: 0 16px;
+    font-size: 12.5px;
+    font-weight: 500;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-family: var(--font-base);
+    transition: .15s ease;
+}
+
+#detailsModal .modal-footer .btn-secondary {
+    background: transparent;
+    border: 1px solid rgba(0, 0, 0, .1);
+    color: #6b7280;
+}
+
+#detailsModal .modal-footer .btn-secondary:hover {
+    background: rgba(0, 0, 0, .04);
+    color: var(--color-primary);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   EMPTY STATE  — lighter than admin-common's version to fit table
+══════════════════════════════════════════════════════════════════ */
+.bookings-card .empty-state {
+    padding: 40px 20px;
     text-align: center;
+    color: #d1d5db;
 }
 
-.empty-state i {
-    font-size: 42px;
-    margin-bottom: 12px;
-    opacity: 0.4;
+.bookings-card .empty-state i {
+    font-size: 32px;
+    margin-bottom: 8px;
+    display: block;
 }
 
-.empty-state p {
+.bookings-card .empty-state p {
+    font-size: 12.5px;
     margin: 0;
-    font-size: 13px;
 }
 
-/* ─── RESPONSIVE ──────────────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════════════════════════════════ */
 
+/* ── Tablet (≤900px) ─────────────────────────── */
 @media (max-width: 900px) {
-    .toolbar {
-        flex-direction: column;
-    }
-
-    .search-box {
-        min-width: 100%;
-    }
-
-    .filter-group {
-        width: 100%;
-    }
-
-    .filter-select {
-        flex: 1;
+    .bookings-card .bookings-table {
+        min-width: 680px;
     }
 
     .details-grid {
         grid-template-columns: 1fr;
+        gap: 14px;
     }
 
     .detail-row {
-        grid-template-columns: 100px 1fr;
-    }
-
-    .bookings-table {
-        font-size: 12px;
-    }
-
-    .bookings-table th,
-    .bookings-table td {
-        padding: 8px 10px;
-    }
-
-    .row-actions {
-        gap: 4px;
-    }
-
-    .icon-btn {
-        width: 28px;
-        height: 28px;
-        font-size: 11px;
+        grid-template-columns: 90px 1fr;
     }
 }
 
+/* ── Mobile (≤600px) ─────────────────────────── */
 @media (max-width: 600px) {
-    .toolbar {
-        flex-direction: column;
-        gap: 10px;
-        margin-bottom: 16px;
-    }
-
-    .search-box {
-        min-width: 100%;
-        padding: 8px 10px 8px 32px;
-        font-size: 12px;
-    }
-
-    .search-box input {
-        padding: 7px 10px 7px 30px;
-        font-size: 12px;
-    }
-
-    .search-box i {
-        left: 10px;
-    }
-
-    .filter-group {
-        width: 100%;
-    }
-
-    .filter-select {
-        flex: 1;
-        font-size: 12px;
-        padding: 8px 10px;
-    }
-
     .bookings-card-header {
-        flex-direction: column;
-        gap: 8px;
-        align-items: flex-start;
-        padding: 14px 16px;
+        padding: 10px 14px;
+        flex-wrap: wrap;
+        gap: 6px;
     }
 
     .bookings-card-header h2 {
         font-size: 13px;
     }
 
-    .bookings-card-header span {
+    .bookings-card .bookings-table {
+        min-width: 620px;
         font-size: 11px;
     }
 
-    .bookings-table-wrap {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
+    .bookings-card .bookings-table thead th {
+        padding: 7px 10px;
+        font-size: 9.5px;
     }
 
-    .bookings-table {
-        min-width: 650px;
+    .bookings-card .bookings-table tbody td {
+        padding: 7px 10px;
         font-size: 11px;
-    }
-
-    .bookings-table th {
-        padding: 8px 8px;
-        font-size: 10px;
-    }
-
-    .bookings-table td {
-        padding: 8px;
-        font-size: 11px;
-    }
-
-    .text-muted-sm {
-        font-size: 10px;
     }
 
     .ref-code {
         font-size: 10px;
-        padding: 2px 5px;
+        padding: 1px 5px;
     }
 
     .passenger-info .name {
-        font-size: 12px;
+        font-size: 11px;
+        max-width: 110px;
     }
 
     .passenger-info .email {
-        font-size: 10px;
+        font-size: 9.5px;
+        max-width: 110px;
     }
 
     .route-info {
-        font-size: 12px;
+        font-size: 11px;
     }
 
     .seat-badge {
         font-size: 10px;
-        padding: 2px 6px;
+        padding: 1px 6px;
     }
 
-    .badge {
-        font-size: 9px;
-        padding: 3px 6px;
+    .bookings-card .badge {
+        font-size: 9.5px;
+        padding: 2px 7px;
     }
 
-    .row-actions {
-        gap: 3px;
-    }
-
-    .icon-btn {
-        width: 26px;
-        height: 26px;
+    .bookings-card .icon-btn {
+        width: 24px;
+        height: 24px;
         font-size: 10px;
+        border-radius: 5px;
+    }
+
+    .bookings-card .row-actions {
+        gap: 3px;
     }
 
     .details-grid {
         grid-template-columns: 1fr;
-        gap: 16px;
+        gap: 12px;
     }
 
     .detail-row {
-        grid-template-columns: 90px 1fr;
-        gap: 10px;
+        grid-template-columns: 80px 1fr;
+        gap: 8px;
     }
 
     .detail-label {
-        font-size: 10px;
+        font-size: 9.5px;
     }
 
     .detail-value {
-        font-size: 12px;
+        font-size: 11.5px;
     }
 
     .section-title {
-        font-size: 10px;
-        margin-bottom: 6px;
-        padding-bottom: 5px;
+        font-size: 9px;
     }
 
-    .modal-body {
-        padding: 16px;
+    #detailsModal .modal-body {
+        padding: 14px;
     }
 
-    .modal-footer {
-        padding: 12px 16px;
-        gap: 6px;
-    }
-
-    .empty-state {
-        padding: 40px 16px;
-    }
-
-    .empty-state i {
-        font-size: 36px;
-        margin-bottom: 10px;
-    }
-
-    .empty-state p {
-        font-size: 12px;
+    #detailsModal .modal-footer {
+        padding: 10px 14px;
     }
 }

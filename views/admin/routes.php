@@ -261,7 +261,7 @@ $routes = $route->GetAllRoutes();
                 </div>
                 <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal"></button>
             </div>
-            <form method="POST" action="../../controllers/routes/EditRoute.php">
+            <form id = "editForm">
                 <div class="rmodal-body">
                     <?= csrf_field() ?>
                     <input type="hidden" name="route_id" id="edit-id">

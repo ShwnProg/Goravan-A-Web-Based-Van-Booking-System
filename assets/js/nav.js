@@ -1,63 +1,76 @@
 // =============================================================
-//  nav.js  — Admin shell UI
-//  Handles: sidebar toggle, profile dropdown, notif dropdown,
-//           and active sidebar link highlighting.
+//  nav.js  —  Admin shell UI  (single source of truth)
 //
-//  No AJAX/SPA — pages are server-rendered via PHP includes.
+//  Dark mode contract:
+//    localStorage key  : 'admin_theme'
+//    localStorage value: 'dark' | 'light'
+//    Shell class       : body.admin-dark-mode-active
+//    Content class     : #page-content.admin-dark-mode
 // =============================================================
 
-document.addEventListener('DOMContentLoaded', () => {
 
-    // ── ELEMENTS ──────────────────────────────────────────────
-    const sidebar    = document.getElementById('sidebar');
-    const overlay    = document.getElementById('sidebar-overlay');
-    const burgerBtn  = document.getElementById('burger-btn');
+document.addEventListener('DOMContentLoaded', function () {
 
-    const notifToggle    = document.getElementById('notif-toggle');
-    const notifDropdown  = document.getElementById('notif-dropdown');
-    const notifDot       = document.getElementById('notif-dot');
-    const markAllRead    = document.getElementById('mark-all-read');
+    var isDark = localStorage.getItem('admin_theme') === 'dark';
 
-    const profileToggle  = document.getElementById('profile-toggle');
-    const profileDropdown = document.getElementById('profile-dropdown');
-    const profileCaret   = document.getElementById('profile-caret');
+    // Immediately sync page-content on every page load
+    var pageContent = document.getElementById('page-content');
+    if (pageContent && isDark) {
+        pageContent.classList.add('admin-dark-mode');
+    }
+
+    // ── ELEMENT REFS ───────────────────────────────────────────
+
+    // ── ELEMENT REFS ───────────────────────────────────────────
+    var sidebar   = document.getElementById('sidebar');
+    var overlay   = document.getElementById('sidebar-overlay');
+    var burgerBtn = document.getElementById('burger-btn');
+
+    var notifToggle   = document.getElementById('notif-toggle');
+    var notifDropdown = document.getElementById('notif-dropdown');
+    var notifDot      = document.getElementById('notif-dot');
+    var markAllRead   = document.getElementById('mark-all-read');
+
+    var profileToggle   = document.getElementById('profile-toggle');
+    var profileDropdown = document.getElementById('profile-dropdown');
+    var profileCaret    = document.getElementById('profile-caret');
+
+    var darkToggleBtn = document.getElementById('topbar-dark-toggle');
 
 
-    // ── SIDEBAR TOGGLE ────────────────────────────────────────
+    // ── SIDEBAR ────────────────────────────────────────────────
     function openSidebar() {
-        sidebar.classList.add('open');
-        overlay?.classList.add('active');
-        burgerBtn?.classList.add('open');
+        sidebar   && sidebar.classList.add('open');
+        overlay   && overlay.classList.add('active');
+        burgerBtn && burgerBtn.classList.add('open');
     }
 
     function closeSidebar() {
-        sidebar.classList.remove('open');
-        overlay?.classList.remove('active');
-        burgerBtn?.classList.remove('open');
+        sidebar   && sidebar.classList.remove('open');
+        overlay   && overlay.classList.remove('active');
+        burgerBtn && burgerBtn.classList.remove('open');
     }
 
-    burgerBtn?.addEventListener('click', () => {
-        sidebar.classList.contains('open') ? closeSidebar() : openSidebar();
-    });
+    if (burgerBtn) {
+        burgerBtn.addEventListener('click', function () {
+            sidebar && sidebar.classList.contains('open') ? closeSidebar() : openSidebar();
+        });
+    }
 
-    // Close sidebar when clicking the overlay (mobile)
-    overlay?.addEventListener('click', closeSidebar);
+    if (overlay) overlay.addEventListener('click', closeSidebar);
 
-    // Close sidebar on mobile when a menu link is clicked
-    document.querySelectorAll('.menu-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
+    document.querySelectorAll('.menu-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
             if (window.innerWidth <= 768) closeSidebar();
         });
     });
 
 
-    // ── ACTIVE SIDEBAR LINK ───────────────────────────────────
-    // Compare each link's href against the current URL path.
-    // Works with both relative hrefs and full paths.
-    const currentPath = window.location.pathname.replace(/\/$/, '').toLowerCase();
+    // ── ACTIVE SIDEBAR LINK ────────────────────────────────────
+    var currentPath = window.location.pathname.replace(/\/$/, '').toLowerCase();
 
-    document.querySelectorAll('.menu-btn[href]').forEach(btn => {
-        const linkPath = btn.getAttribute('href').replace(/\/$/, '').toLowerCase();
+    document.querySelectorAll('.menu-btn[href]').forEach(function (btn) {
+        var linkPath = btn.getAttribute('href').replace(/\/$/, '').toLowerCase();
         if (currentPath.endsWith(linkPath)) {
             btn.classList.add('active');
         } else {
@@ -66,41 +79,112 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
 
-    // ── NOTIFICATION DROPDOWN ─────────────────────────────────
-    notifToggle?.addEventListener('click', e => {
-        e.stopPropagation();
-        profileDropdown?.classList.remove('open');
-        profileCaret?.classList.remove('open');
-        notifDropdown?.classList.toggle('open');
-    });
+    // ── NOTIFICATION DROPDOWN ──────────────────────────────────
+    if (notifToggle) {
+        notifToggle.addEventListener('click', function (e) {
+            e.stopPropagation();
+            profileDropdown && profileDropdown.classList.remove('open');
+            profileCaret    && profileCaret.classList.remove('open');
+            notifDropdown   && notifDropdown.classList.toggle('open');
+        });
+    }
 
-    markAllRead?.addEventListener('click', () => {
-        document.querySelectorAll('.notif-item.unread')
-            .forEach(item => item.classList.remove('unread'));
-        if (notifDot) notifDot.style.display = 'none';
-    });
+    if (markAllRead) {
+        markAllRead.addEventListener('click', function () {
+            document.querySelectorAll('.notif-item.unread').forEach(function (item) {
+                item.classList.remove('unread');
+            });
+            if (notifDot) notifDot.style.display = 'none';
+        });
+    }
 
-    // Prevent clicks inside the dropdown from closing it
-    notifDropdown?.addEventListener('click', e => e.stopPropagation());
+    if (notifDropdown) {
+        notifDropdown.addEventListener('click', function (e) { e.stopPropagation(); });
+    }
 
 
     // ── PROFILE DROPDOWN ──────────────────────────────────────
-    profileToggle?.addEventListener('click', e => {
-        e.stopPropagation();
-        notifDropdown?.classList.remove('open');
-        profileDropdown?.classList.toggle('open');
-        profileCaret?.classList.toggle('open');
-    });
+    if (profileToggle) {
+        profileToggle.addEventListener('click', function (e) {
+            e.stopPropagation();
+            notifDropdown   && notifDropdown.classList.remove('open');
+            profileDropdown && profileDropdown.classList.toggle('open');
+            profileCaret    && profileCaret.classList.toggle('open');
+        });
+    }
 
-    // Prevent clicks inside the dropdown from closing it
-    profileDropdown?.addEventListener('click', e => e.stopPropagation());
-
+    if (profileDropdown) {
+        profileDropdown.addEventListener('click', function (e) { e.stopPropagation(); });
+    }
 
     // ── CLOSE ALL DROPDOWNS on outside click ──────────────────
-    document.addEventListener('click', () => {
-        notifDropdown?.classList.remove('open');
-        profileDropdown?.classList.remove('open');
-        profileCaret?.classList.remove('open');
+    document.addEventListener('click', function () {
+        notifDropdown   && notifDropdown.classList.remove('open');
+        profileDropdown && profileDropdown.classList.remove('open');
+        profileCaret    && profileCaret.classList.remove('open');
     });
+
+
+    // ══════════════════════════════════════════════════════════
+    //  DARK MODE ENGINE — single source of truth
+    // ══════════════════════════════════════════════════════════
+
+    var THEME_KEY = 'admin_theme';
+    var DARK_VAL  = 'dark';
+
+    function applyTheme(dark) {
+        var pc = document.getElementById('page-content');
+
+        // 1. Body class → sidebar + topbar
+        document.body.classList.toggle('admin-dark-mode-active', dark);
+
+        // 2. Page content class → all page views
+        if (pc) pc.classList.toggle('admin-dark-mode', dark);
+
+        // 3. Topbar icon swap (moon ↔ sun)
+        if (darkToggleBtn) {
+            var icon = darkToggleBtn.querySelector('i');
+            if (icon) icon.className = dark ? 'fas fa-sun' : 'fas fa-moon';
+            darkToggleBtn.title = dark ? 'Light Mode' : 'Dark Mode';
+        }
+
+        // 4. Settings page checkbox sync
+        var settingsToggle = document.getElementById('dark-mode-toggle');
+        if (settingsToggle) settingsToggle.checked = dark;
+
+        // 5. Logo: white in dark mode
+        var logo = document.querySelector('.sidebar .logo img');
+        if (logo) logo.style.filter = dark ? 'brightness(0) invert(1)' : '';
+    }
+
+    function initDarkMode() {
+        // Sync icon + checkbox + logo (page-content class already applied above)
+        applyTheme(isDark);
+
+        // Topbar moon/sun button
+        if (darkToggleBtn) {
+            darkToggleBtn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                var nowDark = !document.body.classList.contains('admin-dark-mode-active');
+                localStorage.setItem(THEME_KEY, nowDark ? DARK_VAL : 'light');
+                applyTheme(nowDark);
+            });
+        }
+
+        // Settings page checkbox
+        var settingsToggle = document.getElementById('dark-mode-toggle');
+        if (settingsToggle) {
+            settingsToggle.addEventListener('change', function () {
+                var dark = this.checked;
+                localStorage.setItem(THEME_KEY, dark ? DARK_VAL : 'light');
+                applyTheme(dark);
+            });
+        }
+    }
+
+    initDarkMode();
+
+    // Global escape hatch
+    window.adminApplyTheme = applyTheme;
 
 });

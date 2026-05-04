@@ -1,8 +1,3 @@
-/* ══════════════════════════════════════════════
-   AdminLayout.CSS — admin shell (sidebar + topbar)
-   Requires: base.css loaded before this file.
-   ══════════════════════════════════════════════ */
-
 body {
     overflow-y: auto;
 }

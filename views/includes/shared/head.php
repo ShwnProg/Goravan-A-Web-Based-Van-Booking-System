@@ -9,10 +9,10 @@
 <!-- Bootstrap CSS -->
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
-<!-- Leaflet CSS (used on map pages; harmless to load globally) -->
+<!-- Leaflet CSS -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 
-<!-- App CSS (load order: base → layout → common → page-specific → auth) ── -->
+<!-- App CSS -->
 <link rel="stylesheet" href="../../assets/css/base.css">
 <link rel="stylesheet" href="../../assets/css/admin-layout.css">
 <link rel="stylesheet" href="../../assets/css/admin-common.css">
@@ -25,9 +25,12 @@
 <link rel="stylesheet" href="../../assets/css/auth.css">
 <link rel="stylesheet" href="../../assets/css/style.css">
 
+<!-- Dark mode system — must load LAST so it overrides everything above -->
+<link rel="stylesheet" href="../../assets/css/settings.css">
+
+<!-- Page-specific CSS (settings layout, etc.) -->
+<?php if (!empty($page_css)): ?>
+    <link rel="stylesheet" href="<?= $page_css ?>">
+<?php endif; ?>
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-
-<!-- <?php if ($page_css): ?>
-<link rel="stylesheet" href="<?= $page_css ?>">
-<?php endif; ?> -->
-

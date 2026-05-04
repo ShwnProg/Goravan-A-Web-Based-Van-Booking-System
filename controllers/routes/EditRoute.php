@@ -1,12 +1,18 @@
 <?php
 require_once '../../autoload.php';
 
+header('Content-Type: application/json');
+
+/* ── CSRF CHECK ───────────────────────────────────────────────────────────── */
 if (!csrf_check()) {
-    $_SESSION['error'] = 'Invalid CSRF token.';
-    header('Location: ../../views/admin/routes.php');
+    echo json_encode([
+        'success' => false,
+        'message' => 'Invalid CSRF token.'
+    ]);
     exit;
 }
 
+/* ── INPUTS ───────────────────────────────────────────────────────────────── */
 $routeId     = (int)   ($_POST['route_id']    ?? 0);
 $origin      = trim(   ($_POST['origin']       ?? ''));
 $destination = trim(   ($_POST['destination']  ?? ''));
@@ -18,43 +24,48 @@ $stops = array_values(array_filter(
     fn($s) => $s !== ''
 ));
 
+/* ── VALIDATION ───────────────────────────────────────────────────────────── */
 if (!$routeId || !$origin || !$destination) {
-    $_SESSION['error'] = 'Missing required fields.';
-    header('Location: ../../views/admin/routes.php');
+    echo json_encode([
+        'success' => false,
+        'message' => 'Missing required fields.'
+    ]);
     exit;
 }
 
 if ($fare <= 0) {
-    $_SESSION['error'] = 'Fare must be a positive number.';
-    header('Location: ../../views/admin/routes.php');
+    echo json_encode([
+        'success' => false,
+        'message' => 'Fare must be a positive number.'
+    ]);
     exit;
 }
 
 if ($origin === $destination) {
-    $_SESSION['error'] = 'Origin and destination cannot be the same.';
-    header('Location: ../../views/admin/routes.php');
+    echo json_encode([
+        'success' => false,
+        'message' => 'Origin and destination cannot be the same.'
+    ]);
     exit;
 }
 
+/* ── LOAD ROUTE ───────────────────────────────────────────────────────────── */
 $route = new Routes($conn);
-$route->id          = $routeId;
-$route->origin      = $origin;
-$route->destination = $destination;
-$route->status      = $status;
-$route->fare        = $fare;
-$route->stops       = $stops;
-
+$route->id = $routeId;
 $route_info = $route->GetRouteByID();
 
 if (empty($route_info)) {
-    $_SESSION['error'] = 'Route not found.';
-    header('Location: ../../views/admin/routes.php');
+    echo json_encode([
+        'success' => false,
+        'message' => 'Route not found.'
+    ]);
     exit;
 }
 
 $existing      = $route_info[0];
 $existingStops = array_column($existing['stops'], 'stop_name');
 
+/* ── NO CHANGES CHECK ─────────────────────────────────────────────────────── */
 $sameOrigin      = strtolower($existing['origin'])      === strtolower($origin);
 $sameDestination = strtolower($existing['destination']) === strtolower($destination);
 $sameFare        = (float) $existing['fare']            === $fare;
@@ -63,25 +74,45 @@ $sameStops       = array_map('strtolower', $existingStops)
                    === array_map('strtolower', $stops);
 
 if ($sameOrigin && $sameDestination && $sameFare && $sameStatus && $sameStops) {
-    $_SESSION['no_changes'] = 'No changes were made.';
-    header('Location: ../../views/admin/routes.php');
+    echo json_encode([
+        'no_changes' => true,
+        'message' => 'No changes were made.'
+    ]);
     exit;
 }
 
+/* ── DUPLICATE CHECK ──────────────────────────────────────────────────────── */
 $routeSignatureChanged = !$sameOrigin || !$sameDestination || !$sameStops;
 
+$route->origin      = $origin;
+$route->destination = $destination;
+$route->stops       = $stops;
+
 if ($routeSignatureChanged && $route->IsRouteExist()) {
-    $_SESSION['error'] = 'That route already exists.';
-    header('Location: ../../views/admin/routes.php');
+    echo json_encode([
+        'success' => false,
+        'message' => 'That route already exists.'
+    ]);
     exit;
 }
 
-$result = $route->EditRoute();
+/* ── UPDATE ───────────────────────────────────────────────────────────────── */
+$route->status = $status;
+$route->fare   = $fare;
+$result        = $route->EditRoute();
 
-$_SESSION[$result['success'] ? 'success' : 'error'] = $result['success']
-    ? 'Route updated successfully.'
-    : 'Failed to update route: ' . ($result['error'] ?? 'Unknown error.');
+/* ── RESPONSE ─────────────────────────────────────────────────────────────── */
+if ($result['success']) {
+    echo json_encode([
+        'success' => true,
+        'message' => 'Route updated successfully.'
+    ]);
+} else {
+    echo json_encode([
+        'success' => false,
+        'message' => $result['error'] ?? 'Failed to update route.'
+    ]);
+}
 
-header('Location: ../../views/admin/routes.php');
 exit;
 ?>
