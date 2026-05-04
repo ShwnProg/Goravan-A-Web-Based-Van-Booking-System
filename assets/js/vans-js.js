@@ -234,7 +234,10 @@ window.initVansPage = function () {
                     // update UI instantly (no reload)
                     toggleBtn.dataset.status = nextStatus;
 
-                    const badge = toggleBtn.closest('tr').querySelector('.badge');
+                    const row = toggleBtn.closest('tr');
+                    row.dataset.status = nextStatus;
+
+                    const badge = row.querySelector('.badge');
                     if (badge) {
                         badge.className = 'badge ' + nextStatus;
                         badge.textContent = nextStatus.charAt(0).toUpperCase() + nextStatus.slice(1);
@@ -246,6 +249,7 @@ window.initVansPage = function () {
                         icon.className = 'fas fa-' + (nextStatus === 'active' ? 'toggle-on' : 'toggle-off');
                     }
 
+                    applyFilters();
                     Swal.fire('Success', 'Status updated!', 'success');
 
                 } else {
@@ -426,7 +430,7 @@ window.initVansPage = function () {
 
         return result;
     }
-    /** Generate seat labels: 1, 2, 3 … n */
+    
     function generateLabels(count) {
         var labels = [];
         for (var i = 1; i <= count; i++) labels.push(String(i));

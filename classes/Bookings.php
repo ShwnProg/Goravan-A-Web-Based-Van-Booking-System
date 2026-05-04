@@ -111,7 +111,7 @@ class Bookings
         return (bool) $stmt->fetchColumn();
     }
 
-    // ── CREATE ────────────────────────────────────────────────────
+    // CREATE 
 
     public function AddBooking(): array
     {

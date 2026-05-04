@@ -28,16 +28,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!empty($_FILES['verification']['name'])) {
 
         $file = $_FILES['verification'];
-        $filename = time() . "_" . $file['name'];
+
+        $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
+
+        // safer + unique filename
+        $filename = time() . "_" . bin2hex(random_bytes(5)) . "." . $ext;
+
+        // optional: sanitize extension
+        $allowed = ['jpg', 'jpeg', 'png', 'pdf'];
+
+        if (!in_array(strtolower($ext), $allowed)) {
+            $errors[] = "Invalid file type";
+        }
+
         $target = "../../uploads/documents/" . $filename;
 
-        $upload_ok = move_uploaded_file($file['tmp_name'], $target);
-
-        if (!$upload_ok) {
+        if (!move_uploaded_file($file['tmp_name'], $target)) {
             $errors[] = "File upload failed";
         }
     }
-
     // EMAIL
     $clean_email = filter_var($email, FILTER_SANITIZE_EMAIL);
     $validate_email = filter_var($clean_email, FILTER_VALIDATE_EMAIL);
@@ -115,6 +124,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $verification->user_id_fk = $user_id;
                 $verification->type = $type;
                 $verification->document = $filename;
+                $verification->status = "pending";
 
                 $result = $verification->AddDocuments();
 

@@ -5,7 +5,7 @@ html, body {
 
 html.dark-init,
 body.admin-dark-mode-active {
-    background: #0f172a;
+    background: #374151;
 }
 
 .toolbar {
@@ -316,6 +316,15 @@ body.admin-dark-mode-active {
 
 .badge.rejected::before {
     background: #ef4444;
+}
+
+.badge.no-submission {
+    background: rgba(107, 114, 128, .08);
+    color: #6b7280;
+}
+
+.badge.no-submission::before {
+    background: #6b7280;
 }
 
 .badge.cancelled {
@@ -890,4 +899,319 @@ select.ss {
     .empty-state p {
         font-size: 12px;
     }
+}
+
+/* ══════════════════════════════════════════════
+   DARK MODE — admin.css shared styles
+   ══════════════════════════════════════════════ */
+
+/* ── TOOLBAR ─────────────────────────────────── */
+body.admin-dark-mode-active .search-box {
+    background: #1e293b;
+    border-color: rgba(255, 255, 255, .08);
+}
+
+body.admin-dark-mode-active .search-box i {
+    color: #475569;
+}
+
+body.admin-dark-mode-active .search-box input {
+    color: #e2e8f0;
+    background: transparent;
+}
+
+body.admin-dark-mode-active .search-box input::placeholder {
+    color: #475569;
+}
+
+body.admin-dark-mode-active .filter-select {
+    background: #1e293b;
+    border-color: rgba(255, 255, 255, .08);
+    color: #e2e8f0;
+}
+
+/* ── SHARED PAGE CARDS ───────────────────────── */
+body.admin-dark-mode-active .page-card,
+body.admin-dark-mode-active .vans-card,
+body.admin-dark-mode-active .drivers-card,
+body.admin-dark-mode-active .routes-card,
+body.admin-dark-mode-active .schedules-card,
+body.admin-dark-mode-active .bookings-card {
+    background: #1e293b;
+    border-color: rgba(255, 255, 255, .07);
+}
+
+body.admin-dark-mode-active .page-card-header,
+body.admin-dark-mode-active .vans-card-header,
+body.admin-dark-mode-active .drivers-card-header,
+body.admin-dark-mode-active .routes-card-header,
+body.admin-dark-mode-active .schedules-card-header,
+body.admin-dark-mode-active .bookings-card-header {
+    border-bottom-color: rgba(255, 255, 255, .06);
+}
+
+body.admin-dark-mode-active .page-card-header h2,
+body.admin-dark-mode-active .vans-card-header h2,
+body.admin-dark-mode-active .drivers-card-header h2,
+body.admin-dark-mode-active .routes-card-header h2,
+body.admin-dark-mode-active .schedules-card-header h2,
+body.admin-dark-mode-active .bookings-card-header h2 {
+    color: #e2e8f0;
+}
+
+body.admin-dark-mode-active .page-card-header span,
+body.admin-dark-mode-active .vans-card-header span,
+body.admin-dark-mode-active .drivers-card-header span,
+body.admin-dark-mode-active .routes-card-header span,
+body.admin-dark-mode-active .schedules-card-header span,
+body.admin-dark-mode-active .bookings-card-header span {
+    background: rgba(255, 255, 255, .06);
+    color: #94a3b8;
+}
+
+/* ── SHARED TABLES ───────────────────────────── */
+body.admin-dark-mode-active .page-table thead th,
+body.admin-dark-mode-active .vans-table thead th,
+body.admin-dark-mode-active .drivers-table thead th,
+body.admin-dark-mode-active .routes-table thead th,
+body.admin-dark-mode-active .schedules-table thead th,
+body.admin-dark-mode-active .bookings-table thead th {
+    background: #162032;
+    color: #64748b;
+    border-bottom-color: rgba(255, 255, 255, .06);
+}
+
+body.admin-dark-mode-active .page-table tbody tr,
+body.admin-dark-mode-active .vans-table tbody tr,
+body.admin-dark-mode-active .drivers-table tbody tr,
+body.admin-dark-mode-active .routes-table tbody tr,
+body.admin-dark-mode-active .schedules-table tbody tr,
+body.admin-dark-mode-active .bookings-table tbody tr {
+    border-bottom-color: rgba(255, 255, 255, .04);
+}
+
+body.admin-dark-mode-active .page-table tbody tr:hover,
+body.admin-dark-mode-active .vans-table tbody tr:hover,
+body.admin-dark-mode-active .drivers-table tbody tr:hover,
+body.admin-dark-mode-active .routes-table tbody tr:hover,
+body.admin-dark-mode-active .schedules-table tbody tr:hover,
+body.admin-dark-mode-active .bookings-table tbody tr:hover {
+    background: rgba(255, 255, 255, .03);
+}
+
+body.admin-dark-mode-active .page-table tbody tr.selected,
+body.admin-dark-mode-active .vans-table tbody tr.selected,
+body.admin-dark-mode-active .drivers-table tbody tr.selected,
+body.admin-dark-mode-active .routes-table tbody tr.selected,
+body.admin-dark-mode-active .schedules-table tbody tr.selected,
+body.admin-dark-mode-active .bookings-table tbody tr.selected {
+    background: rgba(249, 115, 22, .08);
+    border-left-color: var(--color-accent);
+}
+
+body.admin-dark-mode-active .page-table tbody td,
+body.admin-dark-mode-active .vans-table tbody td,
+body.admin-dark-mode-active .drivers-table tbody td,
+body.admin-dark-mode-active .routes-table tbody td,
+body.admin-dark-mode-active .schedules-table tbody td,
+body.admin-dark-mode-active .bookings-table tbody td {
+    color: #cbd5e1;
+}
+
+body.admin-dark-mode-active .text-muted-sm {
+    color: #94a3b8;
+}
+
+/* ── BADGES ──────────────────────────────────── */
+body.admin-dark-mode-active .badge.active {
+    background: rgba(16, 185, 129, .1);
+    color: #34d399;
+}
+
+body.admin-dark-mode-active .badge.active::before {
+    background: #10b981;
+}
+
+body.admin-dark-mode-active .badge.inactive {
+    background: rgba(239, 68, 68, .1);
+    color: #f87171;
+}
+
+body.admin-dark-mode-active .badge.inactive::before {
+    background: #ef4444;
+}
+
+body.admin-dark-mode-active .badge.pending {
+    background: rgba(249, 115, 22, .12);
+    color: #fb923c;
+}
+
+body.admin-dark-mode-active .badge.pending::before {
+    background: #f97316;
+}
+
+body.admin-dark-mode-active .badge.approved {
+    background: rgba(16, 185, 129, .1);
+    color: #34d399;
+}
+
+body.admin-dark-mode-active .badge.approved::before {
+    background: #10b981;
+}
+
+body.admin-dark-mode-active .badge.rejected {
+    background: rgba(239, 68, 68, .1);
+    color: #f87171;
+}
+
+body.admin-dark-mode-active .badge.rejected::before {
+    background: #ef4444;
+}
+
+body.admin-dark-mode-active .badge.no-submission {
+    background: rgba(100, 116, 139, .1);
+    color: #94a3b8;
+}
+
+body.admin-dark-mode-active .badge.no-submission::before {
+    background: #64748b;
+}
+
+body.admin-dark-mode-active .badge.cancelled {
+    background: rgba(100, 116, 139, .1);
+    color: #94a3b8;
+}
+
+body.admin-dark-mode-active .badge.cancelled::before {
+    background: #64748b;
+}
+
+/* ── ICON BUTTONS ────────────────────────────── */
+body.admin-dark-mode-active .icon-btn {
+    color: #94a3b8;
+}
+
+body.admin-dark-mode-active .icon-btn:hover {
+    background: rgba(255, 255, 255, .07);
+    color: #e2e8f0;
+}
+
+body.admin-dark-mode-active .icon-btn.edit {
+    background: rgba(249, 115, 22, .1);
+    color: #fb923c;
+}
+
+body.admin-dark-mode-active .icon-btn.delete {
+    background: rgba(239, 68, 68, .1);
+    color: #f87171;
+}
+
+body.admin-dark-mode-active .icon-btn.toggle {
+    background: rgba(16, 185, 129, .1);
+    color: #34d399;
+}
+
+body.admin-dark-mode-active .icon-btn.view {
+    background: rgba(255, 255, 255, .06);
+    color: #94a3b8;
+}
+
+body.admin-dark-mode-active .icon-btn.view:hover {
+    background: rgba(255, 255, 255, .12);
+    color: #e2e8f0;
+}
+
+/* ── EMPTY STATE ─────────────────────────────── */
+body.admin-dark-mode-active .empty-state {
+    color: #475569;
+}
+
+body.admin-dark-mode-active .empty-state p {
+    color: #475569;
+}
+
+/* ── FORM INPUTS ─────────────────────────────── */
+body.admin-dark-mode-active .rinput {
+    background: #162032;
+    border-color: rgba(255, 255, 255, .09);
+    color: #e2e8f0;
+}
+
+body.admin-dark-mode-active .rinput::placeholder {
+    color: #475569;
+}
+
+body.admin-dark-mode-active .rinput:hover {
+    background: #1e293b;
+    border-color: rgba(255, 255, 255, .14);
+}
+
+body.admin-dark-mode-active .rinput:focus {
+    background: #1e293b;
+    border-color: var(--color-accent);
+}
+
+body.admin-dark-mode-active .rfield-label {
+    color: #64748b;
+}
+
+/* ── MODAL ───────────────────────────────────── */
+body.admin-dark-mode-active .rmodal {
+    background: #1e293b !important;
+}
+
+body.admin-dark-mode-active .rmodal-title {
+    color: #e2e8f0;
+}
+
+body.admin-dark-mode-active .rmodal-sub {
+    color: #64748b;
+}
+
+body.admin-dark-mode-active .rmodal-footer {
+    border-top-color: rgba(255, 255, 255, .07);
+}
+
+body.admin-dark-mode-active .rbtn-ghost {
+    color: #94a3b8;
+    border-color: rgba(255, 255, 255, .1);
+}
+
+body.admin-dark-mode-active .rbtn-ghost:hover {
+    background: rgba(255, 255, 255, .06);
+    color: #e2e8f0;
+}
+
+/* ── SEARCHABLE SELECT ───────────────────────── */
+body.admin-dark-mode-active .ss-btn {
+    background: #162032;
+    border-color: rgba(255, 255, 255, .09);
+    color: #e2e8f0;
+}
+
+body.admin-dark-mode-active .ss-btn:hover {
+    background: #1e293b;
+    border-color: rgba(255, 255, 255, .14);
+}
+
+body.admin-dark-mode-active .ss-panel {
+    background: #1e293b;
+    border-color: rgba(255, 255, 255, .09);
+}
+
+body.admin-dark-mode-active .ss-item {
+    color: #cbd5e1;
+}
+
+body.admin-dark-mode-active .ss-item:hover {
+    background: rgba(249, 115, 22, .08);
+    color: #fb923c;
+}
+
+body.admin-dark-mode-active .ss-item.is-sel {
+    color: #fb923c;
+}
+
+body.admin-dark-mode-active .ss-no-results {
+    color: #475569;
 }

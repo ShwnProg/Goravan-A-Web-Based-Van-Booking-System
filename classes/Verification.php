@@ -8,7 +8,7 @@ class Verification
     public $type;
 
     public $document;
-
+    public $status;
     public function __construct($db)
     {
         $this->conn = $db;
@@ -18,14 +18,15 @@ class Verification
     {
 
         try {
-            $stmt = $this->conn->prepare("INSERT INTO $this->table(user_id_fk,document_type,file_path,submitted_at) 
-                                          VALUES (:id,:type,:path,:submitted_at)");
+            $stmt = $this->conn->prepare("INSERT INTO $this->table(user_id_fk,document_type,file_path,submitted_at,status) 
+                                          VALUES (:id,:type,:path,:submitted_at,status)");
 
             $stmt->execute([
                 ':id' => $this->user_id_fk,
                 ':type' => $this->type,
                 ':path' => $this->document,
-                ':submitted_at'  => date('Y-m-d H:i:s')
+                ':status' => $this->status,
+                ':submitted_at' => date('Y-m-d H:i:s')
             ]);
 
             return true;

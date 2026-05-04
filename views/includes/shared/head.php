@@ -22,8 +22,12 @@
 <link rel="stylesheet" href="../../assets/css/schedules.css">
 <link rel="stylesheet" href="../../assets/css/dashboard.css">
 <link rel="stylesheet" href="../../assets/css/bookings.css">
+<link rel="stylesheet" href="../../assets/css/users.css">
+<link rel="stylesheet" href="../../assets/css/payments.css">
 <link rel="stylesheet" href="../../assets/css/auth.css">
 <link rel="stylesheet" href="../../assets/css/style.css">
+<!-- <link rel="stylesheet" href="../../assets/css/users.css"> -->
+
 
 <!-- Dark mode system — must load LAST so it overrides everything above -->
 <link rel="stylesheet" href="../../assets/css/settings.css">

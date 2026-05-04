@@ -81,6 +81,7 @@ $vans = $vanObj->GetAllVans();
                             data-plate="<?= htmlspecialchars($v['plate_number'], ENT_QUOTES) ?>"
                             data-model="<?= htmlspecialchars($v['model'], ENT_QUOTES) ?>"
                             data-capacity="<?= (int) $v['capacity'] ?>" data-passenger-capacity="<?= (int) $v['capacity'] ?>"
+                            data-status="<?= htmlspecialchars($v['status'], ENT_QUOTES) ?>"
                             data-seats="<?= $seatsJson ?>">
 
                             <td class="text-muted-sm"><?= $i + 1 ?></td>
