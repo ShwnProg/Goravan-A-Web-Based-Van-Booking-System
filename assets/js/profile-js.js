@@ -27,7 +27,8 @@ function initProfileForm() {
 
             var data = {
                 action:         'update_profile',
-                fullname:       (form.querySelector('[name="fullname"]') || {}).value || '',
+                first_name:     (form.querySelector('[name="first_name"]') || {}).value || '',
+                last_name:      (form.querySelector('[name="last_name"]') || {}).value || '',
                 email:          (form.querySelector('[name="email"]') || {}).value || '',
                 contact_number: (form.querySelector('[name="contact_number"]') || {}).value || '',
                 csrf_token:     (form.querySelector('[name="csrf_token"]') || {}).value || ''

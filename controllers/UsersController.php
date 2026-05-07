@@ -58,7 +58,8 @@ $userObj = new UserManagement($conn);
 /* ── EDIT ─────────────────────────────────────── */
 if ($action === 'edit') {
     $user_id = (int) decrypt(trim($_POST['user_id'] ?? ''));
-    $fullname = trim($_POST['fullname'] ?? '');
+    $firstName = trim($_POST['first_name'] ?? '');
+    $lastName = trim($_POST['last_name'] ?? '');
     $email = strtolower(trim($_POST['email'] ?? ''));
     $contact = trim($_POST['contact_number'] ?? '');
     $birthdate = trim($_POST['birthdate'] ?? '');
@@ -66,8 +67,8 @@ if ($action === 'edit') {
     if (!$user_id) {
         _fail('Invalid user ID.');
     }
-    if (!$fullname) {
-        _fail('Full name is required.');
+    if (!$firstName || !$lastName) {
+        _fail('First and last name are required.');
     }
     if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
         _fail('A valid email is required.');
@@ -93,7 +94,8 @@ if ($action === 'edit') {
         _fail('A user with that email already exists.');
     }
 
-    $changed = $fullname !== $orig['fullname']
+    $changed = $firstName !== $orig['firstname']
+        || $lastName !== $orig['lastname']
         || $email !== $orig['email']
         || $contact !== ($orig['contact_number'] ?? '')
         || $birthdate !== ($orig['birthdate'] ?? '');
@@ -104,7 +106,8 @@ if ($action === 'edit') {
         exit;
     }
 
-    $userObj->fullname = $fullname;
+    $userObj->first_name = $firstName;
+    $userObj->last_name = $lastName;
     $userObj->contact_number = $contact;
     $userObj->birthdate = $birthdate;
 

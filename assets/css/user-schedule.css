@@ -1,0 +1,300 @@
+/* user-schedule.css — Schedule page specific styles */
+
+/* Schedule grid */
+.u-schedule-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+}
+
+/* Schedule card */
+.u-schedule-card {
+    background: var(--u-surface);
+    border: 1px solid var(--u-border);
+    border-radius: 12px;
+    padding: 16px;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.u-schedule-card:hover {
+    border-color: var(--u-accent-ring);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* Schedule header */
+.u-schedule-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--u-border);
+}
+
+.u-schedule-time {
+    text-align: left;
+}
+
+.u-schedule-dep {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--u-text);
+    line-height: 1.2;
+}
+
+.u-schedule-arr {
+    font-size: 11px;
+    color: var(--u-muted);
+    margin-top: 2px;
+}
+
+.u-schedule-route {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.u-schedule-origin,
+.u-schedule-dest {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--u-text);
+}
+
+.u-schedule-arrow {
+    color: var(--u-accent);
+    font-size: 12px;
+}
+
+/* Schedule meta info */
+.u-schedule-meta {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 12px;
+}
+
+.u-schedule-info {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--u-muted);
+}
+
+.u-schedule-info i {
+    color: var(--u-dim);
+}
+
+/* Schedule footer */
+.u-schedule-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 12px;
+    border-top: 1px solid var(--u-border);
+}
+
+.u-schedule-price {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.u-price-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--u-dim);
+}
+
+.u-price-value {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--u-accent);
+}
+
+.u-book-btn {
+    padding: 8px 16px;
+    font-size: 13px;
+}
+
+/* Modal styles */
+.u-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.u-modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+}
+
+.u-modal-content {
+    position: relative;
+    background: var(--u-surface);
+    border-radius: 16px;
+    max-width: 400px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+}
+
+.u-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--u-border);
+}
+
+.u-modal-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--u-text);
+    margin: 0;
+}
+
+.u-modal-close {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: var(--u-surface2);
+    border-radius: 8px;
+    color: var(--u-muted);
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: 0.15s;
+}
+
+.u-modal-close:hover {
+    background: var(--u-danger-bg);
+    color: var(--u-danger);
+}
+
+.u-modal-body {
+    padding: 20px;
+}
+
+/* Form styles */
+.u-form-group {
+    margin-bottom: 16px;
+}
+
+.u-form-group label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--u-text);
+    margin-bottom: 6px;
+}
+
+.u-form-group input {
+    width: 100%;
+    height: 40px;
+    background: var(--u-surface2);
+    border: 1px solid var(--u-border);
+    border-radius: 8px;
+    padding: 0 12px;
+    font-size: 13px;
+    color: var(--u-text);
+    font-family: inherit;
+    transition: border 0.15s, box-shadow 0.15s;
+}
+
+.u-form-group input:focus {
+    outline: none;
+    border-color: var(--u-accent);
+    box-shadow: 0 0 0 3px var(--u-accent-ring);
+}
+
+.u-form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.u-total-price {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    background: var(--u-accent-soft);
+    border-radius: 8px;
+}
+
+.u-total-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--u-text);
+}
+
+.u-total-value {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--u-accent);
+}
+
+.u-modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.u-btn {
+    flex: 1;
+    height: 40px;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: 0.15s;
+}
+
+.u-btn-primary {
+    background: var(--u-accent);
+    color: #fff;
+}
+
+.u-btn-primary:hover {
+    background: #ea6906;
+}
+
+.u-btn-secondary {
+    background: var(--u-surface2);
+    color: var(--u-text);
+}
+
+.u-btn-secondary:hover {
+    background: var(--u-border2);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .u-schedule-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .u-form-row {
+        grid-template-columns: 1fr;
+    }
+}

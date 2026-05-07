@@ -6,7 +6,8 @@ class UserManagement
     private $veri_table = 'verification_documents';
 
     public $id;
-    public $fullname;
+    public $first_name;
+    public $last_name;
     public $email;
     public $contact_number;
     public $birthdate;
@@ -23,7 +24,7 @@ class UserManagement
         $stmt = $this->conn->prepare("
             SELECT
                 u.user_id_pk,
-                u.fullname,
+                CONCAT(u.firstname, ' ', u.lastname) as fullname,
                 u.email,
                 u.contact_number,
                 u.birthdate,
@@ -58,7 +59,7 @@ class UserManagement
         $stmt = $this->conn->prepare("
             SELECT
                 u.user_id_pk,
-                u.fullname,
+                CONCAT(u.firstname, ' ', u.lastname) as fullname,
                 u.email,
                 u.contact_number,
                 u.birthdate,
@@ -155,14 +156,16 @@ class UserManagement
         try {
             $stmt = $this->conn->prepare("
                 UPDATE {$this->table}
-                SET fullname       = :fullname,
+                SET firstname      = :firstname,
+                    lastname       = :lastname,
                     email          = :email,
                     contact_number = :contact_number,
                     birthdate      = :birthdate
                 WHERE user_id_pk = :id
             ");
             $stmt->execute([
-                ':fullname'       => $this->fullname,
+                ':firstname'      => $this->first_name,
+                ':lastname'       => $this->last_name,
                 ':email'          => $this->email,
                 ':contact_number' => $this->contact_number,
                 ':birthdate'      => $this->birthdate,

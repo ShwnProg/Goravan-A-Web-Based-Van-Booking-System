@@ -22,7 +22,8 @@ if (!$info) {
     exit;
 }
 
-$fullname  = htmlspecialchars($info['fullname']        ?? '');
+$firstName = htmlspecialchars($info['firstname'] ?? '');
+$lastName  = htmlspecialchars($info['lastname']  ?? '');
 $email     = htmlspecialchars($info['email']           ?? '');
 $contact   = htmlspecialchars($info['contact_number']  ?? '');
 ?>
@@ -53,16 +54,29 @@ $contact   = htmlspecialchars($info['contact_number']  ?? '');
             <form id="form-profile" novalidate>
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
 
-                <div class="rfield">
-                    <label class="rfield-label">Full Name</label>
-                    <input
-                        type="text"
-                        name="fullname"
-                        class="rinput"
-                        value="<?= $fullname ?>"
-                        placeholder="Your full name"
-                        required
-                    >
+                <div class="rfield name-row">
+                    <div class="rfield-half">
+                        <label class="rfield-label">First Name</label>
+                        <input
+                            type="text"
+                            name="first_name"
+                            class="rinput"
+                            value="<?= $firstName ?>"
+                            placeholder="First name"
+                            required
+                        >
+                    </div>
+                    <div class="rfield-half">
+                        <label class="rfield-label">Last Name</label>
+                        <input
+                            type="text"
+                            name="last_name"
+                            class="rinput"
+                            value="<?= $lastName ?>"
+                            placeholder="Last name"
+                            required
+                        >
+                    </div>
                 </div>
 
                 <div class="rfield">

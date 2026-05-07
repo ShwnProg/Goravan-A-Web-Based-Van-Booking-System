@@ -234,6 +234,53 @@
     font-size: .835rem;
 }
 
+/* Name group for first/last name */
+.name-group {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.name-field {
+    flex: 1;
+}
+
+.name-field label {
+    display: block;
+    font-size: .775rem;
+    font-weight: 600;
+    color: var(--color-primary);
+    margin-bottom: 7px;
+    letter-spacing: .01em;
+}
+
+.name-field input {
+    width: 100%;
+    height: var(--input-height);
+    padding: 0 14px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--input-bg);
+    font-family: var(--font-base);
+    font-size: .875rem;
+    color: var(--color-primary);
+    outline: none;
+    transition: border-color var(--transition),
+        box-shadow var(--transition),
+        background var(--transition);
+}
+
+.name-field input:focus {
+    border-color: var(--color-accent);
+    background: var(--color-white);
+    box-shadow: 0 0 0 3.5px rgba(249, 115, 22, .12);
+}
+
+.name-field input::placeholder {
+    color: #b8c5d0;
+    font-size: .835rem;
+}
+
 .password-wrapper {
     position: relative;
     display: block;
@@ -529,6 +576,11 @@
 
     .password-group {
         grid-template-columns: 1fr;
+        gap: 18px;
+    }
+
+    .name-group {
+        flex-direction: column;
         gap: 18px;
     }
 }

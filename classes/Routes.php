@@ -246,5 +246,10 @@ class Routes
         ");
         $stmt->execute([':id' => $routeId]);
     }
+    public function GetActiveRoutes(){
+        $stmt=$this->conn->prepare("SELECT * FROM routes WHERE is_active=1");
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }
 ?>

@@ -25,7 +25,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($role === 'user') {
         $result = $user->AuthenticateUser();
 
-        if ($result === true) {
+        if ($result) {
+            $_SESSION['id'] = encrypt((string)$result);
             $_SESSION['is_login'] = true;
             $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
             header("Location: ../views/users/index.php");

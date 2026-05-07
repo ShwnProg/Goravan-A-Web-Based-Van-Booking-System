@@ -5,7 +5,7 @@ $greeting = $hour < 12 ? 'Good morning' : ($hour < 18 ? 'Good afternoon' : 'Good
 $admin = new Admin($conn);
 $admin->id = decrypt($_SESSION['id']);
 $info = $admin->Read();
-$adminName = $info['fullname'] ?? 'Admin';
+$adminName = ($info['firstname'] ?? '') . ' ' . ($info['lastname'] ?? 'Admin');
 $initials = strtoupper(substr($adminName, 0, 1));
 ?>
 
@@ -18,7 +18,7 @@ $initials = strtoupper(substr($adminName, 0, 1));
         </button>
         <div class="topbar-title">
             <p class="page-title"><?= htmlspecialchars(strtoupper($title ?? 'Dashboard')) ?></p>
-            <p class="topbar-greeting"><?= $greeting ?>, <?= htmlspecialchars($adminName) ?></p>
+            <p class="topbar-greeting"><?= $greeting ?>, <?= htmlspecialchars(ucwords($adminName)) ?></p>
         </div>
     </div>
 
@@ -57,7 +57,7 @@ $initials = strtoupper(substr($adminName, 0, 1));
         <div class="topbar-profile" id="profile-toggle">
             <div class="topbar-avatar"><?= $initials ?></div>
             <div class="topbar-profile-info">
-                <span class="topbar-name"><?= htmlspecialchars($adminName) ?></span>
+                <span class="topbar-name"><?= htmlspecialchars(ucwords($adminName)) ?></span>
                 <span class="topbar-role">Administrator</span>
             </div>
             <i class="fas fa-chevron-down topbar-caret" id="profile-caret"></i>
@@ -67,7 +67,7 @@ $initials = strtoupper(substr($adminName, 0, 1));
                 <div class="dropdown-header">
                     <div class="dropdown-avatar"><?= $initials ?></div>
                     <div>
-                        <p class="dropdown-name"><?= htmlspecialchars($adminName) ?></p>
+                        <p class="dropdown-name"><?= htmlspecialchars(ucwords($adminName)) ?></p>
                         <p class="dropdown-role">Administrator</p>
                     </div>
                 </div>

@@ -1,0 +1,16 @@
+/* user-home.css — Home page specific styles */
+
+/* Home page specific overrides */
+.u-body {
+    padding-top: 0; /* No top padding needed with new header */
+}
+
+/* Stats spacing */
+.u-sec:first-child {
+    margin-top: 0;
+}
+
+/* Quick actions hover effects */
+.u-qa-card:active {
+    transform: scale(0.98);
+}

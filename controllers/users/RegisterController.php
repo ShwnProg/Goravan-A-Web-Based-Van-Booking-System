@@ -14,7 +14,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $is_created = false;
 
     // INPUTSW
-    $fullname = ucwords(trim($_POST['fullname'] ?? ''));
+    $firstName = ucwords(trim($_POST['first_name'] ?? ''));
+    $lastName = ucwords(trim($_POST['last_name'] ?? ''));
     $email = trim($_POST['email'] ?? '');
     $contact = trim($_POST['contact'] ?? '');
     $password = trim($_POST['password'] ?? '');
@@ -47,6 +48,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $errors[] = "File upload failed";
         }
     }
+    // NAME
+    if (empty($firstName) || strlen($firstName) < 2) {
+        $errors[] = 'First name must be at least 2 characters';
+    }
+    if (empty($lastName) || strlen($lastName) < 2) {
+        $errors[] = 'Last name must be at least 2 characters';
+    }
+
     // EMAIL
     $clean_email = filter_var($email, FILTER_SANITIZE_EMAIL);
     $validate_email = filter_var($clean_email, FILTER_VALIDATE_EMAIL);
@@ -107,7 +116,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
 
         // USER INSERT
-        $user->fullname = htmlspecialchars($fullname);
+        $user->first_name = htmlspecialchars($firstName);
+        $user->last_name = htmlspecialchars($lastName);
         $user->email = $email;
         $user->contact = $contact;
         $user->password = password_hash($password, PASSWORD_DEFAULT);
@@ -155,7 +165,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // OLD INPUTS
     $_SESSION['old'] = [
-        'fullname' => $fullname,
+        'first_name' => $firstName,
+        'last_name' => $lastName,
         'email' => $email,
         'contact' => $contact,
         'type' => $type

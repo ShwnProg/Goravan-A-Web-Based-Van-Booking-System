@@ -499,6 +499,16 @@ body.admin-dark-mode-active {
     font-style: italic;
 }
 
+/* Name row for first/last name */
+.name-row {
+    display: flex;
+    gap: 16px;
+}
+
+.rfield-half {
+    flex: 1;
+}
+
 /* ── SEARCHABLE SELECT ───────────────────────── */
 select.ss {
     display: none !important;
@@ -808,6 +818,11 @@ select.ss {
         min-width: 100%;
         order: -1;
         font-size: 12px;
+    }
+
+    .name-row {
+        flex-direction: column;
+        gap: 12px;
     }
 
     .filter-group {

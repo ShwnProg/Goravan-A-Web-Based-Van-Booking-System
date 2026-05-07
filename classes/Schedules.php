@@ -71,7 +71,8 @@ class Schedules
         $stmt->execute([':id' => $this->id]);
         $sch = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if (!$sch) return [];
+        if (!$sch)
+            return [];
 
         $seatStmt = $this->conn->prepare("
             SELECT * FROM seats WHERE van_id_fk = :van_id ORDER BY seat_row, seat_col
@@ -93,9 +94,9 @@ class Schedules
         ");
         $stmt->execute([
             ':van_id' => $this->van_id,
-            ':date'   => $this->departure_date,
-            ':time'   => $this->departure_time,
-            ':id'     => $this->id ?: 0
+            ':date' => $this->departure_date,
+            ':time' => $this->departure_time,
+            ':id' => $this->id ?: 0
         ]);
         return (bool) $stmt->fetchColumn();
     }
@@ -111,9 +112,9 @@ class Schedules
         ");
         $stmt->execute([
             ':driver_id' => $this->driver_id,
-            ':date'      => $this->departure_date,
-            ':time'      => $this->departure_time,
-            ':id'        => $this->id ?: 0
+            ':date' => $this->departure_date,
+            ':time' => $this->departure_time,
+            ':id' => $this->id ?: 0
         ]);
         return (bool) $stmt->fetchColumn();
     }
@@ -130,12 +131,12 @@ class Schedules
                     (:route_id, :driver_id, :van_id, :date, :time, :status)
             ");
             $stmt->execute([
-                ':route_id'  => $this->route_id,
+                ':route_id' => $this->route_id,
                 ':driver_id' => $this->driver_id,
-                ':van_id'    => $this->van_id,
-                ':date'      => $this->departure_date,
-                ':time'      => $this->departure_time,
-                ':status'    => $this->trip_status
+                ':van_id' => $this->van_id,
+                ':date' => $this->departure_date,
+                ':time' => $this->departure_time,
+                ':status' => $this->trip_status
             ]);
 
             $this->conn->commit();
@@ -163,13 +164,13 @@ class Schedules
                 WHERE schedule_id_pk = :id
             ");
             $stmt->execute([
-                ':id'        => $this->id,
-                ':route_id'  => $this->route_id,
+                ':id' => $this->id,
+                ':route_id' => $this->route_id,
                 ':driver_id' => $this->driver_id,
-                ':van_id'    => $this->van_id,
-                ':date'      => $this->departure_date,
-                ':time'      => $this->departure_time,
-                ':status'    => $this->trip_status
+                ':van_id' => $this->van_id,
+                ':date' => $this->departure_date,
+                ':time' => $this->departure_time,
+                ':status' => $this->trip_status
             ]);
 
             $this->conn->commit();
@@ -189,15 +190,17 @@ class Schedules
 
     public function canUpdateStatus(string $newStatus): bool
     {
-        if (!$this->id) return false;
+        if (!$this->id)
+            return false;
 
         $current = $this->getCurrentStatus();
-        if (!$current) return false;
+        if (!$current)
+            return false;
 
         $transitions = [
-            'boarding'  => ['departed', 'cancelled'],
-            'departed'  => ['arrived',  'cancelled'],
-            'arrived'   => [],
+            'boarding' => ['departed', 'cancelled'],
+            'departed' => ['arrived', 'cancelled'],
+            'arrived' => [],
             'cancelled' => []
         ];
 
@@ -228,14 +231,31 @@ class Schedules
                 WHERE schedule_id_pk = :id
             ");
             $stmt->execute([
-                ':status'  => $this->trip_status,
+                ':status' => $this->trip_status,
                 ':status2' => $this->trip_status,   // PDO doesn't allow reusing named params
-                ':id'      => $this->id
+                ':id' => $this->id
             ]);
             return ['success' => true];
         } catch (PDOException $e) {
             return ['success' => false, 'error' => $e->getMessage()];
         }
+    }
+    public function GetAvailableSchedules()
+    {
+        $stmt = $this->conn->prepare("
+            SELECT 
+                s.*,
+                r.origin, r.destination, r.fare as route_fare,
+                d.full_name, d.license_number, d.contact_number,
+                v.plate_number, v.model, v.capacity
+            FROM {$this->table} s
+            INNER JOIN routes r ON s.route_id_fk = r.route_id_pk
+            INNER JOIN drivers d ON s.driver_id_fk = d.driver_id_pk
+            INNER JOIN vans v ON s.van_id_fk = v.van_id_pk
+            WHERE s.trip_status = 'boarding'
+        ");
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }
 ?>

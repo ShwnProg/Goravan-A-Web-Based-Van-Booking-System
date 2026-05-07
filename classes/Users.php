@@ -4,7 +4,8 @@ class Users
     private $conn = null;
     private $table = 'users';
     public $id;
-    public $fullname;
+    public $first_name;
+    public $last_name;
     public $email;
     public $contact;
     public $password;
@@ -19,10 +20,11 @@ class Users
     public function AddUser()
     {
         try {
-            $stmt0 = $this->conn->prepare("INSERT INTO $this->table (fullname,email,contact_number,password,role,created_at,birthdate)
-                                           VALUES (:fullname,:email,:contact,:password,:role,:created_at,:birthdate)");
+            $stmt0 = $this->conn->prepare("INSERT INTO $this->table (firstname,lastname,email,contact_number,password,role,created_at,birthdate)
+                                           VALUES (:firstname,:lastname,:email,:contact,:password,:role,:created_at,:birthdate)");
             $stmt0->execute([
-                ':fullname' => $this->fullname,
+                ':firstname' => $this->first_name,
+                ':lastname' => $this->last_name,
                 ':email' => $this->email,
                 ':contact' => $this->contact,
                 ':password' => $this->password,
@@ -32,6 +34,16 @@ class Users
             ]);
 
             return $this->conn->lastInsertId();
+        } catch (PDOException $e) {
+            return $e->getMessage();
+        }
+    }
+    public function GetUserById()
+    {
+        try {
+            $stmt = $this->conn->prepare("SELECT user_id_pk, firstname, lastname, email, contact_number, birthdate FROM $this->table WHERE user_id_pk = :id");
+            $stmt->execute([':id' => $this->id]);
+            return $stmt->fetch();
         } catch (PDOException $e) {
             return $e->getMessage();
         }
@@ -62,13 +74,13 @@ class Users
     public function AuthenticateUser()
     {
         try {
-            $stmt = $this->conn->prepare("SELECT password FROM $this->table WHERE email = :email ");
+            $stmt = $this->conn->prepare("SELECT user_id_pk,password FROM $this->table WHERE email = :email ");
             $stmt->execute([':email' => $this->email]);
 
             $user = $stmt->fetch();
 
             if ($user && password_verify($this->password, $user['password'])) {
-                return true;
+                return $user["user_id_pk"];
             }
             return 'Invalid Credentials';
         } catch (PDOException $e) {

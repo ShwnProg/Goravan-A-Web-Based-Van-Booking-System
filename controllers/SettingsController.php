@@ -63,12 +63,13 @@ try {
 
 function handleUpdateProfile(PDO $conn, int $adminId, array $data): void
 {
-    $fullname = trim($data['fullname'] ?? '');
-    $email    = trim($data['email']    ?? '');
-    $contact  = trim($data['contact_number'] ?? '');
+    $firstName = trim($data['first_name'] ?? '');
+    $lastName  = trim($data['last_name']  ?? '');
+    $email     = trim($data['email']      ?? '');
+    $contact   = trim($data['contact_number'] ?? '');
 
-    if ($fullname === '') {
-        echo json_encode(['success' => false, 'message' => 'Full name is required.']);
+    if ($firstName === '' || $lastName === '') {
+        echo json_encode(['success' => false, 'message' => 'First and last name are required.']);
         return;
     }
 
@@ -87,15 +88,16 @@ function handleUpdateProfile(PDO $conn, int $adminId, array $data): void
 
     $stmt = $conn->prepare("
         UPDATE users
-        SET fullname = :fullname, email = :email, contact_number = :contact
+        SET firstname = :firstname, lastname = :lastname, email = :email, contact_number = :contact
         WHERE user_id_pk = :id AND role = 'admin'
     ");
 
     $ok = $stmt->execute([
-        ':fullname' => $fullname,
-        ':email'    => $email,
-        ':contact'  => $contact,
-        ':id'       => $adminId,
+        ':firstname' => $firstName,
+        ':lastname'  => $lastName,
+        ':email'     => $email,
+        ':contact'   => $contact,
+        ':id'        => $adminId,
     ]);
 
     if ($ok) {

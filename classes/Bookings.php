@@ -24,7 +24,7 @@ class Bookings
         $stmt = $this->conn->prepare("
             SELECT 
                 b.*,
-                u.fullname as user_name,
+                CONCAT(u.firstname, ' ', u.lastname) as user_name,
                 u.email as user_email,
                 u.contact_number as user_phone,
                 CONCAT(r.origin, ' → ', r.destination) as route_display,
@@ -54,7 +54,7 @@ class Bookings
         $stmt = $this->conn->prepare("
             SELECT 
                 b.*,
-                u.fullname as user_name,
+                CONCAT(u.firstname, ' ', u.lastname) as user_name,
                 u.email as user_email,
                 u.contact_number as user_phone,
                 CONCAT(r.origin, ' → ', r.destination) as route_display,
@@ -194,5 +194,90 @@ class Bookings
     {
         return strtotime($deadline) < time();
     }
+
+    public function GetUpcomingTripByUser()
+    {
+        $stmt = $this->conn->prepare("
+            SELECT 
+                b.*,
+                CONCAT(r.origin, ' → ', r.destination) as route_display,
+                s.departure_date,
+                s.departure_time,
+                s.trip_status as schedule_status
+            FROM {$this->table} b
+            LEFT JOIN schedules s ON b.schedule_id_fk = s.schedule_id_pk
+            LEFT JOIN routes r ON s.route_id_fk = r.route_id_pk
+            WHERE b.user_id_fk = :user_id
+              AND b.status = 'approved'
+              AND CONCAT(s.departure_date, ' ', s.departure_time) > NOW()
+            ORDER BY CONCAT(s.departure_date, ' ', s.departure_time) ASC
+            LIMIT 1
+        ");
+        $stmt->execute([':user_id' => $this->id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+    public function GetRecentBookingsByUser($limit = 3)
+    {
+        $stmt = $this->conn->prepare("
+            SELECT 
+                b.*,
+                CONCAT(r.origin, ' → ', r.destination) as route_display,
+                s.departure_date,
+                s.departure_time,
+                s.trip_status as schedule_status
+            FROM {$this->table} b
+            LEFT JOIN schedules s ON b.schedule_id_fk = s.schedule_id_pk
+            LEFT JOIN routes r ON s.route_id_fk = r.route_id_pk
+            WHERE b.user_id_fk = :user_id
+            ORDER BY b.created_at DESC
+            LIMIT :limit
+        ");
+        $stmt->bindValue(':user_id', $this->id, PDO::PARAM_INT);
+        $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+    public function GetUserStats()
+    {
+        $stmt = $this->conn->prepare("
+            SELECT 
+                COUNT(*) as total,
+                SUM(CASE WHEN b.status = 'approved' AND CONCAT(s.departure_date, ' ', s.departure_time) > NOW() THEN 1 ELSE 0 END) as upcoming,
+                SUM(CASE WHEN b.status = 'approved' AND CONCAT(s.departure_date, ' ', s.departure_time) <= NOW() THEN 1 ELSE 0 END) as completed
+            FROM {$this->table} b
+            LEFT JOIN schedules s ON b.schedule_id_fk = s.schedule_id_pk
+            WHERE b.user_id_fk = :user_id
+        ");
+        $stmt->execute([':user_id' => $this->id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+    public function GetBookingsByUserFiltered()
+    {
+        $query = "
+            SELECT 
+                b.*,
+                CONCAT(r.origin, ' → ', r.destination) as route_display,
+                s.departure_date,
+                s.departure_time,
+                s.trip_status as schedule_status
+            FROM {$this->table} b
+            LEFT JOIN schedules s ON b.schedule_id_fk = s.schedule_id_pk
+            LEFT JOIN routes r ON s.route_id_fk = r.route_id_pk
+            WHERE b.user_id_fk = :user_id
+        ";
+
+        if ($this->status === 'upcoming') {
+            $query .= " AND b.status = 'approved' AND CONCAT(s.departure_date, ' ', s.departure_time) > NOW()";
+        } elseif ($this->status === 'completed') {
+            $query .= " AND b.status = 'approved' AND CONCAT(s.departure_date, ' ', s.departure_time) <= NOW()";
+        } elseif ($this->status === 'cancelled') {
+            $query .= " AND b.status = 'cancelled'";
+        }
+
+        $query .= " ORDER BY b.created_at DESC";
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute([':user_id' => $this->id]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }
-?>

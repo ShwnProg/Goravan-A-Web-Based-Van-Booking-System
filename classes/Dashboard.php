@@ -82,7 +82,7 @@ class Dashboard
                 b.reference_code,
                 b.status,
                 b.created_at,
-                u.fullname                               AS passenger,
+                u.firstname                               AS passenger,
                 CONCAT(r.origin, ' → ', r.destination)  AS route_display
             FROM bookings b
             LEFT JOIN users     u ON b.user_id_fk     = u.user_id_pk

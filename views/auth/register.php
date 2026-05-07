@@ -38,10 +38,17 @@ unset($_SESSION['old']);
         enctype="multipart/form-data">
         <?= csrf_field() ?>
 
-        <div class="input-group">
-            <label for="fullname">Full Name</label>
-            <input type="text" name="fullname" id="fullname" value="<?= htmlspecialchars($old['fullname'] ?? '') ?>"
-                placeholder="Enter your full name" Required>
+        <div class="input-group name-group">
+            <div class="name-field">
+                <label for="first_name">First Name</label>
+                <input type="text" name="first_name" id="first_name" value="<?= htmlspecialchars($old['first_name'] ?? '') ?>"
+                    placeholder="Enter first name" Required>
+            </div>
+            <div class="name-field">
+                <label for="last_name">Last Name</label>
+                <input type="text" name="last_name" id="last_name" value="<?= htmlspecialchars($old['last_name'] ?? '') ?>"
+                    placeholder="Enter last name" Required>
+            </div>
         </div>
 
         <div class="input-group">

@@ -1,0 +1,49 @@
+/* user-bookings.css — Bookings page specific styles */
+
+/* Filter tabs active state */
+.u-ftab.active {
+    background: var(--u-accent-soft);
+    border-color: var(--u-accent-ring);
+    color: var(--u-accent);
+}
+
+/* Booking item hover effect */
+.u-bk-item:active {
+    transform: scale(0.99);
+}
+
+/* Status badge colors */
+.u-badge.pending {
+    background: var(--u-warn-bg);
+    color: var(--u-warn);
+}
+
+.u-badge.approved {
+    background: var(--u-success-bg);
+    color: var(--u-success);
+}
+
+.u-badge.rejected {
+    background: var(--u-danger-bg);
+    color: var(--u-danger);
+}
+
+.u-badge.cancelled {
+    background: var(--u-grey-bg);
+    color: var(--u-grey);
+}
+
+.u-badge.completed {
+    background: var(--u-info-bg);
+    color: var(--u-info);
+}
+
+/* Empty state styling */
+.u-bk-list:empty::before {
+    content: "No bookings found";
+    display: block;
+    text-align: center;
+    padding: 40px;
+    color: var(--u-muted);
+    font-size: 14px;
+}
