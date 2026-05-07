@@ -5,20 +5,6 @@
    Load order: base.css → admin-layout.css → admin-common.css → bookings.css
    ══════════════════════════════════════════════════════════════════ */
 
-/* ── STATUS TOKENS (booking-specific, not in admin-common) ───────── */
-:root {
-    --bk-pending-bg: rgba(249, 115, 22, .08);
-    --bk-pending-text: #f97316;
-    --bk-approved-bg: rgba(22, 163, 74, .08);
-    --bk-approved-txt: #16a34a;
-    --bk-rejected-bg: rgba(239, 68, 68, .08);
-    --bk-rejected-txt: #ef4444;
-    --bk-cancelled-bg: rgba(156, 163, 175, .08);
-    --bk-cancelled-txt: #9ca3af;
-    --bk-expired-bg: rgba(239, 68, 68, .06);
-    --bk-expired-txt: #dc2626;
-}
-
 /* ══════════════════════════════════════════════════════════════════
    WRAPPER
 ══════════════════════════════════════════════════════════════════ */
@@ -74,7 +60,7 @@
 
 /* ── TH ──────────────────────────────────────── */
 .bookings-card .bookings-table thead th {
-    padding: 8px 12px;
+    padding: 9px 12px;
     font-size: 10px;
     font-weight: 700;
     color: #9ca3af;
@@ -88,7 +74,7 @@
 
 /* ── TD ──────────────────────────────────────── */
 .bookings-card .bookings-table tbody td {
-    padding: 9px 12px;
+    padding: 10px 12px;
     color: #374151;
     vertical-align: middle;
     border-bottom: 1px solid rgba(0, 0, 0, .04);
@@ -176,6 +162,13 @@
     white-space: nowrap;
 }
 
+.route-info span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 160px;
+}
+
 /* ── Seat badge ──────────────────────────────── */
 .seat-badge {
     display: inline-flex;
@@ -259,8 +252,34 @@
 .bookings-card .badge.expired,
 .bookings-card .badge.pending.expired {
     background: var(--bk-expired-bg);
-    color: var(--bk-expired-txt);
     border: 1px solid rgba(239, 68, 68, .15);
+}
+
+/* Dark mode overrides for better visibility */
+body.admin-dark-mode-active .bookings-card .badge.pending {
+    background: rgba(245, 158, 11, .12);
+    color: #fbbf24;
+}
+
+body.admin-dark-mode-active .bookings-card .badge.approved {
+    background: rgba(16, 185, 129, .1);
+    color: #34d399;
+}
+
+body.admin-dark-mode-active .bookings-card .badge.rejected {
+    background: rgba(239, 68, 68, .1);
+    color: #f87171;
+}
+
+body.admin-dark-mode-active .bookings-card .badge.cancelled {
+    background: rgba(100, 116, 139, .12);
+    color: #94a3b8;
+}
+
+body.admin-dark-mode-active .bookings-card .badge.expired,
+body.admin-dark-mode-active .bookings-card .badge.pending.expired {
+    background: rgba(239, 68, 68, .08);
+    border: 1px solid rgba(239, 68, 68, .2);
 }
 
 /* ══════════════════════════════════════════════════════════════════
@@ -269,7 +288,7 @@
 .bookings-card .row-actions {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 5px;
     flex-wrap: nowrap;
 }
 

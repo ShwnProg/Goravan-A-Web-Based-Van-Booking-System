@@ -28,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($result === true) {
             $_SESSION['is_login'] = true;
             $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-            header("Location: ../views/user/index.php");
+            header("Location: ../views/users/index.php");
             exit;
         } else {
             $_SESSION['error'] = $result;
@@ -41,10 +41,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $result = $admin->AuthenticateAdmin();
 
         if ($result) {
+            // CRITICAL: Regenerate CSRF token BEFORE setting login to prevent token mismatch
+            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
             $_SESSION['is_login'] = true;
             $_SESSION['id'] = encrypt((string) $result);
             $_SESSION['success'] = 'Login Successfully';
-            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
             header("Location: ../views/admin/index.php");
             exit;
         } else {

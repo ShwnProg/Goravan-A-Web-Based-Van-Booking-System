@@ -19,7 +19,6 @@ var burgerBtn = document.getElementById('burger-btn');
     var notifToggle   = document.getElementById('notif-toggle');
     var notifDropdown = document.getElementById('notif-dropdown');
     var notifDot      = document.getElementById('notif-dot');
-    var markAllRead   = document.getElementById('mark-all-read');
 
     var profileToggle   = document.getElementById('profile-toggle');
     var profileDropdown = document.getElementById('profile-dropdown');
@@ -74,15 +73,6 @@ function openSidebar() {
             profileDropdown && profileDropdown.classList.remove('open');
             profileCaret    && profileCaret.classList.remove('open');
             notifDropdown   && notifDropdown.classList.toggle('open');
-        });
-    }
-
-    if (markAllRead) {
-        markAllRead.addEventListener('click', function () {
-            document.querySelectorAll('.notif-item.unread').forEach(function (item) {
-                item.classList.remove('unread');
-            });
-            if (notifDot) notifDot.style.display = 'none';
         });
     }
 

@@ -2,14 +2,26 @@
 require_once "../../autoload.php";
 ob_start();
 
-$title    = 'Settings';
-$page_css = '../../assets/css/settings.css';
-$page_js  = '../../assets/js/settings-js.js';
+$title    = 'Profile';
+$page_css = '../../assets/css/profile.css';
+$page_js  = '../../assets/js/profile-js.js';
 
 // Fetch current admin info
+$adminId = decrypt($_SESSION['id']);
+if (!$adminId || !is_numeric($adminId)) {
+    header("Location: ../../views/auth/login.php");
+    exit;
+}
+
 $admin     = new Admin($conn);
-$admin->id = decrypt($_SESSION['id']);
+$admin->id = (int)$adminId;
 $info      = $admin->Read();
+
+if (!$info) {
+    header("Location: ../../views/auth/login.php");
+    exit;
+}
+
 $fullname  = htmlspecialchars($info['fullname']        ?? '');
 $email     = htmlspecialchars($info['email']           ?? '');
 $contact   = htmlspecialchars($info['contact_number']  ?? '');
@@ -104,39 +116,54 @@ $contact   = htmlspecialchars($info['contact_number']  ?? '');
 
                 <div class="rfield">
                     <label class="rfield-label">Current Password</label>
-                    <input
-                        type="password"
-                        name="current_password"
-                        class="rinput"
-                        placeholder="Enter current password"
-                        autocomplete="current-password"
-                        required
-                    >
+                    <div class="password-wrapper">
+                        <input
+                            type="password"
+                            name="current_password"
+                            class="rinput"
+                            placeholder="Enter current password"
+                            autocomplete="current-password"
+                            required
+                        >
+                        <button type="button" class="password-toggle" aria-label="Toggle password visibility">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
                 </div>
 
                 <div class="rfield">
                     <label class="rfield-label">New Password</label>
-                    <input
-                        type="password"
-                        name="new_password"
-                        class="rinput"
-                        placeholder="Min. 8 characters"
-                        autocomplete="new-password"
-                        required
-                    >
+                    <div class="password-wrapper">
+                        <input
+                            type="password"
+                            name="new_password"
+                            class="rinput"
+                            placeholder="Min. 8 characters"
+                            autocomplete="new-password"
+                            required
+                        >
+                        <button type="button" class="password-toggle" aria-label="Toggle password visibility">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
                     <span class="rfield-hint">At least 8 characters</span>
                 </div>
 
                 <div class="rfield">
                     <label class="rfield-label">Confirm New Password</label>
-                    <input
-                        type="password"
-                        name="confirm_password"
-                        class="rinput"
-                        placeholder="Repeat new password"
-                        autocomplete="new-password"
-                        required
-                    >
+                    <div class="password-wrapper">
+                        <input
+                            type="password"
+                            name="confirm_password"
+                            class="rinput"
+                            placeholder="Repeat new password"
+                            autocomplete="new-password"
+                            required
+                        >
+                        <button type="button" class="password-toggle" aria-label="Toggle password visibility">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
                 </div>
 
                 <div id="password-feedback" class="settings-feedback"></div>

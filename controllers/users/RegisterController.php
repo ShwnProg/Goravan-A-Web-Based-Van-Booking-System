@@ -131,7 +131,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($result === true) {
                     $is_created = true;
                 } else {
-                    $_SESSION['error'] = 'Failed to save verification';
+                    $_SESSION['error'] = 'Failed to save verification' . $result;
                 }
 
             } else {

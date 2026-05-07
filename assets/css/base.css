@@ -166,3 +166,8 @@ small,
     font-family: var(--font-mono);
     font-size: 0.95em;
 }
+
+/* Dark mode CSS variable override */
+html.admin-dark-mode-active {
+    --page-bg: #0f172a;
+}

@@ -1,4 +1,18 @@
 <!-- Fonts -->
+<script>
+    (function () {
+        if (localStorage.getItem('admin_theme') === 'dark') {
+            document.documentElement.classList.add('dark-init');
+            document.body.classList.add('admin-dark-mode-active');
+        }
+    })();
+</script>
+<style>
+    html.dark-init,
+    html.dark-init body {
+        background: #374151 !important;
+    }
+</style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -11,7 +25,7 @@
 
 <!-- Leaflet CSS -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-
+   <link rel="icon" href="../../images/logo_white.png" type="image/png">
 <!-- App CSS -->
 <link rel="stylesheet" href="../../assets/css/base.css">
 <link rel="stylesheet" href="../../assets/css/admin-layout.css">
@@ -29,12 +43,12 @@
 <!-- <link rel="stylesheet" href="../../assets/css/users.css"> -->
 
 
-<!-- Dark mode system — must load LAST so it overrides everything above -->
-<link rel="stylesheet" href="../../assets/css/settings.css">
+<!-- Dark mode system  must load last so it overrides everything above -->
+<link rel="stylesheet" href="../../assets/css/profile.css">
 
-<!-- Page-specific CSS (settings layout, etc.) -->
-<?php if (!empty($page_css)): ?>
+<!-- Page-specific CSS -->
+<!-- <?php if (!empty($page_css)): ?>
     <link rel="stylesheet" href="<?= $page_css ?>">
-<?php endif; ?>
+<?php endif; ?> -->
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>

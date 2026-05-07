@@ -49,9 +49,9 @@
 
         <div class="menu-section">
             <label>Account</label>
-            <a href="settings.php" class="menu-btn <?= $current == 'settings.php' ? 'active' : '' ?>">
+            <!-- <a href="settings.php" class="menu-btn <?= $current == 'settings.php' ? 'active' : '' ?>">
                 <i class="fas fa-cog"></i><span>Settings</span>
-            </a>
+            </a> -->
             <a href="profile.php" class="menu-btn <?= $current == 'profile.php' ? 'active' : '' ?>">
                 <i class="fa-solid fa-circle-user"></i><span>Profile</span>
             </a>

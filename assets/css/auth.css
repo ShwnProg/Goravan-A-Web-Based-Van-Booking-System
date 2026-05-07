@@ -156,6 +156,19 @@
     margin-bottom: 4px;
 }
 
+.auth-input {
+    width: 100%;
+    max-width: 440px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+}
+
+.auth-input form {
+    width: 100%;
+}
+
 .auth-container h2 {
     font-size: 1.9rem;
     font-weight: 700;
@@ -178,10 +191,7 @@
 }
 
 /* Auth input wrapper */
-.auth-input {
-    width: 100%;
-    max-width: 440px;
-}
+/* Card styles are defined above so the auth form appears as a polished panel. */
 
 /* Input group */
 .input-group {
@@ -222,6 +232,53 @@
 .input-group input::placeholder {
     color: #b8c5d0;
     font-size: .835rem;
+}
+
+.password-wrapper {
+    position: relative;
+    display: block;
+    width: 100%;
+}
+
+.password-wrapper input {
+    width: 100%;
+    padding-right: 50px;
+    box-sizing: border-box;
+}
+
+.password-toggle {
+    position: absolute;
+    top: 50%;
+    right: 12px;
+    transform: translateY(-50%);
+    border: none;
+    background: transparent;
+    color: var(--color-primary);
+    cursor: pointer;
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    line-height: 1;
+    border-radius: 50%;
+    z-index: 2;
+    transition: color var(--transition), transform var(--transition);
+}
+
+.password-toggle i {
+    pointer-events: none;
+}
+
+.password-toggle:hover {
+    color: var(--color-accent);
+    transform: translateY(-50%) scale(1.05);
+}
+
+.password-toggle:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(249, 115, 22, .15);
 }
 
 /* Password group */

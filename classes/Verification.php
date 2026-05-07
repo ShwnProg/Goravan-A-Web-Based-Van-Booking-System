@@ -18,8 +18,8 @@ class Verification
     {
 
         try {
-            $stmt = $this->conn->prepare("INSERT INTO $this->table(user_id_fk,document_type,file_path,submitted_at,status) 
-                                          VALUES (:id,:type,:path,:submitted_at,status)");
+            $stmt = $this->conn->prepare("INSERT INTO $this->table(user_id_fk,document_type,file_path,submitted_at,status)
+                                          VALUES (:id,:type,:path,:submitted_at,:status)");
 
             $stmt->execute([
                 ':id' => $this->user_id_fk,

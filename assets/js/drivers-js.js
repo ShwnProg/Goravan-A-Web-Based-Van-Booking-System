@@ -241,7 +241,7 @@ document.getElementById('drivers-tbody')?.addEventListener('click', function (e)
 
         Swal.fire({
             title: 'Toggle Status?',
-            text: 'Set this van to ' + nextStatus + '?',
+            text: 'Set this driver to ' + nextStatus + '?',
             icon: 'question',
             showCancelButton: true,
             confirmButtonText: 'Yes, toggle',

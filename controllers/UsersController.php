@@ -23,37 +23,37 @@ if (!in_array($action, $readOnlyActions, true) && !csrf_check()) {
 $userObj = new UserManagement($conn);
 
 /* ── ADD ──────────────────────────────────────── */
-if ($action === 'add') {
-    $fullname = trim($_POST['fullname'] ?? '');
-    $email = strtolower(trim($_POST['email'] ?? ''));
-    $contact = trim($_POST['contact_number'] ?? '');
-    $birthdate = trim($_POST['birthdate'] ?? '');
+// if ($action === 'add') {
+//     $fullname = trim($_POST['fullname'] ?? '');
+//     $email = strtolower(trim($_POST['email'] ?? ''));
+//     $contact = trim($_POST['contact_number'] ?? '');
+//     $birthdate = trim($_POST['birthdate'] ?? '');
 
-    if (!$fullname) {
-        _fail('Full name is required.');
-    }
-    if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        _fail('A valid email is required.');
-    }
-    if (!$contact) {
-        _fail('Contact number is required.');
-    }
-    if (!$birthdate) {
-        _fail('Birthdate is required.');
-    }
+//     if (!$fullname) {
+//         _fail('Full name is required.');
+//     }
+//     if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+//         _fail('A valid email is required.');
+//     }
+//     if (!$contact) {
+//         _fail('Contact number is required.');
+//     }
+//     if (!$birthdate) {
+//         _fail('Birthdate is required.');
+//     }
 
-    $userObj->email = $email;
-    if ($userObj->IsEmailExist()) {
-        _fail('A user with that email already exists.');
-    }
+//     $userObj->email = $email;
+//     if ($userObj->IsEmailExist()) {
+//         _fail('A user with that email already exists.');
+//     }
 
-    $userObj->fullname = $fullname;
-    $userObj->contact_number = $contact;
-    $userObj->birthdate = $birthdate;
+//     $userObj->fullname = $fullname;
+//     $userObj->contact_number = $contact;
+//     $userObj->birthdate = $birthdate;
 
-    $r = $userObj->AddUser();
-    $r['success'] ? _ok('User added successfully.') : _fail($r['error'] ?? 'Failed to add user.');
-}
+//     $r = $userObj->AddUser();
+//     $r['success'] ? _ok('User added successfully.') : _fail($r['error'] ?? 'Failed to add user.');
+// }
 
 /* ── EDIT ─────────────────────────────────────── */
 if ($action === 'edit') {
@@ -113,16 +113,16 @@ if ($action === 'edit') {
 }
 
 /* ── DELETE ───────────────────────────────────── */
-if ($action === 'delete') {
-    $user_id = (int) decrypt(trim($_POST['user_id'] ?? ''));
-    if (!$user_id) {
-        _fail('Invalid user ID.');
-    }
+// if ($action === 'delete') {
+//     $user_id = (int) decrypt(trim($_POST['user_id'] ?? ''));
+//     if (!$user_id) {
+//         _fail('Invalid user ID.');
+//     }
 
-    $userObj->id = $user_id;
-    $r = $userObj->DeleteUser();
-    $r['success'] ? _ok('User deleted successfully.') : _fail($r['error'] ?? 'Failed to delete user.');
-}
+//     $userObj->id = $user_id;
+//     $r = $userObj->DeleteUser();
+//     $r['success'] ? _ok('User deleted successfully.') : _fail($r['error'] ?? 'Failed to delete user.');
+// }
 
 /* ── GET DOCUMENTS ────────────────────────────── */
 if ($action === 'get-docs') {

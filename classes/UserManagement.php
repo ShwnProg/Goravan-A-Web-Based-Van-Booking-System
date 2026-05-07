@@ -128,25 +128,25 @@ class UserManagement
 
     /* ── CREATE ───────────────────────────────── */
 
-    public function AddUser(): array
-    {
-        try {
-            $stmt = $this->conn->prepare("
-                INSERT INTO {$this->table}
-                    (fullname, email, contact_number, birthdate, role, created_at)
-                VALUES (:fullname, :email, :contact_number, :birthdate, 'user', NOW())
-            ");
-            $stmt->execute([
-                ':fullname'       => $this->fullname,
-                ':email'          => $this->email,
-                ':contact_number' => $this->contact_number,
-                ':birthdate'      => $this->birthdate,
-            ]);
-            return ['success' => true, 'id' => (int) $this->conn->lastInsertId()];
-        } catch (PDOException $e) {
-            return ['success' => false, 'error' => $e->getMessage()];
-        }
-    }
+    // public function AddUser(): array
+    // {
+    //     try {
+    //         $stmt = $this->conn->prepare("
+    //             INSERT INTO {$this->table}
+    //                 (fullname, email, contact_number, birthdate, role, created_at)
+    //             VALUES (:fullname, :email, :contact_number, :birthdate, 'user', NOW())
+    //         ");
+    //         $stmt->execute([
+    //             ':fullname'       => $this->fullname,
+    //             ':email'          => $this->email,
+    //             ':contact_number' => $this->contact_number,
+    //             ':birthdate'      => $this->birthdate,
+    //         ]);
+    //         return ['success' => true, 'id' => (int) $this->conn->lastInsertId()];
+    //     } catch (PDOException $e) {
+    //         return ['success' => false, 'error' => $e->getMessage()];
+    //     }
+    // }
 
     /* ── UPDATE ───────────────────────────────── */
 

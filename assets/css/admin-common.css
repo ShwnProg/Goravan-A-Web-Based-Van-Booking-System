@@ -1,6 +1,25 @@
+/* ══════════════════════════════════════════════════════════════════
+   admin-common.css
+   Shared styles for admin pages.
+   Load order: base.css → admin-layout.css → admin-common.css → page-specific.css
+   ══════════════════════════════════════════════════════════════════ */
+
+/* Status Colors (Light Mode) */
+:root {
+    --bk-pending-bg: rgba(249, 115, 22, .08);
+    --bk-pending-text: #ea580c;
+    --bk-approved-bg: rgba(22, 163, 74, .08);
+    --bk-approved-txt: #15803d;
+    --bk-rejected-bg: rgba(239, 68, 68, .08);
+    --bk-rejected-txt: #dc2626;
+    --bk-cancelled-bg: rgba(156, 163, 175, .08);
+    --bk-cancelled-txt: #6b7280;
+    --bk-expired-bg: rgba(239, 68, 68, .06);
+    --bk-expired-txt: #dc2626;
+}
+
 html, body {
     background: #f9fafb;
-    transition: background 0.2s ease;
 }
 
 html.dark-init,

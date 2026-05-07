@@ -2,6 +2,7 @@
 require_once '../../autoload.php';
 ob_start();
 $title = "Create Account";
+$page_js = '../../assets/js/user.js';
 
 $left_headline = "Join the<br><em>journey.</em>";
 $left_desc = "Create your GoraVan account and unlock hassle free van booking across Southern Leyte.";
@@ -61,12 +62,21 @@ unset($_SESSION['old']);
         <div class="password-group">
             <div class="pw-field">
                 <label for="password">Password</label>
-                <input type="password" name="password" id="password" placeholder="Min. 8 characters" Required>
+                <div class="password-wrapper">
+                    <input type="password" name="password" id="password" placeholder="Min. 8 characters" Required>
+                    <button type="button" class="password-toggle" aria-label="Toggle password visibility">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
             </div>
             <div class="pw-field">
                 <label for="confirm_password">Confirm Password</label>
-                <input type="password" name="confirm_password" id="confirm_password" placeholder="Re-enter password"
-                    Required>
+                <div class="password-wrapper">
+                    <input type="password" name="confirm_password" id="confirm_password" placeholder="Re-enter password" Required>
+                    <button type="button" class="password-toggle" aria-label="Toggle password visibility">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
             </div>
         </div>
 

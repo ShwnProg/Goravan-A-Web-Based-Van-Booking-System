@@ -33,7 +33,7 @@ function initProfileForm() {
                 csrf_token:     (form.querySelector('[name="csrf_token"]') || {}).value || ''
             };
 
-            fetch('../../controllers/admin/SettingsController.php', {
+            fetch('../../controllers/SettingsController.php', {
                 method:  'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body:    JSON.stringify(data)
@@ -83,7 +83,7 @@ function initProfileForm() {
                 csrf_token:       (form.querySelector('[name="csrf_token"]') || {}).value || ''
             };
 
-            fetch('../../controllers/admin/SettingsController.php', {
+            fetch('../../controllers/SettingsController.php', {
                 method:  'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body:    JSON.stringify(data)
@@ -102,9 +102,27 @@ function initProfileForm() {
         });
     }
 
+    function initPasswordToggles() {
+        var toggles = document.querySelectorAll('.password-toggle');
+        toggles.forEach(function (toggle) {
+            toggle.addEventListener('click', function () {
+                var wrapper = toggle.closest('.password-wrapper');
+                if (!wrapper) return;
+
+                var input = wrapper.querySelector('input[type="password"], input[type="text"]');
+                if (!input) return;
+
+                var isPassword = input.type === 'password';
+                input.type = isPassword ? 'text' : 'password';
+                toggle.innerHTML = '<i class="fas fa-' + (isPassword ? 'eye-slash' : 'eye') + '"></i>';
+            });
+        });
+    }
+
     window.initSettingsPage = function () {
         initProfileForm();
         initPasswordForm();
+        initPasswordToggles();
         // Dark mode toggle on settings page is wired in nav.js automatically
     };
 

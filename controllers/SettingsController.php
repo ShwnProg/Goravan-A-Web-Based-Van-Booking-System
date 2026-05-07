@@ -1,5 +1,5 @@
 <?php
-require_once '../../autoload.php';
+require_once __DIR__ . '/../autoload.php';
 
 header('Content-Type: application/json');
 
@@ -25,23 +25,38 @@ if (empty($data['csrf_token']) || $data['csrf_token'] !== ($_SESSION['csrf_token
 }
 
 $adminId = decrypt($_SESSION['id']);
+
+// Validate decryption worked
+if ($adminId === false || !is_numeric($adminId)) {
+    error_log('SettingsController: Decryption failed for id: ' . ($_SESSION['id'] ?? 'empty'));
+    echo json_encode(['success' => false, 'message' => 'Session expired. Please login again.']);
+    exit;
+}
+
+$adminId = (int)$adminId;
 $admin   = new Admin($conn);
 $admin->id = $adminId;
 
 // Route actions
-switch ($data['action']) {
+try {
+    switch ($data['action']) {
 
-    case 'update_profile':
-        handleUpdateProfile($conn, $adminId, $data);
-        break;
+        case 'update_profile':
+            handleUpdateProfile($conn, $adminId, $data);
+            break;
 
-    case 'change_password':
-        handleChangePassword($conn, $adminId, $admin, $data);
-        break;
+        case 'change_password':
+            handleChangePassword($conn, $adminId, $admin, $data);
+            break;
 
-    default:
-        echo json_encode(['success' => false, 'message' => 'Unknown action.']);
-        break;
+        default:
+            echo json_encode(['success' => false, 'message' => 'Unknown action.']);
+            break;
+    }
+} catch (Exception $e) {
+    error_log('SettingsController error: ' . $e->getMessage());
+    echo json_encode(['success' => false, 'message' => 'An error occurred. Please try again.']);
+    exit;
 }
 
 // Update profile handler
@@ -83,9 +98,15 @@ function handleUpdateProfile(PDO $conn, int $adminId, array $data): void
         ':id'       => $adminId,
     ]);
 
-    if ($ok && $stmt->rowCount() >= 0) {
-        echo json_encode(['success' => true, 'message' => 'Profile updated successfully.']);
+    if ($ok) {
+        $updated = $stmt->rowCount();
+        if ($updated > 0) {
+            echo json_encode(['success' => true, 'message' => 'Profile updated successfully.']);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'No changes were made.']);
+        }
     } else {
+        error_log('Profile update failed for admin ' . $adminId);
         echo json_encode(['success' => false, 'message' => 'Failed to update profile. Please try again.']);
     }
 }

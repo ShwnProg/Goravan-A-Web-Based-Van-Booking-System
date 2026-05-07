@@ -2,6 +2,7 @@
 require_once "../../autoload.php";
 ob_start();
 $title = "Login";
+$page_js = '../../assets/js/user.js';
 
 $left_headline  = "Your seat is<br><em>waiting.</em>";
 $left_desc      = "Sign back in to GoraVan ands manage bookings, check schedules, and travel across Southern Leyte with ease.";
@@ -40,7 +41,12 @@ $left_features  = [
 
         <div class="input-group">
             <label for="password">Password</label>
-            <input type="password" name="password" id="password" placeholder="Enter your password" required>
+            <div class="password-wrapper">
+                <input type="password" name="password" id="password" placeholder="Enter your password" required>
+                <button type="button" class="password-toggle" aria-label="Toggle password visibility">
+                    <i class="fas fa-eye"></i>
+                </button>
+            </div>
         </div>
 
         <a href="forgot_password.php" class="forgot-link">Forgot password?</a>

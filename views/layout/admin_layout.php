@@ -1,7 +1,7 @@
 <?php
 require_once '../../autoload.php';
 
-if (empty($_SESSION['is_login'])) {
+if (empty($_SESSION['is_login']) || empty($_SESSION['id'])) {
     header("Location: ../auth/login.php");
     exit;
 }
@@ -21,14 +21,6 @@ $current = basename($_SERVER['PHP_SELF']);
     <?php if (!empty($page_css)): ?>
         <link rel="stylesheet" href="<?= $page_css ?>">
     <?php endif; ?>
-<script>
-        (function () {
-            if (localStorage.getItem('admin_theme') === 'dark') {
-                document.documentElement.classList.add('dark-init');
-                document.body.classList.add('admin-dark-mode-active');
-            }
-        })();
-    </script>
 
 </head>
 
@@ -71,6 +63,7 @@ $current = basename($_SERVER['PHP_SELF']);
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="../../assets/js/nav.js"></script>
+    <script src="../../assets/js/notifications.js"></script>
 
     <!-- ── Page-specific script ───────────────── -->
     <?php if (!empty($page_js)): ?>

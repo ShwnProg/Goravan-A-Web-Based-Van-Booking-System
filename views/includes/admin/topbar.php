@@ -30,59 +30,28 @@ $initials = strtoupper(substr($adminName, 0, 1));
         </button>
 
         <!-- NOTIFICATIONS -->
-        <button class="topbar-icon-btn" id="notif-toggle" title="Notifications">
+        <!-- <button class="topbar-icon-btn" id="notif-toggle" title="Notifications">
             <i class="fas fa-bell"></i>
             <span class="notif-dot" id="notif-dot"></span>
-        </button>
+        </button> -->
 
         <!-- NOTIFICATION DROPDOWN -->
-        <div class="notif-dropdown" id="notif-dropdown">
-            <div class="notif-header">
+        <!-- <div class="notif-dropdown" id="notif-dropdown"> -->
+            <!-- <div class="notif-header">
                 <p>Notifications</p>
                 <span id="mark-all-read">Mark all as read</span>
             </div>
             <div class="notif-list" id="notif-list">
-                <div class="notif-item unread">
-                    <div class="notif-icon booking">
-                        <i class="fas fa-calendar-check"></i>
-                    </div>
-                    <div class="notif-body">
-                        <p class="notif-text">New booking request from <b>Juan Dela Cruz</b></p>
-                        <span class="notif-time">2 minutes ago</span>
-                    </div>
-                </div>
-                <div class="notif-item unread">
-                    <div class="notif-icon payment">
-                        <i class="fas fa-credit-card"></i>
-                    </div>
-                    <div class="notif-body">
-                        <p class="notif-text">Payment confirmed for booking <b>#BK-0042</b></p>
-                        <span class="notif-time">1 hour ago</span>
-                    </div>
-                </div>
                 <div class="notif-item">
-                    <div class="notif-icon trip">
-                        <i class="fas fa-road"></i>
-                    </div>
                     <div class="notif-body">
-                        <p class="notif-text">Trip <b>#TR-0021</b> has been completed</p>
-                        <span class="notif-time">3 hours ago</span>
-                    </div>
-                </div>
-                <div class="notif-item">
-                    <div class="notif-icon user">
-                        <i class="fas fa-user"></i>
-                    </div>
-                    <div class="notif-body">
-                        <p class="notif-text">New user registered: <b>Maria Santos</b></p>
-                        <span class="notif-time">Yesterday</span>
+                        <p class="notif-text">Loading notifications...</p>
                     </div>
                 </div>
             </div>
             <div class="notif-footer">
                 <a href="notifications.php">View all notifications</a>
             </div>
-        </div>
+        </div> -->
 
         <!-- PROFILE DROPDOWN -->
         <div class="topbar-profile" id="profile-toggle">
@@ -107,10 +76,10 @@ $initials = strtoupper(substr($adminName, 0, 1));
                     <i class="fas fa-user"></i>
                     <span>My Profile</span>
                 </a>
-                <a href="settings.php" class="dropdown-item">
+                <!-- <a href="settings.php" class="dropdown-item">
                     <i class="fas fa-cog"></i>
                     <span>Settings</span>
-                </a>
+                </a> -->
                 <div class="dropdown-divider"></div>
                 <a href="../../controllers/users/LogoutController.php" class="dropdown-item dropdown-logout">
                     <i class="fas fa-sign-out-alt"></i>

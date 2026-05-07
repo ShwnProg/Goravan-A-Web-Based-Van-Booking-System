@@ -71,7 +71,16 @@ require_once "../../autoload.php";
 
     </main>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
+    <?php if (!empty($page_js)): ?>
+        <script src="<?= $page_js ?>"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                if (window.initAuthPage) {
+                    window.initAuthPage();
+                }
+            });
+        </script>
+    <?php endif; ?>
 </body>
 
 </html>

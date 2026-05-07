@@ -83,11 +83,39 @@
     line-height: 1.3;
 }
 
-.settings-card-body {
+..settings-card-body {
     padding: 20px;
     display: flex;
     flex-direction: column;
     gap: 14px;
+}
+
+.password-wrapper {
+    position: relative;
+}
+
+.password-wrapper .rinput {
+    padding-right: 44px;
+}
+
+.password-toggle {
+    position: absolute;
+    top: 50%;
+    right: 14px;
+    transform: translateY(-50%);
+    border: none;
+    background: transparent;
+    color: var(--color-primary);
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+}
+
+.password-toggle:focus {
+    outline: none;
 }
 
 /* Dark mode toggle row */

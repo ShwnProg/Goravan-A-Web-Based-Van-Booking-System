@@ -441,33 +441,46 @@ function deleteRoute(routeId, routeName) {
  */
 function toggleRouteStatus(routeId, currentActive) {
     const newActive = currentActive == 1 ? 0 : 1;
-    const formData = new FormData();
-    formData.append('route_id', routeId);
-    formData.append('is_active', newActive);
-    formData.append('csrf_token', getCsrf());
+    const nextStatus = newActive == 1 ? 'active' : 'inactive';
 
-    console.log('[Routes Toggle] Sending:', { routeId, newActive });
+    Swal.fire({
+        title: 'Toggle Status?',
+        text: 'Set this route to ' + nextStatus + '?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, toggle',
+        confirmButtonColor: '#2e3a4d',
+    }).then(result => {
+        if (!result.isConfirmed) return;
 
-    fetch('../../controllers/routes/ToggleRoute.php', {
-        method: 'POST',
-        body: formData
-    })
-        .then(res => res.json())
-        .then(data => {
-            console.log('[Routes Toggle] Response:', data);
+        const formData = new FormData();
+        formData.append('route_id', routeId);
+        formData.append('is_active', newActive);
+        formData.append('csrf_token', getCsrf());
 
-            if (data.success) {
-                Swal.fire('Success', 'Status updated!', 'success').then(() => {
-                    location.reload();
-                });
-            } else {
-                Swal.fire('Error', data.message || 'Failed to update status.', 'error');
-            }
+        console.log('[Routes Toggle] Sending:', { routeId, newActive });
+
+        fetch('../../controllers/routes/ToggleRoute.php', {
+            method: 'POST',
+            body: formData
         })
-        .catch(err => {
-            console.error('[Routes Toggle] Fetch error:', err);
-            Swal.fire('Error', 'Network error. Please try again.', 'error');
-        });
+            .then(res => res.json())
+            .then(data => {
+                console.log('[Routes Toggle] Response:', data);
+
+                if (data.success) {
+                    Swal.fire('Updated!', data.message, 'success').then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire('Error', data.message || 'Failed to update status.', 'error');
+                }
+            })
+            .catch(err => {
+                console.error('[Routes Toggle] Fetch error:', err);
+                Swal.fire('Error', 'Network error. Please try again.', 'error');
+            });
+    });
 }
 
 /**
