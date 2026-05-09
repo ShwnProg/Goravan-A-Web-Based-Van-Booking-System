@@ -93,5 +93,18 @@ class Dashboard
         ");
         return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
+    public function GetTotalPending()
+    {
+        try {
+            $stmt = $this->conn->prepare(
+                "SELECT COUNT(*) FROM verification_documents
+                 WHERE status = 'pending'"
+            );
+            $stmt->execute();
+            return (int) $stmt->fetchColumn();
+        } catch (PDOException $e) {
+            return 0;
+        }
+    }
 }
 ?>

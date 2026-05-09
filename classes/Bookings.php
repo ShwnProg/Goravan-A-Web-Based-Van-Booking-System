@@ -10,7 +10,7 @@ class Bookings
     public $seat_id;
     public $reference_code;
     public $status;
-    public $payment_deadline;
+    // public $payment_deadline;
 
     public function __construct($db)
     {
@@ -118,17 +118,17 @@ class Bookings
         try {
             $stmt = $this->conn->prepare("
                 INSERT INTO {$this->table}
-                    (user_id_fk, schedule_id_fk, seat_id_fk, reference_code, status, payment_deadline)
+                    (user_id_fk, schedule_id_fk, seat_id_fk, reference_code, status)
                 VALUES
-                    (:user_id, :schedule_id, :seat_id, :ref_code, :status, :deadline)
+                    (:user_id, :schedule_id, :seat_id, :ref_code, :status)
             ");
             $stmt->execute([
                 ':user_id' => $this->user_id,
                 ':schedule_id' => $this->schedule_id,
                 ':seat_id' => $this->seat_id,
                 ':ref_code' => $this->reference_code,
-                ':status' => $this->status,
-                ':deadline' => $this->payment_deadline
+                ':status' => $this->status
+                // ':deadline' => $this->payment_deadline
             ]);
 
             return ['success' => true, 'id' => (int) $this->conn->lastInsertId()];
@@ -190,10 +190,10 @@ class Bookings
         return $colors[$status] ?? '#9ca3af';
     }
 
-    public static function IsPaymentExpired(string $deadline): bool
-    {
-        return strtotime($deadline) < time();
-    }
+    // public static function IsPaymentExpired(string $deadline): bool
+    // {
+    //     return strtotime($deadline) < time();
+    // }
 
     public function GetUpcomingTripByUser()
     {
@@ -242,6 +242,7 @@ class Bookings
         $stmt = $this->conn->prepare("
             SELECT 
                 COUNT(*) as total,
+                SUM(CASE WHEN b.status = 'pending' THEN 1 ELSE 0 END) as pending,
                 SUM(CASE WHEN b.status = 'approved' AND CONCAT(s.departure_date, ' ', s.departure_time) > NOW() THEN 1 ELSE 0 END) as upcoming,
                 SUM(CASE WHEN b.status = 'approved' AND CONCAT(s.departure_date, ' ', s.departure_time) <= NOW() THEN 1 ELSE 0 END) as completed
             FROM {$this->table} b

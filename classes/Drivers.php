@@ -15,7 +15,7 @@ class Drivers
         $this->conn = $db;
     }
 
-    // ── READ ──────────────────────────────────────────────────
+    // READ 
     public function GetAllDrivers(): array
     {
         $stmt = $this->conn->prepare("
@@ -59,7 +59,7 @@ class Drivers
         return (bool) $stmt->fetchColumn();
     }
 
-    // ── CREATE ────────────────────────────────────────────────
+    // CREATE 
     public function AddDriver(): array
     {
         try {
@@ -80,7 +80,7 @@ class Drivers
         }
     }
 
-    // ── UPDATE ────────────────────────────────────────────────
+    // UPDATE
     public function EditDriver(): array
     {
         $stmt = $this->conn->prepare("

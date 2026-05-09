@@ -29,8 +29,15 @@ class UserManagement
                 u.contact_number,
                 u.birthdate,
                 u.created_at,
+                (
+                    SELECT COALESCE(v2.status, 'pending')
+                    FROM {$this->veri_table} v2
+                    WHERE v2.user_id_fk = u.user_id_pk
+                    ORDER BY v2.submitted_at DESC, v2.document_id_pk DESC
+                    LIMIT 1
+                ) AS latest_verification_status,
                 COUNT(v.document_id_pk) AS document_count,
-                SUM(CASE WHEN v.status = 'pending' THEN 1 ELSE 0 END) AS pending_count,
+                SUM(CASE WHEN v.status = 'pending' OR v.status IS NULL THEN 1 ELSE 0 END) AS pending_count,
                 SUM(CASE WHEN v.status = 'rejected' THEN 1 ELSE 0 END) AS rejected_count,
                 SUM(CASE WHEN v.status = 'approved' THEN 1 ELSE 0 END) AS approved_count
             FROM {$this->table} u
@@ -47,7 +54,8 @@ class UserManagement
                 (int) $row['document_count'],
                 (int) $row['pending_count'],
                 (int) $row['rejected_count'],
-                (int) $row['approved_count']
+                (int) $row['approved_count'],
+                $row['latest_verification_status'] ?? null
             );
         }
 
@@ -64,8 +72,15 @@ class UserManagement
                 u.contact_number,
                 u.birthdate,
                 u.created_at,
+                (
+                    SELECT COALESCE(v2.status, 'pending')
+                    FROM {$this->veri_table} v2
+                    WHERE v2.user_id_fk = u.user_id_pk
+                    ORDER BY v2.submitted_at DESC, v2.document_id_pk DESC
+                    LIMIT 1
+                ) AS latest_verification_status,
                 COUNT(v.document_id_pk) AS document_count,
-                SUM(CASE WHEN v.status = 'pending' THEN 1 ELSE 0 END) AS pending_count,
+                SUM(CASE WHEN v.status = 'pending' OR v.status IS NULL THEN 1 ELSE 0 END) AS pending_count,
                 SUM(CASE WHEN v.status = 'rejected' THEN 1 ELSE 0 END) AS rejected_count,
                 SUM(CASE WHEN v.status = 'approved' THEN 1 ELSE 0 END) AS approved_count
             FROM {$this->table} u
@@ -82,7 +97,8 @@ class UserManagement
             (int) $rows[0]['document_count'],
             (int) $rows[0]['pending_count'],
             (int) $rows[0]['rejected_count'],
-            (int) $rows[0]['approved_count']
+            (int) $rows[0]['approved_count'],
+            $rows[0]['latest_verification_status'] ?? null
         );
 
         return $rows;
@@ -95,10 +111,9 @@ class UserManagement
                 document_id_pk,
                 document_type,
                 file_path,
-                status,
+                COALESCE(status, 'pending') AS status,
                 submitted_at,
-                reviewed_at,
-                reviewed_by
+                reviewed_at
             FROM {$this->veri_table}
             WHERE user_id_fk = :user_id
             ORDER BY submitted_at DESC
@@ -218,13 +233,11 @@ class UserManagement
             $stmt = $this->conn->prepare("
                 UPDATE {$this->veri_table}
                 SET status      = :status,
-                    reviewed_at = NOW(),
-                    reviewed_by = :reviewer
+                    reviewed_at = NOW()
                 WHERE document_id_pk = :id
             ");
             $stmt->execute([
                 ':status'   => $status,
-                ':reviewer' => $_SESSION['user_id'] ?? 0,
                 ':id'       => $doc_id,
             ]);
             return ['success' => true];
@@ -240,17 +253,14 @@ class UserManagement
      * - Any pending → "pending"
      * - All approved → "approved"
      */
-    private function resolveStatusFromCounts(int $total, int $pending, int $rejected, int $approved): string
+    private function resolveStatusFromCounts(int $total, int $pending, int $rejected, int $approved, ?string $latest = null): string
     {
         if ($total === 0) {
             return 'no_submission';
         }
-        if ($rejected > 0) {
-            return 'rejected';
+        if (in_array($latest, ['pending', 'approved', 'rejected'], true)) {
+            return $latest;
         }
-        if ($pending > 0) {
-            return 'pending';
-        }
-        return 'approved';
+        return $pending > 0 ? 'pending' : ($rejected > 0 ? 'rejected' : 'approved');
     }
 }

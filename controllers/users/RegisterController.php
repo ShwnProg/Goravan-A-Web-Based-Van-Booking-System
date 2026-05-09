@@ -99,6 +99,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = 'Password do not match';
     }
 
+    //Atleast One Number
+    if (!preg_match('/\d/', $password)) {
+        $errors[] = 'Password Must contain at least one number';
+    }
+
+    //Atleast One Uppercase Letter
+    if (!preg_match('/[A-Z]/', $password)) {
+        $errors[] = 'Password Must contain at least one uppercase letter';
+    }
+    
+
     // TYPE
     if (empty($type)) {
         $errors[] = 'Passenger type is required.';

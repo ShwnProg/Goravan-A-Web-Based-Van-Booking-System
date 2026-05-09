@@ -50,7 +50,6 @@ $bookings   = $bookingObj->GetAllBookings();
                         <th>Route</th>
                         <th>Seat</th>
                         <th>Status</th>
-                        <th>Payment Due</th>
                         <th>Created</th>
                         <th>Actions</th>
                     </tr>
@@ -67,8 +66,6 @@ $bookings   = $bookingObj->GetAllBookings();
                         </tr>
                     <?php else: ?>
                         <?php foreach ($bookings as $i => $b):
-                            $isExpired = Bookings::IsPaymentExpired($b['payment_deadline']);
-                            $paymentDue = date('M d, Y g:i A', strtotime($b['payment_deadline']));
                         ?>
                             <tr class="booking-row"
                                 data-id="<?= (int) $b['book_id_pk'] ?>"
@@ -79,7 +76,6 @@ $bookings   = $bookingObj->GetAllBookings();
                                 data-route="<?= htmlspecialchars($b['route_display'] ?? 'N/A', ENT_QUOTES) ?>"
                                 data-seat="<?= htmlspecialchars($b['seat_number'] ?? 'N/A', ENT_QUOTES) ?>"
                                 data-status="<?= htmlspecialchars($b['status'], ENT_QUOTES) ?>"
-                                data-payment-deadline="<?= htmlspecialchars($b['payment_deadline'], ENT_QUOTES) ?>"
                                 data-driver="<?= htmlspecialchars($b['driver_name'] ?? 'N/A', ENT_QUOTES) ?>"
                                 data-van="<?= htmlspecialchars($b['van_plate'] ?? 'N/A', ENT_QUOTES) ?>"
                                 data-departure="<?= date('M d g:i A', strtotime($b['departure_date'] . ' ' . $b['departure_time'])) ?>"
@@ -111,17 +107,17 @@ $bookings   = $bookingObj->GetAllBookings();
                                 <td>
                                     <span class="badge <?= $b['status'] ?> <?= $isExpired ? 'expired' : '' ?>">
                                         <?= ucfirst($b['status']) ?>
-                                        <?php if ($isExpired && $b['status'] === 'pending'): ?>
+                                        <!-- <?php if ($isExpired && $b['status'] === 'pending'): ?>
                                             <i class="fas fa-exclamation-triangle" style="font-size:9px;margin-left:3px"></i>
-                                        <?php endif; ?>
+                                        <?php endif; ?> -->
                                     </span>
                                 </td>
-                                <td class="<?= $isExpired ? 'text-danger' : '' ?>">
+                                <!-- <td class="<?= $isExpired ? 'text-danger' : '' ?>">
                                     <small><?= $paymentDue ?></small>
                                     <?php if ($isExpired): ?>
                                         <div class="expired-label">EXPIRED</div>
                                     <?php endif; ?>
-                                </td>
+                                </td> -->
                                 <td class="text-muted-sm">
                                     <small><?= date('M d, Y', strtotime($b['created_at'])) ?></small>
                                 </td>
@@ -131,12 +127,12 @@ $bookings   = $bookingObj->GetAllBookings();
                                             <i class="fas fa-eye"></i>
                                         </button>
                                         <?php if ($b['status'] === 'pending'): ?>
-                                            <button class="icon-btn approve" title="Approve">
+                                            <!-- <button class="icon-btn approve" title="Approve">
                                                 <i class="fas fa-check"></i>
                                             </button>
                                             <button class="icon-btn reject" title="Reject">
                                                 <i class="fas fa-times"></i>
-                                            </button>
+                                            </button> -->
                                         <?php endif; ?>
                                         <?php if (in_array($b['status'], ['pending', 'approved'])): ?>
                                             <button class="icon-btn cancel" title="Cancel">

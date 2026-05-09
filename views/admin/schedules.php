@@ -203,7 +203,7 @@ $vans   = $vanObj->GetAllVans();
                 </div>
                 <div class="detail-row">
                     <span class="detail-label">Status</span>
-                    <span id="preview-status" class="detail-badge badge">—</span>
+                    <span id="preview-status" class="detail-badge badge" style="justify-content: center;">—</span>
                 </div>
                 <div class="detail-row" id="preview-arrived-row" style="display:none;">
                     <span class="detail-label">Arrived At</span>

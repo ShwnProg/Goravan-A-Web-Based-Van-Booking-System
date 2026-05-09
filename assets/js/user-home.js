@@ -7,7 +7,7 @@
     }
 
     // Search form validation
-    var searchForm = document.querySelector('.u-srow');
+    var searchForm = document.querySelector('.u-toolbar-form');
     if (searchForm) {
         searchForm.addEventListener('submit', function (e) {
             var from = document.getElementById('from').value;

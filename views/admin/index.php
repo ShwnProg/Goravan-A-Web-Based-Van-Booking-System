@@ -8,7 +8,7 @@ $page_js  = '../../assets/js/dashboard-js.js';
 
 // FETCH  
 $dash = new Dashboard($conn);
-
+$verificationSummary = $dash->GetTotalPending();
 $bookingSummary = $dash->GetBookingSummary();   // total, pending, approved, rejected, cancelled
 $totalUsers     = $dash->GetTotalUsers();
 $schedSummary   = $dash->GetScheduleSummary();  // active_schedules
@@ -43,8 +43,8 @@ $breakdown = [
     </div>
 
     <div class="db-stat">
-        <span class="db-stat__label">Pending</span>
-        <span class="db-stat__val"><?= number_format($bookingSummary['pending']) ?></span>
+        <span class="db-stat__label">Pending (Verification Documents)</span>
+        <span class="db-stat__val"><?= number_format($verificationSummary) ?></span>
         <span class="db-stat__sub"><strong>Needs</strong> your action</span>
     </div>
 

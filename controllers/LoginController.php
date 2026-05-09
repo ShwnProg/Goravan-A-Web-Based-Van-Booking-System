@@ -16,43 +16,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = trim($_POST['password'] ?? '');
 
     $user->email = $email;
-    $user->password = $password;
 
     // $result = $user->AuthenticateUser();
 
     $role = $user->GetRole();
 
     if ($role === 'user') {
+        $user->password = $password;
+
         $result = $user->AuthenticateUser();
 
-        if ($result) {
-            $_SESSION['id'] = encrypt((string)$result);
+        if ($result['is_login']) {
+            $_SESSION['id'] = encrypt((string) $result['id']);
             $_SESSION['is_login'] = true;
             $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
             header("Location: ../views/users/index.php");
             exit;
         } else {
-            $_SESSION['error'] = $result;
+            $_SESSION['error'] = $result['error'];
         }
-    } else {
+
+    } else if ($role === 'admin') {
         $admin = new Admin($conn);
         $admin->email = $email;
         $admin->password = $password;
 
         $result = $admin->AuthenticateAdmin();
 
-        if ($result) {
-            // CRITICAL: Regenerate CSRF token BEFORE setting login to prevent token mismatch
+        if ($result['is_login']) {
             $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
             $_SESSION['is_login'] = true;
-            $_SESSION['id'] = encrypt((string) $result);
+            $_SESSION['id'] = encrypt((string) $result['id']);
             $_SESSION['success'] = 'Login Successfully';
             header("Location: ../views/admin/index.php");
             exit;
         } else {
-            $_SESSION['error'] = 'Invalid Credentials';
+            $_SESSION['error'] = $result['error'];
         }
+    } else {
+        $_SESSION['error'] = 'No account found with that email.';
     }
+    // var_dump($role);
+    // var_dump($result);
+
+
 
     header("Location: ../views/auth/login.php");
     exit;

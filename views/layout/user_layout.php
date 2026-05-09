@@ -5,9 +5,9 @@ if (!isset($_SESSION['is_login'])) {
     exit;
 }
 $userId = decrypt($_SESSION['id']);
-$um     = new Users($conn);
+$um = new Users($conn);
 $um->id = $userId;
-$user   = $um->GetUserById();
+$user = $um->GetUserById();
 $_SESSION['user_firstname'] = $user['firstname'] ?? '';
 $_SESSION['user_lastname'] = $user['lastname'] ?? '';
 // Determine relative path depth for assets
@@ -20,6 +20,7 @@ $depth = str_repeat('../', substr_count($_SERVER['PHP_SELF'], '/') - 1);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($title ?? 'GoraVan') ?> — GoraVan</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="<?= $depth ?>assets/css/base.css">
     <link rel="stylesheet" href="<?= $depth ?>assets/css/user-common.css">
     <?php if (!empty($page_css)): ?>
@@ -31,12 +32,30 @@ $depth = str_repeat('../', substr_count($_SERVER['PHP_SELF'], '/') - 1);
 </head>
 
 <body class="user-page" id="userBody">
+    <?php if (isset($_SESSION['success'])): ?>
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                Swal.fire({ title: 'Success', text: <?= json_encode($_SESSION['success']) ?>, icon: 'success' });
+            });
+        </script>
+        <?php unset($_SESSION['success']); ?>
+    <?php endif; ?>
+
+    <?php if (isset($_SESSION['error'])): ?>
+        <?php $firstError = is_array($_SESSION['error']) ? $_SESSION['error'][0] : $_SESSION['error']; ?>
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                Swal.fire({ title: 'Error', text: <?= json_encode($firstError) ?>, icon: 'error' });
+            });
+        </script>
+        <?php unset($_SESSION['error']); ?>
+    <?php endif; ?>
 
     <nav class="u-topnav">
         <!-- <img src="../../images/logo.png" alt="GoraVan Logo"> -->
         <a href="<?= $depth ?>views/users/index.php" class="u-logo">
             <img src="<?= $depth ?>images/logo.png" alt="GoraVan Logo" id="logoImg">
-            <span>Gora<span>Van</span></span>
+            <span>Gora<span class='accent'>Van</span></span>
         </a>
 
         <div class="u-navlinks">
@@ -121,6 +140,9 @@ $depth = str_repeat('../', substr_count($_SERVER['PHP_SELF'], '/') - 1);
             <i class="fa-regular fa-user"></i><span>Profile</span>
         </a>
     </nav>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <?php if (!empty($page_js)): ?>
         <script src="<?= $page_js ?>"></script>

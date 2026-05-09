@@ -1,88 +1,99 @@
-/* user-profile.js — Profile page specific JavaScript */
+/* user-profile.js - Profile page specific JavaScript */
 
 (function () {
-    // Profile form handling
-    var profileForm = document.querySelector('form[action*="ProfileController.php"]');
-    if (profileForm) {
-        profileForm.addEventListener('submit', function (e) {
-            var action = this.querySelector('input[name="action"]').value;
 
-            if (action === 'update_profile') {
-                // Validate profile update
-                var firstName = document.getElementById('firstName').value;
-                var lastName = document.getElementById('lastName').value;
-                var email = document.getElementById('email').value;
-                var phone = document.getElementById('phone').value;
 
-                if (!firstName || !lastName || !email) {
-                    e.preventDefault();
-                    alert('Please fill in all required fields');
-                    return false;
+    let editForm = document.getElementById('editform');
+
+    //AJAX SWEET ALERT
+
+    editForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        let formData = new FormData(editForm);
+
+        fetch('../../controllers/users/ProfileController.php', {
+            method: 'POST',
+            body: formData,
+            dataType: 'json'
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Profile Updated',
+                        text: data.message,
+                        timer: 2000
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Update Failed',
+                        text: data.message || 'An error occurred while updating your profile.',
+                    });
                 }
+            })
+            .catch(error => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Network Error',
+                    text: 'A network error occurred. Please check your connection and try again.',
+                });
+                console.error('ProfileController error:', error);
+            });
+    });
 
-                // Email validation
-                var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                if (!emailRegex.test(email)) {
-                    e.preventDefault();
-                    alert('Please enter a valid email address');
-                    return false;
+    let changePasswordForm = document.getElementById('changePasswordForm');
+
+    changePasswordForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        let formData = new FormData(changePasswordForm);
+
+
+        fetch('../../controllers/users/PasswordController.php', {
+            method: 'POST',
+            body: formData,
+            dataType: 'json'
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Password Changed',
+                        text: data.message,
+                        timer: 2000
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Update Failed',
+                        text: data.message || 'An error occurred while updating your password.',
+                    });
                 }
-
-                // Phone validation (if provided)
-                if (phone && phone.length < 10) {
-                    e.preventDefault();
-                    alert('Please enter a valid phone number');
-                    return false;
-                }
-            }
-
-            if (action === 'change_password') {
-                // Validate password change
-                var currentPassword = document.getElementById('currentPassword').value;
-                var newPassword = document.getElementById('newPassword').value;
-                var confirmPassword = document.getElementById('confirmPassword').value;
-
-                if (!currentPassword || !newPassword || !confirmPassword) {
-                    e.preventDefault();
-                    alert('Please fill in all password fields');
-                    return false;
-                }
-
-                if (newPassword.length < 8) {
-                    e.preventDefault();
-                    alert('New password must be at least 8 characters long');
-                    return false;
-                }
-
-                if (newPassword !== confirmPassword) {
-                    e.preventDefault();
-                    alert('New passwords do not match');
-                    return false;
-                }
-
-                if (currentPassword === newPassword) {
-                    e.preventDefault();
-                    alert('New password must be different from current password');
-                    return false;
-                }
-            }
-        });
-    }
-
+            })
+            .catch(error => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Network Error',
+                    text: 'A network error occurred. Please check your connection and try again.',
+                });
+                console.error('ProfileController error:', error);
+            });
+    });
     // Menu item interactions
     var menuItems = document.querySelectorAll('.u-menu-item');
     menuItems.forEach(function (item) {
         item.addEventListener('click', function (e) {
-            // Add visual feedback
             this.style.transform = 'scale(0.98)';
-            setTimeout(function () {
-                item.style.transform = '';
-            }, 150);
+            setTimeout(function () { item.style.transform = ''; }, 150);
 
-            // Handle danger items (sign out)
             if (this.classList.contains('danger')) {
-                var confirmSignOut = confirm('Are you sure you want to sign out?');
-                if (!confirmSignOut) {
+                if (!confirm('Are you sure you want to sign out?')) {
                     e.preventDefault();
                 }
             }
@@ -92,44 +103,171 @@
     // Input field focus effects
     var inputs = document.querySelectorAll('.u-form-group input');
     inputs.forEach(function (input) {
-        input.addEventListener('focus', function () {
-            this.parentElement.classList.add('focused');
-        });
-        input.addEventListener('blur', function () {
-            this.parentElement.classList.remove('focused');
-        });
+        input.addEventListener('focus', function () { this.parentElement.classList.add('focused'); });
+        input.addEventListener('blur', function () { this.parentElement.classList.remove('focused'); });
     });
 
-    // Password strength indicator (optional enhancement)
+    // Password match indicator
     var newPasswordInput = document.getElementById('newPassword');
     var confirmPasswordInput = document.getElementById('confirmPassword');
-
     if (newPasswordInput && confirmPasswordInput) {
         confirmPasswordInput.addEventListener('input', function () {
-            if (this.value !== newPasswordInput.value) {
-                this.style.borderColor = 'var(--u-danger)';
-            } else {
-                this.style.borderColor = 'var(--u-success)';
-            }
+            this.style.borderColor = (this.value !== newPasswordInput.value)
+                ? 'var(--u-danger)'
+                : 'var(--u-success)';
         });
     }
 
     // Phone number formatting
     var phoneInput = document.getElementById('phone');
     if (phoneInput) {
-        phoneInput.addEventListener('input', function (e) {
-            // Remove non-numeric characters
+        phoneInput.addEventListener('input', function () {
             var value = this.value.replace(/\D/g, '');
-            // Format as 09XX XXX XXXX
-            if (value.length > 0) {
-                if (value.length <= 4) {
-                    this.value = value;
-                } else if (value.length <= 7) {
-                    this.value = value.slice(0, 4) + ' ' + value.slice(4);
-                } else {
-                    this.value = value.slice(0, 4) + ' ' + value.slice(4, 7) + ' ' + value.slice(7, 11);
-                }
+            if (value.length <= 4) {
+                this.value = value;
+            } else if (value.length <= 7) {
+                this.value = value.slice(0, 4) + ' ' + value.slice(4);
+            } else {
+                this.value = value.slice(0, 4) + ' ' + value.slice(4, 7) + ' ' + value.slice(7, 11);
             }
         });
+    }
+})();
+
+
+/* Verification system - AJAX + Bootstrap modal */
+(function () {
+    var modalEl = document.getElementById('verifModal');
+    if (!modalEl) return; // Not on profile page
+
+    var verifModal = new bootstrap.Modal(modalEl);
+
+    // DOM refs
+    var actionInput = document.getElementById('verifAction');
+    var csrfInput = document.getElementById('verifCsrf');
+    var modalTitle = document.getElementById('verifModalTitle');
+    var typeSelect = document.getElementById('verifType');
+    var fileInput = document.getElementById('verifDoc');
+    var fileName = document.getElementById('verifFileName');
+    var alertBox = document.getElementById('verifAlert');
+    var btnSubmit = document.getElementById('btnSubmitVerif');
+    var btnText = document.getElementById('verifBtnText');
+    var btnSpinner = document.getElementById('verifBtnSpinner');
+
+    // Label map
+    var labels = {
+        submit_verification: { title: 'Submit Verification', btn: 'Submit' },
+        resubmit_verification: { title: 'Resubmit Verification', btn: 'Resubmit' },
+        update_verification: { title: 'Update Verification', btn: 'Update' },
+    };
+
+    // Open modal via trigger buttons.
+    document.querySelectorAll('.verif-trigger').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var action = this.dataset.action || 'submit_verification';
+            actionInput.value = action;
+
+            // Reset form state
+            typeSelect.value = '';
+            fileInput.value = '';
+            setFileName('');
+            hideAlert();
+            setLoading(false);
+
+            // Set modal copy
+            var lbl = labels[action] || labels['submit_verification'];
+            modalTitle.textContent = lbl.title;
+            btnText.textContent = lbl.btn;
+        });
+    });
+
+    fileInput.addEventListener('change', function () {
+        setFileName(this.files[0] ? this.files[0].name : '');
+    });
+
+    // Submit button.
+    btnSubmit.addEventListener('click', function () {
+        var action = actionInput.value;
+        var type = typeSelect.value;
+        var file = fileInput.files[0];
+
+        if (!type) {
+            showAlert('Please select a verification type.', 'danger');
+            return;
+        }
+        if (!file) {
+            showAlert('Please upload a supporting document.', 'danger');
+            return;
+        }
+
+        // Client-side size check (5 MB)
+        // if (file.size > 5 * 1024 * 1024) {
+        //     showAlert('File is too large. Maximum allowed size is 5 MB.', 'danger');
+        //     return;
+        // }
+
+        var formData = new FormData();
+        formData.append('action', action);
+        formData.append('verification_type', type);
+        formData.append('verification_document', file);
+        formData.append('csrf_token', csrfInput.value);
+
+        setLoading(true);
+        hideAlert();
+
+        fetch('../../controllers/users/VerificationController.php', {
+            method: 'POST',
+            body: formData,
+        })
+            .then(function (res) {
+                if (!res.ok) throw new Error('Server error: ' + res.status);
+                return res.json();
+            })
+            .then(function (data) {
+                setLoading(false);
+                if (data.success) {
+                    showAlert(data.message, 'success');
+                    // Reload after a short delay so user sees the success message
+                    setTimeout(function () {
+                        verifModal.hide();
+                        window.location.reload();
+                    }, 1400);
+                } else {
+                    showAlert(data.message || 'Something went wrong. Please try again 1.', 'danger');
+                }
+            })
+            .catch(function (err) {
+                setLoading(false);
+                showAlert('A network error occurred. Please check your connection and try again.' + err, 'danger');
+                console.error('VerificationController error:', err);
+            });
+    });
+
+    // Helpers.
+    function setLoading(on) {
+        btnSubmit.disabled = on;
+        btnSpinner.classList.toggle('d-none', !on);
+        if (!on) {
+            var action = actionInput.value;
+            btnText.textContent = (labels[action] || labels['submit_verification']).btn;
+        } else {
+            btnText.textContent = 'Submitting\u2026';
+        }
+    }
+
+    function showAlert(msg, type) {
+        alertBox.textContent = msg;
+        alertBox.className = 'u-verif-alert ' + (type === 'success' ? 'is-success' : 'is-danger');
+    }
+
+    function hideAlert() {
+        alertBox.textContent = '';
+        alertBox.className = 'u-verif-alert d-none';
+    }
+
+    function setFileName(name) {
+        if (fileName) {
+            fileName.textContent = name || 'No file selected';
+        }
     }
 })();

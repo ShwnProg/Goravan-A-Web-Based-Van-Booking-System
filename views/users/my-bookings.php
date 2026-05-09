@@ -66,10 +66,10 @@ $bookings = $bk->GetBookingsByUserFiltered();
             </a>
             <?php endforeach; ?>
         <?php else: ?>
-            <div style="text-align: center; padding: 40px; color: var(--u-muted);">
-                <i class="fa-solid fa-inbox" style="font-size: 36px; margin-bottom: 12px;"></i>
-                <p style="font-size: 14px; margin-bottom: 8px;">No bookings found</p>
-                <p style="font-size: 12px;">Try changing your filter or <a href="schedule.php" style="color: var(--u-accent); text-decoration: none; font-weight: 600;">book a new trip</a></p>
+            <div class="u-empty-state">
+                <span class="u-empty-icon"><i class="fa-solid fa-inbox"></i></span>
+                <p>No bookings found</p>
+                <p>Try changing your filter or <a href="schedule.php">book a new trip</a></p>
             </div>
         <?php endif; ?>
     </div>

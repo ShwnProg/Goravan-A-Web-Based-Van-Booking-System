@@ -1,45 +1,138 @@
 <?php
 require_once '../../autoload.php';
-if (!isset($_SESSION['is_login'])) { header('Location: ../auth/login.php'); exit; }
+if (!isset($_SESSION['is_login'])) {
+    header('Location: ../auth/login.php');
+    exit;
+}
 
 ob_start();
-$title       = 'Profile';
+$title      = 'Profile';
 $active_page = 'profile';
-$page_css    = '../../assets/css/user-profile.css';
-$page_js     = '../../assets/js/user-profile.js';
+$page_css   = '../../assets/css/user-profile.css';
+$page_js    = '../../assets/js/user-profile.js';
 
-// Fetch user data
+// Fetch user
 $userId = decrypt($_SESSION['id']);
 $um     = new Users($conn);
 $um->id = $userId;
 $user   = $um->GetUserById();
+
+// Fetch verification (latest record)
+$verif              = new Verification($conn);
+$verif->user_id_fk  = $userId;
+$verif_data         = $verif->GetVerficationStatus();
+
+$verif_status  = $verif_data['status']           ?? null;
+$verif_type    = ucfirst($verif_data['document_type'] ?? '');
+$verif_reason  = htmlspecialchars($verif_data['rejection_reason'] ?? '');
+
+// Used by the profile header badge (preserved from original)
+$user_status   = $verif_data;
+$type          = $verif_type;
 ?>
 
-<!-- PAGE BODY -->
 <div class="u-body">
-    <!-- Profile Header Card -->
+
     <div class="u-prof-header">
         <div class="u-prof-avatar">
-            <?= strtoupper(substr($user['firstname'] ?? 'U', 0, 1)) . strtoupper(substr($user['lastname'] ?? '', 0, 1)) ?>
+            <?= strtoupper(substr($user['firstname'] ?? 'U', 0, 1))
+              . strtoupper(substr($user['lastname']  ?? '',  0, 1)) ?>
         </div>
-        <div>
-            <h2 class="u-prof-name"><?= htmlspecialchars(ucfirst($user['firstname'] ?? '')) ?> <?= htmlspecialchars(ucfirst($user['lastname'] ?? '')) ?></h2>
-            <p class="u-prof-email"><?= htmlspecialchars($user['email'] ?? '') ?></p>
-            <div class="u-prof-badge">
-                <i class="fa-solid fa-check-circle"></i> Verified Passenger
+        <div class="u-prof-main">
+            <div class="u-prof-identity">
+                <h2 class="u-prof-name">
+                    <?= htmlspecialchars(ucfirst($user['firstname'] ?? '')) ?>
+                    <?= htmlspecialchars(ucfirst($user['lastname']  ?? '')) ?>
+                </h2>
+                <p class="u-prof-email"><?= htmlspecialchars($user['email'] ?? '') ?></p>
+                <?php if ($verif_status): ?>
+                    <span class="u-prof-badge <?= htmlspecialchars($verif_status) ?>">
+                        <?php if ($verif_status === 'pending'): ?>
+                            <i class="fa-solid fa-clock"></i> <?= htmlspecialchars($type) ?> under review
+                        <?php elseif ($verif_status === 'approved'): ?>
+                            <i class="fa-solid fa-circle-check"></i> Verified <?= htmlspecialchars($type) ?>
+                        <?php elseif ($verif_status === 'rejected'): ?>
+                            <i class="fa-solid fa-circle-xmark"></i> <?= htmlspecialchars($type) ?> rejected
+                        <?php endif; ?>
+                    </span>
+                <?php endif; ?>
+            </div>
+
+            <div class="u-prof-verif">
+                <?php if (!$verif_status): ?>
+                    <div class="u-verif-row">
+                        <div class="u-verif-info">
+                            <p class="u-verif-title">Unverified Account</p>
+                            <p class="u-verif-desc">
+                                Verify as a Student, Senior Citizen, or PWD to unlock exclusive fare discounts.
+                            </p>
+                        </div>
+                        <button type="button"
+                                class="u-btn u-btn-primary verif-trigger"
+                                data-action="submit_verification"
+                                data-bs-toggle="modal" data-bs-target="#verifModal">
+                            <i class="fa-solid fa-upload"></i> Verify Now
+                        </button>
+                    </div>
+                <?php elseif ($verif_status === 'pending'): ?>
+                    <div class="u-verif-row">
+                        <div class="u-verif-info">
+                            <p class="u-verif-title">Verification Pending</p>
+                            <p class="u-verif-desc">
+                                We are reviewing your documents.
+                            </p>
+                        </div>
+                    </div>
+                <?php elseif ($verif_status === 'approved'): ?>
+                    <div class="u-verif-row">
+                        <div class="u-verif-info">
+                            <p class="u-verif-title"><?= htmlspecialchars($verif_type) ?> Verified</p>
+                            <p class="u-verif-desc">
+                                Your identity is verified. You're eligible for <?= htmlspecialchars($verif_type) ?> fare discounts.
+                            </p>
+                        </div>
+                        <button type="button"
+                                class="u-sec-link verif-trigger"
+                                data-action="update_verification"
+                                data-bs-toggle="modal" data-bs-target="#verifModal">
+                            <i class="fa-solid fa-rotate"></i> Update
+                        </button>
+                    </div>
+                <?php elseif ($verif_status === 'rejected'): ?>
+                    <div class="u-verif-row">
+                        <div class="u-verif-info">
+                            <p class="u-verif-title">Verification Rejected</p>
+                            <?php if ($verif_reason): ?>
+                                <p class="u-verif-desc u-verif-reason">
+                                    <i class="fa-solid fa-triangle-exclamation"></i>
+                                    <?= $verif_reason ?>
+                                </p>
+                            <?php else: ?>
+                                <p class="u-verif-desc">
+                                    Your verification was not approved. Please upload a valid document and resubmit.
+                                </p>
+                            <?php endif; ?>
+                        </div>
+                        <button type="button"
+                                class="u-btn u-btn-primary verif-trigger"
+                                data-action="resubmit_verification"
+                                data-bs-toggle="modal" data-bs-target="#verifModal">
+                            <i class="fa-solid fa-rotate-right"></i> Resubmit
+                        </button>
+                    </div>
+                <?php endif; ?>
             </div>
         </div>
     </div>
 
-    <!-- Edit Profile Form -->
     <div class="u-sec">
         <div class="u-sec-head">
             <h2 class="u-sec-title">Edit Profile</h2>
         </div>
         <div class="u-form-card">
-            <form action="../../controllers/users/ProfileController.php" method="POST">
+            <form id = 'editform'>
                 <?= csrf_field() ?>
-                <input type="hidden" name="action" value="update_profile">
+                <!-- <input type="hidden" name="action" value="update_profile"> -->
 
                 <div class="u-form-row">
                     <div class="u-form-group">
@@ -62,25 +155,24 @@ $user   = $um->GetUserById();
 
                 <div class="u-form-group">
                     <label for="phone">Phone Number</label>
-                    <input type="tel" id="phone" name="phone"
+                    <input type="tel" id="contact" name="contact"
                            value="<?= htmlspecialchars($user['contact_number'] ?? '') ?>"
                            placeholder="09XX XXX XXXX">
                 </div>
 
-                <button type="submit" class="u-btn u-btn-primary">Save Changes</button>
+                <button type="submit" class="u-btn u-btn-primary">Update Profile</button>
             </form>
         </div>
     </div>
 
-    <!-- Change Password Form -->
     <div class="u-sec">
         <div class="u-sec-head">
             <h2 class="u-sec-title">Change Password</h2>
         </div>
         <div class="u-form-card">
-            <form action="../../controllers/users/ProfileController.php" method="POST">
+            <form id="changePasswordForm">
                 <?= csrf_field() ?>
-                <input type="hidden" name="action" value="change_password">
+                <!-- <input type="hidden" name="action" value="change_password"> -->
 
                 <div class="u-form-group">
                     <label for="currentPassword">Current Password</label>
@@ -90,13 +182,13 @@ $user   = $um->GetUserById();
                 <div class="u-form-row">
                     <div class="u-form-group">
                         <label for="newPassword">New Password</label>
-                        <input type="password" id="newPassword" name="new_password" required
-                               minlength="8" placeholder="Minimum 8 characters">
+                        <input type="password" id="newPassword" name="new_password"
+                               required minlength="8" placeholder="Minimum 8 characters">
                     </div>
                     <div class="u-form-group">
                         <label for="confirmPassword">Confirm New Password</label>
-                        <input type="password" id="confirmPassword" name="confirm_password" required
-                               minlength="8" placeholder="Re-enter new password">
+                        <input type="password" id="confirmPassword" name="confirm_password"
+                               required minlength="8" placeholder="Re-enter new password">
                     </div>
                 </div>
 
@@ -105,7 +197,6 @@ $user   = $um->GetUserById();
         </div>
     </div>
 
-    <!-- Menu List -->
     <div class="u-sec">
         <div class="u-menu-list">
             <a href="#" class="u-menu-item">
@@ -113,14 +204,14 @@ $user   = $um->GetUserById();
                 <span>Notification Preferences</span>
                 <i class="fa-solid fa-chevron-right caret"></i>
             </a>
-            <a href="#" class="u-menu-item">
+            <!-- <a href="#" class="u-menu-item">
                 <i class="fa-solid fa-shield-halved"></i>
-                <span>Privacy & Security</span>
+                <span>Privacy &amp; Security</span>
                 <i class="fa-solid fa-chevron-right caret"></i>
-            </a>
+            </a> -->
             <a href="#" class="u-menu-item">
                 <i class="fa-solid fa-circle-question"></i>
-                <span>Help & Support</span>
+                <span>Help &amp; Support</span>
                 <i class="fa-solid fa-chevron-right caret"></i>
             </a>
             <div class="u-menu-divider"></div>
@@ -128,6 +219,73 @@ $user   = $um->GetUserById();
                 <i class="fa-solid fa-right-from-bracket"></i>
                 <span>Sign Out</span>
             </a>
+        </div>
+    </div>
+
+</div><!-- /u-body -->
+
+<div class="modal fade" id="verifModal" tabindex="-1"
+     aria-labelledby="verifModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title" id="verifModalLabel">
+                    <i class="fa-solid fa-id-card me-2" style="color:var(--u-accent);"></i>
+                    <span id="verifModalTitle">Submit Verification</span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body">
+                <input type="hidden" id="verifAction" value="">
+                <input type="hidden" id="verifCsrf"
+                       value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
+
+                <div class="u-form-group">
+                    <label for="verifType">Verification Type</label>
+                    <select id="verifType" class="form-select">
+                        <option value="">Select type</option>
+                        <option value="student">Student</option>
+                        <option value="senior">Senior Citizen</option>
+                        <option value="pwd">PWD (Person with Disability)</option>
+                    </select>
+                </div>
+
+                <div class="u-form-group">
+                    <label for="verifDoc">Upload Supporting Document</label>
+                    <label for="verifDoc" class="u-file-upload">
+                        <input type="file" id="verifDoc"
+                               accept=".jpg,.jpeg,.png,.pdf">
+                        <span class="u-file-copy">
+                            <span class="u-file-title" id="verifFileName">No file selected</span>
+                        </span>
+                        <span class="u-file-action">
+                            <i class="fa-solid fa-folder-open"></i>
+                            Choose
+                        </span>
+                    </label>
+                    <small class="u-verif-hint">
+                        <i class="fa-solid fa-circle-info"></i>
+                        Accepted: JPG, PNG, PDF &mdash; max 5 MB
+                    </small>
+                </div>
+
+                <div id="verifAlert" class="u-verif-alert d-none"></div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary"
+                        data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="btnSubmitVerif">
+                    <span id="verifBtnText">Submit</span>
+                    <span id="verifBtnSpinner"
+                          class="spinner-border spinner-border-sm ms-1 d-none"
+                          role="status" aria-hidden="true"></span>
+                </button>
+            </div>
+
         </div>
     </div>
 </div>

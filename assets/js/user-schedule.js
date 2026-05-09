@@ -1,14 +1,12 @@
 /* user-schedule.js — Schedule page specific JavaScript */
 
 (function () {
-    var modal = document.getElementById('bookingModal');
-    var modalOverlay = document.getElementById('modalOverlay');
-    var modalClose = document.getElementById('modalClose');
-    var cancelBtn = document.getElementById('cancelBtn');
+    var modalEl = document.getElementById('bookingModal');
     var bookingForm = document.getElementById('bookingForm');
     var seatsCount = document.getElementById('seatsCount');
     var totalPriceDisplay = document.getElementById('totalPriceDisplay');
     var currentPrice = 0;
+    var bookingModal = modalEl ? new bootstrap.Modal(modalEl, { backdrop: 'static', keyboard: false }) : null;
 
     // Book Now button handlers
     var bookButtons = document.querySelectorAll('.u-book-btn');
@@ -23,42 +21,29 @@
             currentPrice = price;
             updateTotalPrice();
 
-            // Show modal
-            modal.style.display = 'flex';
-            document.body.style.overflow = 'hidden';
+            if (bookingModal) {
+                bookingModal.show();
+            }
         });
     });
 
-    // Close modal handlers
-    function closeModal() {
-        modal.style.display = 'none';
-        document.body.style.overflow = '';
+    bookingForm && modalEl && modalEl.addEventListener('hidden.bs.modal', function () {
         bookingForm.reset();
         seatsCount.value = 1;
+        currentPrice = 0;
         updateTotalPrice();
-    }
-
-    modalClose && modalClose.addEventListener('click', closeModal);
-    cancelBtn && cancelBtn.addEventListener('click', closeModal);
-    modalOverlay && modalOverlay.addEventListener('click', closeModal);
-
-    // Close on Escape key
-    document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape' && modal.style.display === 'flex') {
-            closeModal();
-        }
     });
 
     // Update total price when seats count changes
     seatsCount && seatsCount.addEventListener('input', function () {
-        var seats = parseInt(this.value) || 0;
+        var seats = parseInt(this.value, 10) || 0;
         if (seats < 1) this.value = 1;
         if (seats > 10) this.value = 10;
         updateTotalPrice();
     });
 
     function updateTotalPrice() {
-        var seats = parseInt(seatsCount.value) || 1;
+        var seats = parseInt(seatsCount.value, 10) || 1;
         var total = currentPrice * seats;
         totalPriceDisplay.textContent = '₱' + total.toFixed(2);
     }

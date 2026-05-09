@@ -742,3 +742,30 @@ select.ss {
     }
 }
 
+/* Dark mode overrides for modal */
+.admin-dark-mode .rmodal {
+    background: #1e293b !important;
+    border-color: rgba(255, 255, 255, 0.07) !important;
+}
+
+.admin-dark-mode .rmodal-header {
+    background: #263347;
+}
+
+.admin-dark-mode .rmodal-title {
+    color: white !important;
+}
+
+.admin-dark-mode .rmodal-sub {
+    color: #94a3b8 !important;
+}
+
+.admin-dark-mode .rmodal-body {
+    background: transparent;
+}
+
+.admin-dark-mode .rmodal-footer {
+    border-top-color: rgba(255, 255, 255, 0.07) !important;
+    background: #263347;
+}
+

@@ -23,13 +23,13 @@ class Admin
             $admin = $stmt->fetch();
 
             if ($admin && password_verify($this->password, $admin['password'])) {
-                return $admin['user_id_pk'];
+                return ['is_login' => true, 'id' => $admin['user_id_pk']];
             }
 
-            return false;
+            return ['is_login' => false, 'id' => null, 'error' => 'Invalid credentials'];
 
         } catch (PDOException $e) {
-            return false;
+            return ['is_login' => false, 'id' => null, 'error' => $e->getMessage()];
         }
     }
 

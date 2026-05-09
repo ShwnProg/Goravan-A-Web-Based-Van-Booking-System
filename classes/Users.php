@@ -41,7 +41,7 @@ class Users
     public function GetUserById()
     {
         try {
-            $stmt = $this->conn->prepare("SELECT user_id_pk, firstname, lastname, email, contact_number, birthdate FROM $this->table WHERE user_id_pk = :id");
+            $stmt = $this->conn->prepare("SELECT user_id_pk, firstname, lastname, email, contact_number, birthdate,password FROM $this->table WHERE user_id_pk = :id");
             $stmt->execute([':id' => $this->id]);
             return $stmt->fetch();
         } catch (PDOException $e) {
@@ -80,9 +80,36 @@ class Users
             $user = $stmt->fetch();
 
             if ($user && password_verify($this->password, $user['password'])) {
-                return $user["user_id_pk"];
+                return ['is_login' => true, 'id' => $user['user_id_pk']];
             }
-            return 'Invalid Credentials';
+            return ['is_login' => false, 'id' => null, 'error' => 'Invalid credentials'];
+        } catch (PDOException $e) {
+            return $e->getMessage();
+        }
+    }
+    public function UpdateProfile()
+    {
+        try {
+            $stmt = $this->conn->prepare("UPDATE $this->table SET firstname = :firstname, lastname = :lastname, email = :email, contact_number = :contact WHERE user_id_pk = :id");
+            return $stmt->execute([
+                ':firstname' => $this->first_name,
+                ':lastname' => $this->last_name,
+                ':email' => $this->email,
+                ':contact' => $this->contact,
+                ':id' => $this->id
+            ]);
+        } catch (PDOException $e) {
+            return $e->getMessage();
+        }
+    }
+    public function UpdatePassword()
+    {
+        try {
+            $stmt = $this->conn->prepare("UPDATE $this->table SET password = :password WHERE user_id_pk = :id");
+            return $stmt->execute([
+                ':password' => $this->password,
+                ':id' => $this->id
+            ]);
         } catch (PDOException $e) {
             return $e->getMessage();
         }
@@ -101,5 +128,6 @@ class Users
             return $e->getMessage();
         }
     }
+    
 }
 ?>

@@ -29,12 +29,12 @@ $contact   = htmlspecialchars($info['contact_number']  ?? '');
 ?>
 
 <!-- Page header -->
-<div class="toolbar">
+<!-- <div class="toolbar">
     <div>
         <p style="margin:0;font-size:20px;font-weight:700;color:var(--color-primary);">Settings</p>
         <p style="margin:0;font-size:12px;color:var(--text-muted);margin-top:2px;">Manage your account and preferences</p>
     </div>
-</div>
+</div> -->
 
 <!-- ── SETTINGS GRID ─────────────────────────────────────────────── -->
 <div class="settings-grid">

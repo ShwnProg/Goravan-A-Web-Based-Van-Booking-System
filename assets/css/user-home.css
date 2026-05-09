@@ -1,16 +1,19 @@
-/* user-home.css — Home page specific styles */
+/* ═══════════════════════════════════════════════════
+   user-home.css — Home page specific styles only
+   Load order: base.css → user-common.css → user-home.css
+   ═══════════════════════════════════════════════════ */
 
-/* Home page specific overrides */
+/* Home page body: no extra top padding since header handles spacing */
 .u-body {
-    padding-top: 0; /* No top padding needed with new header */
+    padding-top: 0;
 }
 
-/* Stats spacing */
+/* First section needs no extra top margin */
 .u-sec:first-child {
     margin-top: 0;
 }
 
-/* Quick actions hover effects */
+/* Quick action press effect */
 .u-qa-card:active {
     transform: scale(0.98);
 }

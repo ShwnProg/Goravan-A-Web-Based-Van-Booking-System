@@ -50,7 +50,7 @@ $locations      = LOCATIONS; // Use LOCATIONS constant from autoload.php
                     <?php endforeach; ?>
                 </select>
             </div>
-            <div class="u-t-sep">→</div>
+            <div class="u-t-sep"><i class = 'fa-solid fa-arrow-right'></i></div>
             <div class="u-tf">
                 <label for="to">To</label>
                 <select id="to" name="to" class="ss" data-placeholder="Select destination" required>

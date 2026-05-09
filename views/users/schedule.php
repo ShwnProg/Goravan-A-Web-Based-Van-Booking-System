@@ -27,7 +27,7 @@ $locations = LOCATIONS; // Use LOCATIONS constant from autoload.php
 ?>
 
 <!-- PAGE BODY -->
-<div class="u-body">
+<div class="u-body mobile-view">
     <!-- Search Bar -->
     <div class="u-sec">
         <div class="u-search-card" style="border-radius: 12px; border-bottom: 1px solid var(--u-border);">
@@ -43,7 +43,7 @@ $locations = LOCATIONS; // Use LOCATIONS constant from autoload.php
                         <?php endforeach; ?>
                     </select>
                 </div>
-                <div class="u-s-sep">→</div>
+                <div class="u-s-sep"><i class = 'fa-solid fa-arrow-right'></i></div>
                 <div class="u-sf">
                     <label for="to">To</label>
                     <select id="to" name="to" class="ss" data-placeholder="Select destination">
@@ -125,53 +125,53 @@ $locations = LOCATIONS; // Use LOCATIONS constant from autoload.php
 </div>
 
 <!-- Booking Confirmation Modal -->
-<div class="u-modal" id="bookingModal" style="display: none;">
-    <div class="u-modal-overlay" id="modalOverlay"></div>
-    <div class="u-modal-content">
-        <div class="u-modal-header">
-            <h3 class="u-modal-title">Confirm Booking</h3>
-            <button class="u-modal-close" id="modalClose">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-        </div>
-        <div class="u-modal-body">
-            <form id="bookingForm" action="../../controllers/users/BookingController.php" method="POST">
-                <?= csrf_field() ?>
-                <input type="hidden" name="schedule_id" id="scheduleId">
-                <input type="hidden" name="action" value="create">
-
-                <div class="u-form-group">
-                    <label for="passengerName">Passenger Name</label>
-                    <input type="text" id="passengerName" name="passenger_name"
-                        value="<?= htmlspecialchars($user['firstname'] ?? '') . ' ' . htmlspecialchars($user['lastname'] ?? '') ?>"
-                        required>
+<div class="modal fade" id="bookingModal" tabindex="-1" aria-labelledby="bookingModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content booking-modal">
+            <div class="modal-header">
+                <div>
+                    <h5 class="modal-title" id="bookingModalLabel">Confirm Booking</h5>
+                    <span class="modal-subtitle">Review passenger details and total fare before confirming.</span>
                 </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="bookingForm" action="../../controllers/users/BookingController.php" method="POST">
+                    <?= csrf_field() ?>
+                    <input type="hidden" name="schedule_id" id="scheduleId">
+                    <input type="hidden" name="action" value="create">
 
-                <div class="u-form-group">
-                    <label for="contactNumber">Contact Number</label>
-                    <input type="tel" id="contactNumber" name="contact_number"
-                        value="<?= htmlspecialchars($user['contact_number'] ?? '') ?>" placeholder="09XX XXX XXXX"
-                        required>
-                </div>
+                    <div class="u-form-group">
+                        <label for="passengerName">Passenger Name</label>
+                        <input type="text" class="form-control" id="passengerName" name="passenger_name"
+                            value="<?= htmlspecialchars($user['firstname'] ?? '') . ' ' . htmlspecialchars($user['lastname'] ?? '') ?>"
+                            required>
+                    </div>
 
-                <div class="u-form-group">
-                    <label for="seatsCount">Number of Seats</label>
-                    <input type="number" id="seatsCount" name="seats_count" min="1" max="10" value="1" required>
-                </div>
+                    <div class="u-form-group">
+                        <label for="contactNumber">Contact Number</label>
+                        <input type="tel" class="form-control" id="contactNumber" name="contact_number"
+                            value="<?= htmlspecialchars($user['contact_number'] ?? '') ?>"
+                            placeholder="09XX XXX XXXX"
+                            required>
+                    </div>
 
-                <div class="u-form-group">
-                    <label for="totalPrice">Total Price</label>
+                    <div class="u-form-group">
+                        <label for="seatsCount">Number of Seats</label>
+                        <input type="number" class="form-control" id="seatsCount" name="seats_count" min="1" max="10" value="1" required>
+                    </div>
+
                     <div class="u-total-price">
-                        <span class="u-total-label">Total:</span>
+                        <span class="u-total-label">Total Fare</span>
                         <span class="u-total-value" id="totalPriceDisplay">₱0.00</span>
                     </div>
-                </div>
 
-                <div class="u-modal-actions">
-                    <button type="button" class="u-btn u-btn-secondary" id="cancelBtn">Cancel</button>
-                    <button type="submit" class="u-btn u-btn-primary">Confirm Booking</button>
-                </div>
-            </form>
+                    <div class="u-modal-actions">
+                        <button type="button" class="u-btn u-btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="u-btn u-btn-primary">Confirm Booking</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 </div>
