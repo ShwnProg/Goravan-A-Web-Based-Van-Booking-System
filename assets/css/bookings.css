@@ -46,8 +46,9 @@
    Scoped to .bookings-card so it won't affect other pages.
 ══════════════════════════════════════════════════════════════════ */
 .bookings-card .bookings-table-wrap {
-    overflow-x: auto;
+    overflow: auto;
     -webkit-overflow-scrolling: touch;
+    max-height: calc(100vh - 220px);
 }
 
 .bookings-card .bookings-table {
@@ -60,6 +61,9 @@
 
 /* ── TH ──────────────────────────────────────── */
 .bookings-card .bookings-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
     padding: 9px 12px;
     font-size: 10px;
     font-weight: 700;
@@ -125,6 +129,19 @@
     white-space: nowrap;
 }
 
+.booking-ref-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.booking-ref-stack small {
+    color: #9ca3af;
+    font-size: 10.5px;
+    line-height: 1.2;
+}
+
 /* ── Passenger info ──────────────────────────── */
 .passenger-info {
     display: flex;
@@ -162,11 +179,26 @@
     white-space: nowrap;
 }
 
+.route-info.trip-stack {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+    column-gap: 6px;
+    row-gap: 2px;
+}
+
 .route-info span {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: 160px;
+}
+
+.route-info.trip-stack small {
+    grid-column: 2;
+    color: #9ca3af;
+    font-size: 10.5px;
+    line-height: 1.2;
 }
 
 /* ── Seat badge ──────────────────────────────── */
@@ -182,6 +214,59 @@
     font-size: 11px;
     font-weight: 600;
     white-space: nowrap;
+}
+
+.seat-badge.more {
+    background: rgba(249, 115, 22, .08);
+    color: var(--color-accent);
+    border-color: rgba(249, 115, 22, .18);
+}
+
+.seat-chip-list {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-wrap: wrap;
+    max-width: 190px;
+}
+
+.payment-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 3px;
+}
+
+.payment-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 9px;
+    border-radius: 999px;
+    font-size: 10.5px;
+    font-weight: 700;
+    line-height: 1.5;
+}
+
+.payment-badge.paid,
+.payment-badge.approved {
+    background: rgba(22, 163, 74, .09);
+    color: #15803d;
+}
+
+.payment-badge.pending {
+    background: rgba(249, 115, 22, .1);
+    color: #c2410c;
+}
+
+.payment-badge.rejected,
+.payment-badge.unpaid {
+    background: rgba(107, 114, 128, .1);
+    color: #4b5563;
+}
+
+.payment-stack small {
+    color: #6b7280;
+    font-size: 10.5px;
 }
 
 /* ── Payment due ─────────────────────────────── */
@@ -541,7 +626,7 @@ body.admin-dark-mode-active .bookings-card .badge.pending.expired {
 /* ── Tablet (≤900px) ─────────────────────────── */
 @media (max-width: 900px) {
     .bookings-card .bookings-table {
-        min-width: 680px;
+        min-width: 760px;
     }
 
     .details-grid {
@@ -567,7 +652,7 @@ body.admin-dark-mode-active .bookings-card .badge.pending.expired {
     }
 
     .bookings-card .bookings-table {
-        min-width: 620px;
+        min-width: 720px;
         font-size: 11px;
     }
 
@@ -650,4 +735,59 @@ body.admin-dark-mode-active .bookings-card .badge.pending.expired {
     #detailsModal .modal-footer {
         padding: 10px 14px;
     }
+}
+
+/* Dark mode: bookings page-specific hard-coded table and modal colors */
+body.admin-dark-mode-active .bookings-card .bookings-table thead th,
+body.admin-dark-mode-active #detailsModal .modal-header,
+body.admin-dark-mode-active #detailsModal .modal-footer {
+    background: #162032;
+    border-color: rgba(255, 255, 255, .07);
+}
+
+body.admin-dark-mode-active .bookings-card .bookings-table tbody td,
+body.admin-dark-mode-active .route-info,
+body.admin-dark-mode-active .detail-value,
+body.admin-dark-mode-active #detailsModal .modal-title {
+    color: #cbd5e1;
+}
+
+body.admin-dark-mode-active .passenger-info .name,
+body.admin-dark-mode-active .ref-code,
+body.admin-dark-mode-active .seat-badge {
+    color: #e2e8f0;
+}
+
+body.admin-dark-mode-active .passenger-info .email,
+body.admin-dark-mode-active .booking-ref-stack small,
+body.admin-dark-mode-active .route-info.trip-stack small,
+body.admin-dark-mode-active .payment-stack small,
+body.admin-dark-mode-active .detail-label {
+    color: #94a3b8;
+}
+
+body.admin-dark-mode-active .bookings-card .bookings-table tbody tr.booking-row:hover {
+    background: rgba(255, 255, 255, .03);
+}
+
+body.admin-dark-mode-active .ref-code,
+body.admin-dark-mode-active .seat-badge {
+    background: rgba(255, 255, 255, .06);
+    border-color: rgba(255, 255, 255, .1);
+}
+
+body.admin-dark-mode-active .payment-badge.paid,
+body.admin-dark-mode-active .payment-badge.approved {
+    background: rgba(16, 185, 129, .1);
+    color: #34d399;
+}
+
+body.admin-dark-mode-active #detailsModal .modal-content {
+    background: #1e293b;
+    border: 1px solid rgba(255, 255, 255, .07);
+}
+
+body.admin-dark-mode-active #detailsModal .modal-footer .btn-secondary {
+    border-color: rgba(255, 255, 255, .1);
+    color: #cbd5e1;
 }

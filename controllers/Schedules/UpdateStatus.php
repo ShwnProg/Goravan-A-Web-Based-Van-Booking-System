@@ -17,7 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !csrf_check()) {
 // ── Validate input ────────────────────────────────────────────────────────────
 $schedule_id = (int) ($_POST['schedule_id'] ?? 0);
 $new_status  = trim($_POST['status'] ?? '');
-$valid       = ['boarding', 'departed', 'arrived', 'cancelled'];
+$valid       = ['boarding', 'departed', 'cancelled'];
 
 if (!$schedule_id || !in_array($new_status, $valid, true)) {
     $_SESSION['error'] = 'Invalid parameters.';

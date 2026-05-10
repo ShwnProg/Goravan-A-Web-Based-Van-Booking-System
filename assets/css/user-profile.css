@@ -469,3 +469,31 @@ body.dark #verifModal .form-control {
 body.dark #verifModal .spinner-border {
     color: #fff;
 }
+
+/* Simple profile page interactions */
+.user-page .u-form-group input:focus,
+.user-page .u-file-upload:focus-within,
+.user-page #verifModal .form-select:focus,
+.user-page #verifModal .form-control:focus {
+    box-shadow: none !important;
+    border-color: var(--u-border2) !important;
+}
+
+.user-page .u-menu-item:active {
+    transform: none;
+}
+
+.user-page .u-file-upload:hover {
+    background: var(--u-surface2);
+    border-color: var(--u-border2);
+}
+
+.user-page #verifModal .modal-content {
+    box-shadow: none !important;
+}
+
+.user-page #verifModal .btn-primary:hover,
+.user-page #verifModal .btn-secondary:hover {
+    filter: none;
+    box-shadow: none;
+}

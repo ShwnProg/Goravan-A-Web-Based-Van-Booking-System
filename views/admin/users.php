@@ -157,7 +157,7 @@ function verificationBadge(string $status): string
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
         <div class="modal-content rmodal">
             <div class="rmodal-header">
-                <div class="rmodal-icon"><i class="fas fa-file-check"></i></div>
+                <div class="rmodal-icon"><i class="fas fa-file-circle-check"></i></div>
                 <div>
                     <h6 class="rmodal-title">User Details</h6>
                     <p class="rmodal-sub">Verification documents</p>

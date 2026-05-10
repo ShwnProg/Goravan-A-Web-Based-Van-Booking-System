@@ -12,7 +12,7 @@
 
 .schedules-wrapper {
     display: grid;
-    grid-template-columns: 1fr 300px;
+    grid-template-columns: minmax(0, 1fr) 280px;
     gap: 20px;
     align-items: start;
 }
@@ -75,16 +75,60 @@
 .schedules-card .schedules-table-wrap {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    max-height: calc(100vh - 220px);
+    overflow-y: auto;
 }
 
 .schedules-card .schedules-table {
     width: 100%;
     border-collapse: collapse;
     font-size: 12.5px;
+    min-width: 940px;
+    table-layout: fixed;
+}
+
+.schedules-card .schedules-table th:nth-child(1),
+.schedules-card .schedules-table td:nth-child(1) {
+    width: 44px;
+}
+
+.schedules-card .schedules-table th:nth-child(2),
+.schedules-card .schedules-table td:nth-child(2) {
+    width: 124px;
+}
+
+.schedules-card .schedules-table th:nth-child(3),
+.schedules-card .schedules-table td:nth-child(3) {
+    width: 260px;
+}
+
+.schedules-card .schedules-table th:nth-child(4),
+.schedules-card .schedules-table td:nth-child(4) {
+    width: 150px;
+}
+
+.schedules-card .schedules-table th:nth-child(5),
+.schedules-card .schedules-table td:nth-child(5) {
+    width: 120px;
+}
+
+.schedules-card .schedules-table th:nth-child(6),
+.schedules-card .schedules-table td:nth-child(6),
+.schedules-card .schedules-table th:nth-child(7),
+.schedules-card .schedules-table td:nth-child(7) {
+    width: 132px;
+}
+
+.schedules-card .schedules-table th:nth-child(8),
+.schedules-card .schedules-table td:nth-child(8) {
+    width: 96px;
 }
 
 /* ── TH ── */
 .schedules-card .schedules-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
     padding: 9px 14px;
     font-size: 10px;
     font-weight: 700;
@@ -139,15 +183,37 @@
 /* Route — bold primary */
 .route-display {
     display: inline-flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 7px;
+    min-width: 0;
+    max-width: 100%;
 }
 
-.route-display span {
+.route-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.route-stack span {
     font-size: 12.5px;
     font-weight: 600;
     color: var(--color-primary);
     line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.route-stack small {
+    color: #9ca3af;
+    font-size: 10.5px;
+    font-weight: 600;
+    line-height: 1.25;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 /* Driver — muted secondary */
@@ -261,7 +327,8 @@
 .schedules-card .row-actions {
     display: flex;
     align-items: center;
-    gap: 4px;
+    justify-content: center;
+    gap: 6px;
     flex-wrap: nowrap;
 }
 
@@ -627,7 +694,7 @@
     }
 
     .schedules-card .schedules-table {
-        min-width: 680px;
+        min-width: 940px;
     }
 }
 
@@ -675,7 +742,7 @@
 
     /* Table */
     .schedules-card .schedules-table {
-        min-width: 640px;
+        min-width: 900px;
         font-size: 11.5px;
     }
 
@@ -736,4 +803,59 @@
     .rfield-inline {
         grid-template-columns: 1fr;
     }
+}
+
+/* Dark mode: schedules page-specific surfaces and table text */
+body.admin-dark-mode-active .schedules-card,
+body.admin-dark-mode-active .schedule-card {
+    background: #1e293b;
+    border-color: rgba(255, 255, 255, .07);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, .22);
+}
+
+body.admin-dark-mode-active .schedules-card-header,
+body.admin-dark-mode-active .schedule-card-header {
+    background: #162032;
+    border-bottom-color: rgba(255, 255, 255, .07);
+}
+
+body.admin-dark-mode-active .schedules-card .schedules-table thead th {
+    background: #162032;
+    color: #94a3b8;
+    border-bottom-color: rgba(255, 255, 255, .07);
+}
+
+body.admin-dark-mode-active .schedules-card .schedules-table tbody td,
+body.admin-dark-mode-active .driver-display,
+body.admin-dark-mode-active .detail-value {
+    color: #cbd5e1;
+}
+
+body.admin-dark-mode-active .route-stack span,
+body.admin-dark-mode-active .plate-number,
+body.admin-dark-mode-active .schedule-card-header > p,
+body.admin-dark-mode-active .schedule-details > h3 {
+    color: #e2e8f0;
+}
+
+body.admin-dark-mode-active .route-stack small,
+body.admin-dark-mode-active .detail-label,
+body.admin-dark-mode-active .schedules-card .schedules-table td.text-muted-sm,
+body.admin-dark-mode-active #schedule-label {
+    color: #94a3b8;
+}
+
+body.admin-dark-mode-active .plate-number {
+    background: rgba(255, 255, 255, .06);
+    border-color: rgba(255, 255, 255, .1);
+}
+
+body.admin-dark-mode-active .sched-status-dropdown {
+    background: #1e293b;
+    border-color: rgba(255, 255, 255, .09);
+}
+
+body.admin-dark-mode-active .sched-status-item {
+    color: #cbd5e1;
+    border-bottom-color: rgba(255, 255, 255, .06);
 }

@@ -182,11 +182,9 @@ if (!window._ssWidgetReady) {
         if (themeIcon) {
             themeIcon.className = on ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
         }
-        // Switch logo for dark mode
-        var logoImg = document.getElementById('logoImg');
-        if (logoImg) {
-            logoImg.src = on ? '../../images/logo_white.png' : '../../images/logo.png';
-        }
+        document.querySelectorAll('[data-light-logo][data-dark-logo]').forEach(function (logoImg) {
+            logoImg.src = on ? logoImg.dataset.darkLogo : logoImg.dataset.lightLogo;
+        });
     }
 
     /* ── Profile dropdown ── */
@@ -205,6 +203,8 @@ if (!window._ssWidgetReady) {
         caret && caret.classList.remove('open');
     });
 
+    initUserNotifications();
+
     /* ── Filter tabs (Bookings page) ── */
     document.querySelectorAll('.u-ftab').forEach(function (tab) {
         tab.addEventListener('click', function () {
@@ -218,5 +218,221 @@ if (!window._ssWidgetReady) {
     /* ── Build searchable selects on page load ── */
     if (window.buildSearchableSelects) {
         window.buildSearchableSelects(document);
+    }
+
+    function initUserNotifications() {
+        var toggle = document.getElementById('userNotifToggle');
+        var panel = document.getElementById('userNotifPanel');
+        var list = document.getElementById('userNotifList');
+        var dot = document.getElementById('userNotifDot');
+        var summary = document.getElementById('userNotifSummary');
+        var markRead = document.getElementById('userNotifMarkRead');
+
+        if (!toggle || !panel || !list) return;
+
+        var storageKey = 'gv-user-notif-read';
+        var items = [];
+        var loaded = false;
+        var visibleLimit = 5;
+
+        toggle.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            var open = panel.classList.toggle('open');
+            dropdown && dropdown.classList.remove('open');
+            caret && caret.classList.remove('open');
+            if (open && !loaded) loadNotifications();
+        });
+
+        panel.addEventListener('click', function (e) {
+            e.stopPropagation();
+            var item = e.target.closest('.u-notif-item');
+            if (item && item.dataset.id) {
+                var readIds = getReadIds();
+                if (readIds.indexOf(item.dataset.id) === -1) {
+                    readIds.push(item.dataset.id);
+                    saveReadIds(readIds);
+                }
+            }
+        });
+
+        document.addEventListener('click', function () {
+            panel.classList.remove('open');
+        });
+
+        markRead && markRead.addEventListener('click', function () {
+            saveReadIds(items.map(function (item) { return item.id; }));
+            renderNotifications(items);
+        });
+
+        loadNotifications();
+
+        function loadNotifications() {
+            var url = toggle.dataset.notificationUrl;
+            if (!url) return;
+
+            loaded = true;
+            list.innerHTML = loadingMarkup();
+
+            fetch(url, {
+                headers: { 'Accept': 'application/json' },
+                credentials: 'same-origin'
+            })
+                .then(function (res) { return res.json(); })
+                .then(function (payload) {
+                    if (!payload || !payload.success) {
+                        throw new Error(payload && payload.message ? payload.message : 'Unable to load notifications.');
+                    }
+
+                    items = Array.isArray(payload.data) ? payload.data : [];
+                    items.sort(function (a, b) {
+                        return new Date(b.time || 0) - new Date(a.time || 0);
+                    });
+                    renderNotifications(items);
+                })
+                .catch(function () {
+                    list.innerHTML = emptyMarkup('fa-regular fa-bell-slash', 'Notifications are unavailable right now.');
+                    if (summary) summary.textContent = 'Try again later';
+                    if (dot) dot.hidden = true;
+                });
+        }
+
+        function renderNotifications(data) {
+            var readIds = getReadIds();
+            var unreadCount = data.filter(function (item) {
+                return readIds.indexOf(item.id) === -1;
+            }).length;
+
+            if (dot) dot.hidden = unreadCount === 0;
+            if (markRead) markRead.disabled = unreadCount === 0;
+            if (summary) {
+                summary.textContent = data.length
+                    ? unreadCount + ' unread of ' + data.length
+                    : 'No activity yet';
+            }
+
+            if (!data.length) {
+                list.innerHTML = emptyMarkup('fa-regular fa-bell', 'No notifications yet.');
+                return;
+            }
+
+            var currentGroup = '';
+            var visibleItems = data.slice(0, visibleLimit);
+            var hiddenCount = Math.max(0, data.length - visibleItems.length);
+
+            list.innerHTML = visibleItems.map(function (item) {
+                var group = groupLabel(item.time);
+                var groupHtml = '';
+                if (group !== currentGroup) {
+                    currentGroup = group;
+                    groupHtml = '<div class="u-notif-date">' + esc(group) + '</div>';
+                }
+                return groupHtml + itemMarkup(item, readIds.indexOf(item.id) === -1);
+            }).join('') + viewMoreMarkup(hiddenCount);
+
+            var viewMore = list.querySelector('[data-notif-view-more]');
+            viewMore && viewMore.addEventListener('click', function () {
+                visibleLimit += 5;
+                renderNotifications(items);
+            });
+        }
+
+        function itemMarkup(item, unread) {
+            var title = item.title || 'Notification';
+            var message = item.message || '';
+            var url = item.url || '#';
+            var icon = item.icon || 'fa-regular fa-bell';
+            var tone = (item.tone || item.type || 'default').replace(/[^a-z0-9 _-]/gi, '');
+
+            return '' +
+                '<a class="u-notif-item ' + (unread ? 'unread' : '') + '" href="' + escAttr(url) + '" data-id="' + escAttr(item.id || '') + '">' +
+                    '<span class="u-notif-icon ' + escAttr(tone) + '"><i class="' + escAttr(icon) + '"></i></span>' +
+                    '<span class="u-notif-copy">' +
+                        '<span class="u-notif-title">' + esc(title) + '</span>' +
+                        '<span class="u-notif-msg">' + esc(message) + '</span>' +
+                        '<span class="u-notif-time">' + esc(relativeTime(item.time)) + ' &middot; ' + esc(item.time_label || formatFullDate(item.time)) + '</span>' +
+                    '</span>' +
+                '</a>';
+        }
+
+        function getReadIds() {
+            try {
+                var parsed = JSON.parse(localStorage.getItem(storageKey) || '[]');
+                return Array.isArray(parsed) ? parsed : [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function saveReadIds(ids) {
+            var unique = [];
+            ids.forEach(function (id) {
+                if (id && unique.indexOf(id) === -1) unique.push(id);
+            });
+            localStorage.setItem(storageKey, JSON.stringify(unique.slice(-100)));
+        }
+
+        function groupLabel(value) {
+            var date = new Date(value);
+            if (isNaN(date.getTime())) return 'Older';
+
+            var today = new Date();
+            var startToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+            var startDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+            var diffDays = Math.round((startToday - startDate) / 86400000);
+
+            if (diffDays === 0) return 'Today';
+            if (diffDays === 1) return 'Yesterday';
+            if (diffDays < 7) return date.toLocaleDateString(undefined, { weekday: 'long' });
+            return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+
+        function relativeTime(value) {
+            var date = new Date(value);
+            if (isNaN(date.getTime())) return 'Just now';
+
+            var seconds = Math.max(1, Math.floor((Date.now() - date.getTime()) / 1000));
+            if (seconds < 60) return 'Just now';
+            var minutes = Math.floor(seconds / 60);
+            if (minutes < 60) return minutes + 'm ago';
+            var hours = Math.floor(minutes / 60);
+            if (hours < 24) return hours + 'h ago';
+            var days = Math.floor(hours / 24);
+            if (days < 7) return days + 'd ago';
+            return formatFullDate(value);
+        }
+
+        function formatFullDate(value) {
+            var date = new Date(value);
+            if (isNaN(date.getTime())) return '';
+            return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) +
+                ' ' + date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+        }
+
+        function loadingMarkup() {
+            return emptyMarkup('fa-solid fa-spinner fa-spin', 'Loading notifications...');
+        }
+
+        function emptyMarkup(icon, text) {
+            return '<div class="u-notif-empty"><i class="' + escAttr(icon) + '"></i><p>' + esc(text) + '</p></div>';
+        }
+
+        function viewMoreMarkup(count) {
+            if (count <= 0) return '';
+            return '<button type="button" class="u-notif-more" data-notif-view-more>View more (' + count + ')</button>';
+        }
+
+        function esc(value) {
+            return String(value == null ? '' : value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function escAttr(value) {
+            return esc(value).replace(/`/g, '&#096;');
+        }
     }
 })();

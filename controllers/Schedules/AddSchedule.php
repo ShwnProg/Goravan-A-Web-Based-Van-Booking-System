@@ -12,26 +12,35 @@ $driver_id = (int) ($_POST['driver_id'] ?? 0);
 $van_id = (int) ($_POST['van_id'] ?? 0);
 $departure_date = trim($_POST['departure_date'] ?? '');
 $departure_time = trim($_POST['departure_time'] ?? '');
+$eta_date = trim($_POST['eta_date'] ?? '');
+$eta_time = trim($_POST['eta_time'] ?? '');
 $trip_status = trim($_POST['trip_status'] ?? 'boarding');
 
-if (!$route_id || !$driver_id || !$van_id || !$departure_date || !$departure_time) {
+if (!$route_id || !$driver_id || !$van_id || !$departure_date || !$departure_time || !$eta_date || !$eta_time) {
     $_SESSION['error'] = 'All fields are required.';
     header('Location: ../../views/admin/schedules.php');
     exit;
 }
 
-if (empty($departure_date) || empty($departure_time)) {
-    $_SESSION['error'] = 'Date and time are required.';
+if (empty($departure_date) || empty($departure_time) || empty($eta_date) || empty($eta_time)) {
+    $_SESSION['error'] = 'Departure and ETA are required.';
     header('Location: ../../views/admin/schedules.php');
     exit;
 }
-if (strtotime($departure_date . ' ' . $departure_time) === false) {
+$departureTimestamp = strtotime($departure_date . ' ' . $departure_time);
+$etaTimestamp = strtotime($eta_date . ' ' . $eta_time);
+if ($departureTimestamp === false || $etaTimestamp === false) {
     $_SESSION['error'] = 'Invalid date/time format.';
     header('Location: ../../views/admin/schedules.php');
     exit;
 }
+if ($etaTimestamp < $departureTimestamp) {
+    $_SESSION['error'] = 'ETA cannot be earlier than departure.';
+    header('Location: ../../views/admin/schedules.php');
+    exit;
+}
 
-if (!in_array($trip_status, ['boarding', 'departed', 'arrived', 'cancelled'])) {
+if (!in_array($trip_status, ['boarding', 'departed', 'cancelled'])) {
     $_SESSION['error'] = 'Invalid status.';
     header('Location: ../../views/admin/schedules.php');
     exit;
@@ -43,6 +52,7 @@ $schedule->driver_id = $driver_id;
 $schedule->van_id = $van_id;
 $schedule->departure_date = $departure_date;
 $schedule->departure_time = $departure_time;
+$schedule->estimated_arrival_at = date('Y-m-d H:i:s', $etaTimestamp);
 $schedule->trip_status = $trip_status;
 
 if ($schedule->HasVanConflict() || $schedule->HasDriverConflict()) {

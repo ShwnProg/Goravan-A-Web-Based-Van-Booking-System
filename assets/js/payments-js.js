@@ -55,7 +55,7 @@ window.initPaymentsPage = function () {
         if (!btn || !viewModal) return;
         e.stopPropagation();
 
-        var status = btn.dataset.status || 'pending';
+        var status = btn.dataset.status || 'paid';
 
         document.getElementById('view-booking-ref').textContent  = btn.dataset.bookingRef || '—';
         document.getElementById('view-route').textContent        = btn.dataset.route       || '—';

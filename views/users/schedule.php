@@ -1,5 +1,6 @@
 <?php
 require_once '../../autoload.php';
+
 if (!isset($_SESSION['is_login'])) {
     header('Location: ../auth/login.php');
     exit;
@@ -11,46 +12,64 @@ $active_page = 'schedule';
 $page_css = '../../assets/css/user-schedule.css';
 $page_js = '../../assets/js/user-schedule.js';
 
-// Fetch data
-$userId = decrypt($_SESSION['id']);
+$userId = (int) decrypt($_SESSION['id']);
 $um = new Users($conn);
 $um->id = $userId;
 $user = $um->GetUserById();
 
-$from = $_GET['from'] ?? '';
-$to = $_GET['to'] ?? '';
-$date = $_GET['date'] ?? date('Y-m-d');
+$from = trim($_GET['from'] ?? '');
+$to = trim($_GET['to'] ?? '');
+$date = trim($_GET['date'] ?? '');
+$locations = LOCATIONS;
+
+$verif = new Verification($conn);
+$verif->user_id_fk = $userId;
+$verification = $verif->GetApprovedVerification();
+$verifiedType = $verification['document_type'] ?? '';
+
 $sched = new Schedules($conn);
-$routes = (new Routes($conn))->GetActiveRoutes();
-$results = $sched->GetAvailableSchedules();
-$locations = LOCATIONS; // Use LOCATIONS constant from autoload.php
+$results = $sched->GetAvailableSchedules([
+    'from' => $from,
+    'to' => $to,
+    'date' => $date,
+]);
+
+$passengerName = trim(($user['firstname'] ?? '') . ' ' . ($user['lastname'] ?? ''));
+$contactNumber = $user['contact_number'] ?? '';
+$verifiedPassengerType = $verifiedType === 'senior' ? 'senior' : ($verifiedType ?: 'regular');
 ?>
 
-<!-- PAGE BODY -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    window.GV_DISCOUNTS = <?= json_encode(discounts) ?>;
+    window.GV_VERIFIED_BONUS = <?= $verifiedType ? '2' : '0' ?>;
+    window.GV_VERIFIED_TYPE = <?= json_encode($verifiedPassengerType) ?>;
+</script>
+
 <div class="u-body mobile-view">
-    <!-- Search Bar -->
     <div class="u-sec">
-        <div class="u-search-card" style="border-radius: 12px; border-bottom: 1px solid var(--u-border);">
+        <div class="u-search-card">
             <form class="u-srow" action="" method="GET">
                 <div class="u-sf">
                     <label for="from">From</label>
                     <select id="from" name="from" class="ss" data-placeholder="Select origin">
                         <option value="">Select origin</option>
                         <?php foreach ($locations as $name => $coords): ?>
-                            <option value="<?= $name ?>" <?= $from === $name ? 'selected' : '' ?>>
-                                <?= $name ?>
+                            <option value="<?= htmlspecialchars($name) ?>" <?= $from === $name ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($name) ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
                 </div>
-                <div class="u-s-sep"><i class = 'fa-solid fa-arrow-right'></i></div>
+                <div class="u-s-sep"><i class="fa-solid fa-arrow-right"></i></div>
                 <div class="u-sf">
                     <label for="to">To</label>
                     <select id="to" name="to" class="ss" data-placeholder="Select destination">
                         <option value="">Select destination</option>
                         <?php foreach ($locations as $name => $coords): ?>
-                            <option value="<?= $name ?>" <?= $to === $name ? 'selected' : '' ?>>
-                                <?= $name ?>
+                            <option value="<?= htmlspecialchars($name) ?>" <?= $to === $name ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($name) ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
@@ -67,110 +86,322 @@ $locations = LOCATIONS; // Use LOCATIONS constant from autoload.php
         </div>
     </div>
 
-    <!-- Results Grid -->
     <div class="u-sec">
         <div class="u-sec-head">
             <h2 class="u-sec-title">Available Schedules</h2>
-            <?php if ($results && count($results) > 0): ?>
-                <span style="font-size: 12px; color: var(--u-muted);"><?= count($results) ?> result(s)</span>
+            <?php if (!empty($results)): ?>
+                <span style="font-size: 12px; color: var(--u-muted);">
+                    <?= count($results) ?> result(s)
+                </span>
             <?php endif; ?>
         </div>
 
-        <?php if ($results && count($results) > 0): ?>
+        <?php if (!empty($results)): ?>
             <div class="u-schedule-grid">
-                <?php foreach ($results as $schedule): ?>
+                <?php foreach ($results as $schedule):
+                    $stops = $schedule['stops'] ?? [];
+                    $availableSeats = (int) $schedule['available_seats'];
+                    $arrival = $schedule['estimated_arrival_at']
+                        ? date('g:i A', strtotime($schedule['estimated_arrival_at']))
+                        : date('g:i A', strtotime($schedule['departure_date'] . ' ' . $schedule['departure_time'] . ' +2 hours'));
+                    ?>
                     <div class="u-schedule-card">
                         <div class="u-schedule-header">
                             <div class="u-schedule-time">
-                                <div class="u-schedule-dep"><?= date('g:i A', strtotime($schedule['departure_time'])) ?></div>
-                                <div class="u-schedule-arr">Est. <?= date('g:i A', strtotime($schedule['arrived_at'])) ?></div>
+                                <div class="u-schedule-dep">
+                                    <?= date('g:i A', strtotime($schedule['departure_time'])) ?>
+                                </div>
+                                <div class="u-schedule-arr">Est. <?= htmlspecialchars($arrival) ?></div>
                             </div>
                             <div class="u-schedule-route">
-                                <div class="u-schedule-origin"><?= htmlspecialchars($schedule['origin']) ?></div>
-                                <div class="u-schedule-arrow"><i class="fa-solid fa-arrow-right"></i></div>
-                                <div class="u-schedule-dest"><?= htmlspecialchars($schedule['destination']) ?></div>
+                                <div class="u-route-line">
+                                    <div class="u-schedule-origin"><?= htmlspecialchars($schedule['origin']) ?></div>
+                                    <div class="u-schedule-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+                                    <div class="u-schedule-dest"><?= htmlspecialchars($schedule['destination']) ?></div>
+                                </div>
+                                <?php if (!empty($stops)): ?>
+                                    <div class="u-route-stops" aria-label="Route stops">
+                                        <?php foreach ($stops as $stop): ?>
+                                            <span class="u-route-stop-pill">via <?= htmlspecialchars($stop) ?></span>
+                                        <?php endforeach; ?>
+                                    </div>
+                                <?php endif; ?>
                             </div>
                         </div>
+
                         <div class="u-schedule-meta">
                             <div class="u-schedule-info">
-                                <i class="fa-solid fa-van"></i>
+                                <i class="fa-solid fa-van-shuttle"></i>
                                 <span><?= htmlspecialchars($schedule['model'] ?? 'Standard Van') ?></span>
                             </div>
                             <div class="u-schedule-info">
                                 <i class="fa-solid fa-chair"></i>
-                                <span><?= $schedule['capacity'] ?> seats available</span>
+                                <span><?= $availableSeats ?> seat<?= $availableSeats === 1 ? '' : 's' ?> available</span>
+                            </div>
+                            <div class="u-schedule-info">
+                                <i class="fa-regular fa-calendar"></i>
+                                <span><?= date('M j, Y', strtotime($schedule['departure_date'])) ?></span>
                             </div>
                         </div>
                         <div class="u-schedule-footer">
                             <div class="u-schedule-price">
                                 <span class="u-price-label">per seat</span>
-                                <span class="u-price-value">₱<?= number_format($schedule['route_fare'], 2) ?></span>
+                                <span class="u-price-value">&#8369;<?= number_format((float) $schedule['route_fare'], 2) ?></span>
                             </div>
-                            <button class="u-sbtn u-book-btn" data-schedule-id="<?php echo $schedule['schedule_id_pk'] ?? ''?>"
-                                data-price="<?php echo $schedule['route_fare'] ?>">
-                                Book Now
+                            <button class="u-book-btn"
+                                type="button"
+                                data-schedule-id="<?= htmlspecialchars(encrypt((string) $schedule['schedule_id_pk'])) ?>"
+                                <?= $availableSeats < 1 ? 'disabled' : '' ?>>
+                                <i class="fa-solid fa-ticket"></i> Book Now
                             </button>
                         </div>
                     </div>
                 <?php endforeach; ?>
             </div>
         <?php else: ?>
-            <div style="text-align: center; padding: 40px; color: var(--u-muted);">
-                <i class="fa-solid fa-calendar-xmark" style="font-size: 36px; margin-bottom: 12px;"></i>
-                <p style="font-size: 14px; margin-bottom: 8px;">No schedules available</p>
-                <p style="font-size: 12px;">Try adjusting your search criteria or date</p>
+            <div class="u-empty-state">
+                <i class="fa-solid fa-calendar-xmark"></i>
+                <p>No schedules available</p>
+                <p>Try adjusting your search criteria or date.</p>
             </div>
         <?php endif; ?>
     </div>
 </div>
 
-<!-- Booking Confirmation Modal -->
 <div class="modal fade" id="bookingModal" tabindex="-1" aria-labelledby="bookingModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content booking-modal">
+        <div class="modal-content">
             <div class="modal-header">
                 <div>
-                    <h5 class="modal-title" id="bookingModalLabel">Confirm Booking</h5>
-                    <span class="modal-subtitle">Review passenger details and total fare before confirming.</span>
+                    <h5 class="modal-title" id="bookingModalLabel">Book Your Trip</h5>
+                    <span class="modal-subtitle">Choose seats, passenger details, and payment in one flow.</span>
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form id="bookingForm" action="../../controllers/users/BookingController.php" method="POST">
+                <form id="bookingForm">
                     <?= csrf_field() ?>
-                    <input type="hidden" name="schedule_id" id="scheduleId">
-                    <input type="hidden" name="action" value="create">
-
-                    <div class="u-form-group">
-                        <label for="passengerName">Passenger Name</label>
-                        <input type="text" class="form-control" id="passengerName" name="passenger_name"
-                            value="<?= htmlspecialchars($user['firstname'] ?? '') . ' ' . htmlspecialchars($user['lastname'] ?? '') ?>"
-                            required>
-                    </div>
-
-                    <div class="u-form-group">
-                        <label for="contactNumber">Contact Number</label>
-                        <input type="tel" class="form-control" id="contactNumber" name="contact_number"
-                            value="<?= htmlspecialchars($user['contact_number'] ?? '') ?>"
-                            placeholder="09XX XXX XXXX"
-                            required>
-                    </div>
-
-                    <div class="u-form-group">
-                        <label for="seatsCount">Number of Seats</label>
-                        <input type="number" class="form-control" id="seatsCount" name="seats_count" min="1" max="10" value="1" required>
-                    </div>
-
-                    <div class="u-total-price">
-                        <span class="u-total-label">Total Fare</span>
-                        <span class="u-total-value" id="totalPriceDisplay">₱0.00</span>
-                    </div>
-
-                    <div class="u-modal-actions">
-                        <button type="button" class="u-btn u-btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="u-btn u-btn-primary">Confirm Booking</button>
-                    </div>
                 </form>
+
+                <div class="booking-progress" aria-label="Booking progress">
+                    <div class="progress-step active" data-step="1">
+                        <span class="progress-dot">1</span><span class="progress-label">Route</span>
+                    </div>
+                    <div class="progress-step" data-step="2">
+                        <span class="progress-dot">2</span><span class="progress-label">Seats</span>
+                    </div>
+                    <div class="progress-step" data-step="3">
+                        <span class="progress-dot">3</span><span class="progress-label">Passenger</span>
+                    </div>
+                    <div class="progress-step" data-step="4">
+                        <span class="progress-dot">4</span><span class="progress-label">Payment</span>
+                    </div>
+                    <div class="progress-step" data-step="5">
+                        <span class="progress-dot">5</span><span class="progress-label">Confirm</span>
+                    </div>
+                </div>
+                <div class="booking-mobile-step" id="mobileStepLabel">Step 1 of 5 - Route</div>
+
+                <section class="booking-step active" data-step="1">
+                    <div class="booking-grid">
+                        <div class="booking-card">
+                            <h6>Route Preview</h6>
+                            <div class="booking-map" id="bookingRouteMap"></div>
+                            <div class="booking-route-meta">
+                                <div class="booking-meta-row"><span>Route</span><strong id="routeName">-</strong></div>
+                                <div class="booking-meta-row"><span>Date & time</span><strong id="routeDateTime">-</strong></div>
+                                <div class="booking-meta-row"><span>Van</span><strong id="routeVan">-</strong></div>
+                                <div class="booking-meta-row"><span>Base fare</span><strong id="routeFare">-</strong></div>
+                            </div>
+                        </div>
+                        <aside class="booking-side">
+                            <h6>Stops</h6>
+                            <div class="booking-stop-list" id="bookingStopList"></div>
+                        </aside>
+                    </div>
+                    <div class="booking-actions">
+                        <button type="button" class="u-btn u-btn-primary" data-booking-next>
+                            Next <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </section>
+
+                <section class="booking-step" data-step="2">
+                    <div class="seat-toolbar">
+                        <div>
+                            <div class="seat-counter" id="seatCounter">0 seat(s) selected</div>
+                            <div class="seat-availability" id="seatAvailability">- available</div>
+                        </div>
+                        <div class="seat-selected-list" id="seatSelectedList">No seats selected</div>
+                    </div>
+                    <div class="van-seat-viewer">
+                        <div class="vsv-windshield">
+                            <i class="fas fa-car-side"></i><span>FRONT</span>
+                        </div>
+                        <div class="vsv-grid" id="bookingSeatGrid"></div>
+                        <div class="vsv-legend">
+                            <span class="vsv-legend-item vsv-driver-dot">Driver</span>
+                            <span class="vsv-legend-item vsv-available-dot">Available</span>
+                            <span class="vsv-legend-item vsv-occupied-dot">Booked</span>
+                        </div>
+                    </div>
+                    <div class="seat-fare-live" id="seatFareLive">0 seats x &#8369;0.00 = &#8369;0.00</div>
+                    <div class="booking-actions">
+                        <button type="button" class="u-btn u-btn-secondary" data-booking-back>
+                            <i class="fa-solid fa-arrow-left"></i> Back
+                        </button>
+                        <button type="button" class="u-btn u-btn-primary" data-booking-next>
+                            Next <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </section>
+
+                <section class="booking-step" data-step="3">
+                    <div class="booking-form-grid">
+                        <div class="u-form-group full">
+                            <label for="passengerName">Passenger Name</label>
+                            <input type="text" id="passengerName" value="<?= htmlspecialchars($passengerName) ?>"
+                                data-default="<?= htmlspecialchars($passengerName) ?>" required>
+                        </div>
+                        <div class="u-form-group">
+                            <label for="contactNumber">Contact Number</label>
+                            <input type="tel" id="contactNumber" value="<?= htmlspecialchars($contactNumber) ?>"
+                                data-default="<?= htmlspecialchars($contactNumber) ?>"
+                                placeholder="09XX XXX XXXX" required>
+                        </div>
+                        <div class="u-form-group full">
+                            <?php if ($verifiedType): ?>
+                                <span class="verified-badge">Verified +2% bonus</span>
+                            <?php else: ?>
+                                <span class="note-badge">Verify your account in Profile to get discounts</span>
+                            <?php endif; ?>
+                        </div>
+                        <div class="u-form-group full">
+                            <label>Passenger Type Per Seat</label>
+                            <div class="passenger-seat-list" id="passengerSeatList"></div>
+                        </div>
+                    </div>
+
+                    <div class="fare-breakdown">
+                        <div class="summary-row"><span>Base fare</span><strong id="baseFareBreakdown">&#8369;0.00</strong></div>
+                        <div class="summary-row"><span>Discount</span><strong id="discountBreakdown">-&#8369;0.00</strong></div>
+                        <div class="summary-row fare-total"><span>Total</span><strong id="totalBreakdown">&#8369;0.00</strong></div>
+                    </div>
+
+                    <div class="booking-actions">
+                        <button type="button" class="u-btn u-btn-secondary" data-booking-back>
+                            <i class="fa-solid fa-arrow-left"></i> Back
+                        </button>
+                        <button type="button" class="u-btn u-btn-primary" data-booking-next>
+                            Next <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </section>
+
+                <section class="booking-step" data-step="4">
+                    <div class="booking-grid">
+                        <div class="booking-card">
+                            <h6>Payment Method</h6>
+                            <div class="payment-grid">
+                                <button type="button" class="payment-card" data-method="gcash" style="--method-color: var(--u-accent);">
+                                    <i class="fa-solid fa-mobile-alt"></i><span>GCash</span>
+                                </button>
+                                <button type="button" class="payment-card" data-method="paymaya" style="--method-color: var(--u-info);">
+                                    <i class="fa-solid fa-wallet"></i><span>PayMaya</span>
+                                </button>
+                                <button type="button" class="payment-card" data-method="card" style="--method-color: var(--u-success);">
+                                    <i class="fa-solid fa-credit-card"></i><span>Card</span>
+                                </button>
+                            </div>
+
+                            <div class="payment-panel" data-panel="gcash" hidden>
+                                <div class="u-form-group">
+                                    <label for="paymentPhone">GCash/PayMaya Number</label>
+                                    <input type="tel" id="paymentPhone" placeholder="09XX XXX XXXX">
+                                </div>
+                                <p class="payment-note">This is a demo - no real transaction will occur.</p>
+                            </div>
+
+                            <div class="payment-panel" data-panel="paymaya" hidden>
+                                <div class="u-form-group">
+                                    <label for="paymentPhonePaymaya">GCash/PayMaya Number</label>
+                                    <input type="tel" id="paymentPhonePaymaya" placeholder="09XX XXX XXXX">
+                                </div>
+                                <p class="payment-note">This is a demo - no real transaction will occur.</p>
+                            </div>
+
+                            <div class="payment-panel" data-panel="card" hidden>
+                                <div class="card-fields">
+                                    <div class="u-form-group full">
+                                        <label for="cardNumber">Card Number</label>
+                                        <input type="tel" id="cardNumber" placeholder="XXXX XXXX XXXX XXXX">
+                                    </div>
+                                    <div class="u-form-group full">
+                                        <label for="cardholderName">Cardholder Name</label>
+                                        <input type="text" id="cardholderName">
+                                    </div>
+                                    <div class="u-form-group">
+                                        <label for="cardExpiry">Expiry</label>
+                                        <input type="tel" id="cardExpiry" placeholder="MM/YY">
+                                    </div>
+                                    <div class="u-form-group">
+                                        <label for="cardCvv">CVV</label>
+                                        <input type="password" id="cardCvv" placeholder="123" maxlength="4">
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <aside class="booking-side order-summary">
+                            <h6>Order Summary</h6>
+                            <div class="fare-breakdown">
+                                <div class="summary-row"><span>Route</span><strong id="summaryRoute">-</strong></div>
+                                <div class="summary-row"><span>Date</span><strong id="summaryDate">-</strong></div>
+                                <div class="summary-row"><span>Seats</span><strong id="summarySeats">-</strong></div>
+                                <div class="summary-row"><span>Passenger</span><strong id="summaryPassengerType">Regular</strong></div>
+                                <div class="summary-row"><span>Discount</span><strong id="summaryDiscount">-&#8369;0.00</strong></div>
+                                <div class="summary-row"><span>Subtotal</span><strong id="summarySubtotal">&#8369;0.00</strong></div>
+                                <div class="summary-row"><span>Convenience fee</span><strong id="summaryFee">&#8369;0.00</strong></div>
+                                <div class="summary-row summary-total"><span>Grand Total</span><strong id="summaryGrandTotal">&#8369;0.00</strong></div>
+                            </div>
+                        </aside>
+                    </div>
+
+                    <div class="booking-actions">
+                        <button type="button" class="u-btn u-btn-secondary" data-booking-back>
+                            <i class="fa-solid fa-arrow-left"></i> Back
+                        </button>
+                        <button type="button" class="u-btn u-btn-primary" id="confirmPayBtn">
+                            Confirm & Pay <i class="fa-solid fa-lock"></i>
+                        </button>
+                    </div>
+                </section>
+
+                <section class="booking-step" data-step="5">
+                    <div class="receipt-wrap">
+                        <div class="receipt-check"><i class="fa-solid fa-check"></i></div>
+                        <div class="receipt-title">Booking Submitted</div>
+                        <div class="receipt-ref">
+                            <span id="receiptReference">GV-0000-00000</span>
+                            <button type="button" class="copy-ref" id="copyRefBtn" title="Copy reference">
+                                <i class="fa-regular fa-copy"></i>
+                            </button>
+                        </div>
+                        <div class="receipt-details">
+                            <div class="receipt-row"><span>Route</span><strong id="receiptRoute">-</strong></div>
+                            <div class="receipt-row"><span>Date & time</span><strong id="receiptDate">-</strong></div>
+                            <div class="receipt-row"><span>Seats</span><strong id="receiptSeats">-</strong></div>
+                            <div class="receipt-row"><span>Passenger</span><strong id="receiptPassenger">-</strong></div>
+                            <div class="receipt-row"><span>Payment</span><strong id="receiptPaymentMethod">-</strong></div>
+                            <div class="receipt-row"><span>Amount paid</span><strong id="receiptAmount">&#8369;0.00</strong></div>
+                        </div>
+                        <div class="booking-actions">
+                            <a href="my-bookings.php" class="u-btn u-btn-primary">View My Bookings</a>
+                            <button type="button" class="u-btn u-btn-secondary" id="bookAnotherBtn">Book Another Trip</button>
+                        </div>
+                    </div>
+                </section>
             </div>
         </div>
     </div>

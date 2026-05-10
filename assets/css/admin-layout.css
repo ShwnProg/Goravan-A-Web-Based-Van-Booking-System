@@ -723,3 +723,73 @@ body {
         font-size: 16px;
     }
 }
+
+/* Dark mode shell */
+body.admin-dark-mode-active .sidebar,
+body.admin-dark-mode-active .topbar {
+    background: rgba(15, 23, 42, .96);
+    border-color: rgba(255, 255, 255, .07);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, .18);
+}
+
+body.admin-dark-mode-active .main-content {
+    background: #0f172a;
+}
+
+body.admin-dark-mode-active .logo p,
+body.admin-dark-mode-active .page-title,
+body.admin-dark-mode-active .topbar-name,
+body.admin-dark-mode-active .dropdown-name,
+body.admin-dark-mode-active .notif-header p {
+    color: #e2e8f0;
+}
+
+body.admin-dark-mode-active .menu-btn,
+body.admin-dark-mode-active .topbar-greeting,
+body.admin-dark-mode-active .topbar-role,
+body.admin-dark-mode-active .dropdown-role,
+body.admin-dark-mode-active .notif-time {
+    color: #94a3b8;
+}
+
+body.admin-dark-mode-active .menu-btn i {
+    color: #64748b;
+}
+
+body.admin-dark-mode-active .menu-btn:hover,
+body.admin-dark-mode-active .topbar-profile:hover,
+body.admin-dark-mode-active .topbar-icon-btn:hover {
+    background: rgba(255, 255, 255, .06);
+}
+
+body.admin-dark-mode-active .burger-btn:hover,
+body.admin-dark-mode-active .topbar-icon-btn {
+    background: rgba(255, 255, 255, .05);
+}
+
+body.admin-dark-mode-active .burger-btn span {
+    background: #e2e8f0;
+}
+
+body.admin-dark-mode-active .profile-dropdown-menu,
+body.admin-dark-mode-active .notif-dropdown {
+    background: #1e293b;
+    border-color: rgba(255, 255, 255, .08);
+}
+
+body.admin-dark-mode-active .dropdown-item,
+body.admin-dark-mode-active .notif-text {
+    color: #cbd5e1;
+}
+
+body.admin-dark-mode-active .dropdown-item:hover,
+body.admin-dark-mode-active .notif-item:hover {
+    background: rgba(255, 255, 255, .05);
+}
+
+body.admin-dark-mode-active .dropdown-divider,
+body.admin-dark-mode-active .notif-header,
+body.admin-dark-mode-active .notif-footer,
+body.admin-dark-mode-active .notif-item {
+    border-color: rgba(255, 255, 255, .07);
+}

@@ -8,36 +8,33 @@ $active_page = 'bookings';
 $page_css    = '../../assets/css/user-bookings.css';
 $page_js     = '../../assets/js/user-bookings.js';
 
-// Fetch booking details
 $id = $_GET['id'] ?? null;
 if (!$id) { header('Location: my-bookings.php'); exit; }
 
+$userId = (int) decrypt($_SESSION['id']);
+$bookingId = (int) decrypt($id);
+if (!$bookingId) { header('Location: my-bookings.php'); exit; }
+
 $bk = new Bookings($conn);
-$bk->id = decrypt($id);
-$booking = $bk->GetBookingByID();
+$booking = $bk->GetUserBookingGroupByID($bookingId, $userId);
 
 if (!$booking) { header('Location: my-bookings.php'); exit; }
-$booking = $booking[0]; // Assuming single result
-
 ?>
 
-<!-- PAGE BODY -->
 <div class="u-body">
-    <!-- Back Button -->
     <div class="u-back-link">
         <a href="my-bookings.php" class="u-back-btn">
             <i class="fa-solid fa-arrow-left"></i> Back to My Bookings
         </a>
     </div>
 
-    <!-- Booking Detail Card -->
     <div class="u-bk-detail">
         <div class="u-bk-header">
             <div>
                 <div class="u-bk-ref"><?= htmlspecialchars($booking['reference_code']) ?></div>
                 <div class="u-bk-route"><?= htmlspecialchars($booking['route_display']) ?></div>
             </div>
-            <span class="u-badge <?= $booking['status'] ?>">
+            <span class="u-badge <?= htmlspecialchars($booking['status']) ?>">
                 <?= ucfirst($booking['status']) ?>
             </span>
         </div>
@@ -46,57 +43,75 @@ $booking = $booking[0]; // Assuming single result
             <div class="u-info-row">
                 <span class="u-info-label"><i class="fa-solid fa-calendar-days"></i> Departure Date & Time:</span>
                 <span class="u-info-value">
-                    <?= date('M j, Y · g:i A', strtotime($booking['departure_date'] . ' ' . $booking['departure_time'])) ?>
+                    <?= date('M j, Y', strtotime($booking['departure_date'])) ?> &middot; <?= date('g:i A', strtotime($booking['departure_time'])) ?>
                 </span>
             </div>
+
             <div class="u-info-row">
-                <span class="u-info-label"><i class="fa-solid fa-chair"></i> Seat Number:</span>
-                <span class="u-info-value"><?= htmlspecialchars($booking['seat_number']) ?> (Row <?= $booking['seat_row'] ?>, Col <?= $booking['seat_col'] ?>)</span>
+                <span class="u-info-label"><i class="fa-solid fa-chair"></i> Seats:</span>
+                <span class="u-info-value">
+                    <?= (int) $booking['seats_count'] ?> seat<?= (int) $booking['seats_count'] === 1 ? '' : 's' ?>
+                    <?php if (!empty($booking['seat_numbers'])): ?>
+                        <span class="u-detail-seat-row">
+                            <?php foreach (explode(',', $booking['seat_numbers']) as $seatNumber): ?>
+                                <span class="u-seat-chip"><?= htmlspecialchars(trim($seatNumber)) ?></span>
+                            <?php endforeach; ?>
+                        </span>
+                    <?php endif; ?>
+                </span>
             </div>
+
             <div class="u-info-row">
                 <span class="u-info-label"><i class="fa-solid fa-peso-sign"></i> Fare:</span>
-                <span class="u-info-value">₱<?= number_format($booking['route_fare'], 2) ?></span>
+                <span class="u-info-value">&#8369;<?= number_format((float) $booking['route_fare'], 2) ?> per seat</span>
             </div>
+
+            <?php if (!empty($booking['payment_amount'])): ?>
+            <div class="u-info-row">
+                <span class="u-info-label"><i class="fa-solid fa-wallet"></i> Payment:</span>
+                <span class="u-info-value">
+                    <?= ucfirst($booking['payment_method']) ?> &middot; &#8369;<?= number_format((float) $booking['payment_amount'], 2) ?>
+                    (<?= ucfirst($booking['payment_status']) ?>)
+                </span>
+            </div>
+            <?php endif; ?>
+
+            <?php if (!empty($booking['passenger_name'])): ?>
+            <div class="u-info-row">
+                <span class="u-info-label"><i class="fa-solid fa-user"></i> Passenger:</span>
+                <span class="u-info-value"><?= htmlspecialchars($booking['passenger_name']) ?></span>
+            </div>
+            <?php endif; ?>
+
             <div class="u-info-row">
                 <span class="u-info-label"><i class="fa-solid fa-user-tie"></i> Driver:</span>
-                <span class="u-info-value"><?= htmlspecialchars($booking['driver_name']) ?></span>
+                <span class="u-info-value"><?= htmlspecialchars($booking['driver_name'] ?? 'Unassigned') ?></span>
             </div>
+
             <div class="u-info-row">
                 <span class="u-info-label"><i class="fa-solid fa-bus"></i> Van:</span>
                 <span class="u-info-value"><?= htmlspecialchars($booking['van_model']) ?> (<?= htmlspecialchars($booking['van_plate']) ?>)</span>
             </div>
+
             <div class="u-info-row">
                 <span class="u-info-label"><i class="fa-solid fa-route"></i> Trip Status:</span>
                 <span class="u-info-value"><?= ucfirst($booking['schedule_status']) ?></span>
             </div>
-            <?php if ($booking['arrived_at']): ?>
+
+            <?php if (!empty($booking['arrived_at'])): ?>
             <div class="u-info-row">
                 <span class="u-info-label"><i class="fa-solid fa-flag-checkered"></i> Arrived At:</span>
-                <span class="u-info-value"><?= date('M j, Y · g:i A', strtotime($booking['arrived_at'])) ?></span>
+                <span class="u-info-value"><?= date('M j, Y', strtotime($booking['arrived_at'])) ?> &middot; <?= date('g:i A', strtotime($booking['arrived_at'])) ?></span>
             </div>
             <?php endif; ?>
+
             <div class="u-info-row">
                 <span class="u-info-label"><i class="fa-solid fa-clock"></i> Booked At:</span>
-                <span class="u-info-value"><?= date('M j, Y · g:i A', strtotime($booking['created_at'])) ?></span>
+                <span class="u-info-value"><?= date('M j, Y', strtotime($booking['created_at'])) ?> &middot; <?= date('g:i A', strtotime($booking['created_at'])) ?></span>
             </div>
         </div>
-
-        <?php if ($booking['status'] === 'pending'): ?>
-        <div class="u-bk-actions">
-            <button class="u-btn u-btn-secondary" onclick="cancelBooking('<?= $id ?>')">Cancel Booking</button>
-        </div>
-        <?php endif; ?>
     </div>
 </div>
-
-<script>
-function cancelBooking(id) {
-    if (confirm('Are you sure you want to cancel this booking?')) {
-        // Implement cancel logic, perhaps AJAX to update status
-        alert('Cancel functionality to be implemented');
-    }
-}
-</script>
 
 <?php
 $content = ob_get_clean();

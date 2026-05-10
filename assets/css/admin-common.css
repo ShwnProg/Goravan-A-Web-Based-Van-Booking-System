@@ -440,6 +440,46 @@ body.admin-dark-mode-active {
     color: #9ca3af;
 }
 
+.admin-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 16px;
+    border-top: 1px solid rgba(0, 0, 0, .06);
+    background: #fff;
+    color: #6b7280;
+    font-size: 12px;
+}
+
+.admin-pagination > div {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.admin-pagination button {
+    min-height: 32px;
+    padding: 0 12px;
+    border: 1px solid rgba(0, 0, 0, .1);
+    border-radius: 8px;
+    background: #fff;
+    color: #374151;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.admin-pagination button:hover:not(:disabled) {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+}
+
+.admin-pagination button:disabled {
+    opacity: .45;
+    cursor: not-allowed;
+}
+
 /* ── FORM INPUTS ─────────────────────────────── */
 .rinput {
     width: 100%;
@@ -1056,6 +1096,18 @@ body.admin-dark-mode-active .text-muted-sm {
     color: #94a3b8;
 }
 
+body.admin-dark-mode-active .admin-pagination {
+    background: #1e293b;
+    border-top-color: rgba(255, 255, 255, .07);
+    color: #94a3b8;
+}
+
+body.admin-dark-mode-active .admin-pagination button {
+    background: #162032;
+    border-color: rgba(255, 255, 255, .09);
+    color: #cbd5e1;
+}
+
 /* ── BADGES ──────────────────────────────────── */
 body.admin-dark-mode-active .badge.active {
     background: rgba(16, 185, 129, .1);
@@ -1192,6 +1244,21 @@ body.admin-dark-mode-active .rfield-label {
 /* ── MODAL ───────────────────────────────────── */
 body.admin-dark-mode-active .rmodal {
     background: #1e293b !important;
+}
+
+body.admin-dark-mode-active .modal-content {
+    background: #1e293b;
+    color: #cbd5e1;
+    border-color: rgba(255, 255, 255, .08);
+}
+
+body.admin-dark-mode-active .modal-header,
+body.admin-dark-mode-active .modal-footer {
+    border-color: rgba(255, 255, 255, .07);
+}
+
+body.admin-dark-mode-active .btn-close {
+    filter: invert(1) grayscale(100%);
 }
 
 body.admin-dark-mode-active .rmodal-title {

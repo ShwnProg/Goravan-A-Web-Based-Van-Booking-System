@@ -182,10 +182,13 @@ var STATUS_META = {
 
 var STATUS_TRANSITIONS = {
     boarding : ['departed', 'cancelled'],
-    departed : ['arrived',  'cancelled'],
+    departed : ['cancelled'],
     arrived  : [],
     cancelled: [],
 };
+
+var SCHEDULE_PAGE_SIZE = 10;
+var scheduleCurrentPage = 1;
 
 /* ══════════════════════════════════════════════════════════════════════════
    PAGE INIT  —  called by nav.js after every page swap
@@ -228,11 +231,13 @@ window.initSchedulesPage = function () {
     function applyFilters() {
         var q      = searchInput  ? searchInput.value.toLowerCase().trim() : '';
         var status = statusFilter ? statusFilter.value : '';
+        var rows = Array.from(tbody.querySelectorAll('tr.schedule-row'));
 
-        tbody.querySelectorAll('tr.schedule-row').forEach(function (row) {
+        rows.forEach(function (row) {
             /* Build searchable text from every meaningful data attribute */
             var text = (
                 (row.dataset.routeDisplay || '') + ' ' +
+                (row.dataset.routeVia     || '') + ' ' +
                 (row.dataset.driverName   || '') + ' ' +
                 (row.dataset.vanPlate     || '') + ' ' +
                 (row.dataset.status       || '')
@@ -241,10 +246,22 @@ window.initSchedulesPage = function () {
             var matchSearch = !q      || text.includes(q);
             var matchStatus = !status || row.dataset.status === status;
 
-            row.style.display = (matchSearch && matchStatus) ? '' : 'none';
+            row.dataset.filterMatch = (matchSearch && matchStatus) ? '1' : '0';
+        });
+
+        var matchedRows = rows.filter(function (row) { return row.dataset.filterMatch === '1'; });
+        var totalPages = Math.max(1, Math.ceil(matchedRows.length / SCHEDULE_PAGE_SIZE));
+        scheduleCurrentPage = Math.min(scheduleCurrentPage, totalPages);
+        var start = (scheduleCurrentPage - 1) * SCHEDULE_PAGE_SIZE;
+        var end = start + SCHEDULE_PAGE_SIZE;
+
+        rows.forEach(function (row) {
+            var index = matchedRows.indexOf(row);
+            row.style.display = index >= start && index < end ? '' : 'none';
         });
 
         updateCount();
+        renderSchedulePagination(matchedRows.length, totalPages);
     }
 
     /* ── Count badge ─────────────────────────────────────────────────── */
@@ -252,16 +269,13 @@ window.initSchedulesPage = function () {
         if (!countBadge) return;
         /* :not([style*="display: none"]) misses rows hidden with display:'' reset,
            so check offsetParent instead — but simplest reliable way is to recount */
-        var visible = 0;
-        tbody.querySelectorAll('tr.schedule-row').forEach(function (row) {
-            if (row.style.display !== 'none') visible++;
-        });
+        var visible = tbody.querySelectorAll('tr.schedule-row[data-filter-match="1"]').length;
         countBadge.textContent = visible + ' schedule' + (visible !== 1 ? 's' : '');
     }
 
     /* ── Wire events — both call the same applyFilters() ─────────────── */
-    if (searchInput)  searchInput.addEventListener('input',  applyFilters);
-    if (statusFilter) statusFilter.addEventListener('change', applyFilters);
+    if (searchInput)  searchInput.addEventListener('input',  function () { scheduleCurrentPage = 1; applyFilters(); });
+    if (statusFilter) statusFilter.addEventListener('change', function () { scheduleCurrentPage = 1; applyFilters(); });
 
     /* Run once on init so count is correct immediately */
     applyFilters();
@@ -335,6 +349,7 @@ window.initSchedulesPage = function () {
         if (!emptyEl || !previewEl) return;
 
         var route    = row.dataset.routeDisplay || 'N/A';
+        var via      = row.dataset.routeVia || '';
         var driver   = row.dataset.driverName   || 'N/A';
         var plate    = row.dataset.vanPlate     || 'N/A';
         var capacity = row.dataset.vanCapacity  || '—';
@@ -353,13 +368,14 @@ window.initSchedulesPage = function () {
             } catch (_) { departure = date + ' ' + time; }
         }
 
-        if (labelEl) labelEl.textContent = route;
+        if (labelEl) labelEl.textContent = via ? route + ' · ' + via : route;
 
-        setText('preview-route',    route);
+        setText('preview-route',    via ? route + ' · ' + via : route);
         setText('preview-driver',   driver);
         setText('preview-van',      plate);
         setText('preview-capacity', capacity + ' seats');
         setText('preview-departure', departure);
+        setText('preview-eta', row.dataset.etaDisplay || 'Auto-managed');
 
         var statusEl = document.getElementById('preview-status');
         if (statusEl) {
@@ -392,10 +408,49 @@ window.initSchedulesPage = function () {
     /* ══════════════════════════════════════════════════════════════════
        EDIT MODAL — populate + sync SS
     ══════════════════════════════════════════════════════════════════ */
+    function renderSchedulePagination(total, totalPages) {
+        var card = document.querySelector('.schedules-card');
+        if (!card) return;
+
+        var pager = document.getElementById('schedule-pagination');
+        if (!pager) {
+            pager = document.createElement('div');
+            pager.id = 'schedule-pagination';
+            pager.className = 'admin-pagination';
+            card.appendChild(pager);
+        }
+
+        if (total <= SCHEDULE_PAGE_SIZE) {
+            pager.innerHTML = '';
+            pager.style.display = 'none';
+            return;
+        }
+
+        var from = (scheduleCurrentPage - 1) * SCHEDULE_PAGE_SIZE + 1;
+        var to = Math.min(total, scheduleCurrentPage * SCHEDULE_PAGE_SIZE);
+        pager.style.display = '';
+        pager.innerHTML =
+            '<span>' + from + '-' + to + ' of ' + total + '</span>' +
+            '<div>' +
+                '<button type="button" data-page="prev" ' + (scheduleCurrentPage === 1 ? 'disabled' : '') + '>Previous</button>' +
+                '<button type="button" data-page="next" ' + (scheduleCurrentPage === totalPages ? 'disabled' : '') + '>Next</button>' +
+            '</div>';
+
+        pager.querySelectorAll('button').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                scheduleCurrentPage += btn.dataset.page === 'next' ? 1 : -1;
+                applyFilters();
+            });
+        });
+    }
+
     function populateEditModal(row) {
         document.getElementById('edit-id').value   = row.dataset.id    || '';
         document.getElementById('edit-date').value = row.dataset.date  || '';
         document.getElementById('edit-time').value = row.dataset.time  || '';
+        var eta = row.dataset.eta || '';
+        document.getElementById('edit-eta-date').value = eta ? eta.slice(0, 10) : '';
+        document.getElementById('edit-eta-time').value = eta ? eta.slice(11, 16) : '';
 
         /* Sync each searchable select */
         syncField('edit-route',  row.dataset.route);
@@ -426,13 +481,16 @@ window.initSchedulesPage = function () {
             van_id        : getVal('edit-van'),
             departure_date: getVal('edit-date'),
             departure_time: getVal('edit-time'),
+            eta_date      : getVal('edit-eta-date'),
+            eta_time      : getVal('edit-eta-time'),
             trip_status   : getVal('edit-status'),
             csrf_token    : getCsrf(),
         };
 
         /* Basic client-side validation */
         if (!payload.route_id || !payload.driver_id || !payload.van_id ||
-            !payload.departure_date || !payload.departure_time) {
+            !payload.departure_date || !payload.departure_time ||
+            !payload.eta_date || !payload.eta_time) {
             Swal.fire('Validation', 'Please fill in all required fields.', 'warning');
             return;
         }

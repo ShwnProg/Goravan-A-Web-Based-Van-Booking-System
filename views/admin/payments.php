@@ -23,9 +23,7 @@ $payments = $payObj->GetAllPayments();
     <div class="filter-group">
         <select class="filter-select" id="payment-status-filter">
             <option value="">All Status</option>
-            <option value="pending">Pending</option>
             <option value="paid">Paid</option>
-            <option value="failed">Failed</option>
             <option value="cancelled">Cancelled</option>
         </select>
     </div>

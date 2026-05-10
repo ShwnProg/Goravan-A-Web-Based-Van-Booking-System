@@ -19,6 +19,8 @@ $driver_id      = (int)   ($_POST['driver_id']      ?? 0);
 $van_id         = (int)   ($_POST['van_id']         ?? 0);
 $departure_date = trim(    $_POST['departure_date']  ?? '');
 $departure_time = trim(    $_POST['departure_time']  ?? '');
+$eta_date       = trim(    $_POST['eta_date']        ?? '');
+$eta_time       = trim(    $_POST['eta_time']        ?? '');
 $trip_status    = trim(    $_POST['trip_status']     ?? 'boarding');
 
 /* ── VALIDATION ───────────────────────────────────────────────────────────── */
@@ -30,7 +32,7 @@ if (!$schedule_id) {
     exit;
 }
 
-if (!$route_id || !$driver_id || !$van_id || !$departure_date || !$departure_time) {
+if (!$route_id || !$driver_id || !$van_id || !$departure_date || !$departure_time || !$eta_date || !$eta_time) {
     echo json_encode([
         'success' => false,
         'message' => 'All fields are required.'
@@ -38,10 +40,20 @@ if (!$route_id || !$driver_id || !$van_id || !$departure_date || !$departure_tim
     exit;
 }
 
-if (strtotime($departure_date . ' ' . $departure_time) === false) {
+$departureTimestamp = strtotime($departure_date . ' ' . $departure_time);
+$etaTimestamp = strtotime($eta_date . ' ' . $eta_time);
+if ($departureTimestamp === false || $etaTimestamp === false) {
     echo json_encode([
         'success' => false,
         'message' => 'Invalid date/time format.'
+    ]);
+    exit;
+}
+
+if ($etaTimestamp < $departureTimestamp) {
+    echo json_encode([
+        'success' => false,
+        'message' => 'ETA cannot be earlier than departure.'
     ]);
     exit;
 }
@@ -77,6 +89,7 @@ $noChanges =
     (int)    $current['van_id_fk']      === $van_id         &&
              $current['departure_date'] === $departure_date &&
              $current['departure_time'] === $departure_time &&
+             ($current['estimated_arrival_at'] ?? '') === date('Y-m-d H:i:s', $etaTimestamp) &&
              $current['trip_status']    === $trip_status;
 
 if ($noChanges) {
@@ -93,6 +106,7 @@ $schedule->driver_id      = $driver_id;
 $schedule->van_id         = $van_id;
 $schedule->departure_date = $departure_date;
 $schedule->departure_time = $departure_time;
+$schedule->estimated_arrival_at = date('Y-m-d H:i:s', $etaTimestamp);
 $schedule->trip_status    = $trip_status;
 
 if ($schedule->HasVanConflict() || $schedule->HasDriverConflict()) {

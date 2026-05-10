@@ -32,7 +32,7 @@ $depth = str_repeat('../', substr_count($_SERVER['PHP_SELF'], '/') - 1);
 </head>
 
 <body class="user-page" id="userBody">
-    <?php if (isset($_SESSION['success'])): ?>
+    <!-- <?php if (isset($_SESSION['success'])): ?>
         <script>
             document.addEventListener('DOMContentLoaded', () => {
                 Swal.fire({ title: 'Success', text: <?= json_encode($_SESSION['success']) ?>, icon: 'success' });
@@ -49,12 +49,16 @@ $depth = str_repeat('../', substr_count($_SERVER['PHP_SELF'], '/') - 1);
             });
         </script>
         <?php unset($_SESSION['error']); ?>
-    <?php endif; ?>
+    <?php endif; ?> -->
 
     <nav class="u-topnav">
         <!-- <img src="../../images/logo.png" alt="GoraVan Logo"> -->
         <a href="<?= $depth ?>views/users/index.php" class="u-logo">
-            <img src="<?= $depth ?>images/logo.png" alt="GoraVan Logo" id="logoImg">
+            <img src="<?= $depth ?>images/logo.png"
+                 alt="GoraVan Logo"
+                 id="logoImg"
+                 data-light-logo="<?= $depth ?>images/logo.png"
+                 data-dark-logo="<?= $depth ?>images/logo_white.png">
             <span>Gora<span class='accent'>Van</span></span>
         </a>
 
@@ -63,13 +67,17 @@ $depth = str_repeat('../', substr_count($_SERVER['PHP_SELF'], '/') - 1);
                 class="u-navlink <?= ($active_page ?? '') === 'home' ? 'active' : '' ?>">
                 <i class="fa-solid fa-house"></i> Home
             </a>
+            <a href="<?= $depth ?>views/users/schedule.php"
+                class="u-navlink <?= ($active_page ?? '') === 'schedule' ? 'active' : '' ?>">
+                <i class="fa-solid fa-calendar-days"></i> Schedule
+            </a>
             <a href="<?= $depth ?>views/users/my-bookings.php"
                 class="u-navlink <?= ($active_page ?? '') === 'bookings' ? 'active' : '' ?>">
                 <i class="fa-solid fa-list-ul"></i> My Bookings
             </a>
-            <a href="<?= $depth ?>views/users/schedule.php"
-                class="u-navlink <?= ($active_page ?? '') === 'schedule' ? 'active' : '' ?>">
-                <i class="fa-solid fa-calendar-days"></i> Schedule
+            <a href="<?= $depth ?>views/users/my-payments.php"
+                class="u-navlink <?= ($active_page ?? '') === 'payments' ? 'active' : '' ?>">
+                <i class="fa-solid fa-wallet"></i>  Payments
             </a>
         </div>
 
@@ -80,9 +88,28 @@ $depth = str_repeat('../', substr_count($_SERVER['PHP_SELF'], '/') - 1);
             </button>
 
             <!-- Notifications -->
-            <button class="u-iconbtn" aria-label="Notifications">
-                <i class="fa-regular fa-bell"></i>
-            </button>
+            <div class="u-notif-wrap">
+                <button class="u-iconbtn u-notif-btn" id="userNotifToggle" aria-label="Notifications" title="Notifications"
+                        data-notification-url="<?= $depth ?>controllers/users/NotificationController.php?action=list">
+                    <i class="fa-regular fa-bell"></i>
+                    <span class="u-notif-dot" id="userNotifDot" hidden></span>
+                </button>
+                <div class="u-notif-panel" id="userNotifPanel">
+                    <div class="u-notif-head">
+                        <div>
+                            <strong>Notifications</strong>
+                            <span id="userNotifSummary">Latest activity</span>
+                        </div>
+                        <button type="button" id="userNotifMarkRead">Mark read</button>
+                    </div>
+                    <div class="u-notif-list" id="userNotifList">
+                        <div class="u-notif-empty">
+                            <i class="fa-solid fa-spinner fa-spin"></i>
+                            <p>Loading notifications...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <!-- Profile -->
             <div class="u-profile-wrap">
@@ -127,13 +154,17 @@ $depth = str_repeat('../', substr_count($_SERVER['PHP_SELF'], '/') - 1);
             class="u-bn-item <?= ($active_page ?? '') === 'home' ? 'active' : '' ?>">
             <i class="fa-solid fa-house"></i><span>Home</span>
         </a>
-        <a href="<?= $depth ?>views/users/my-bookings.php"
-            class="u-bn-item <?= ($active_page ?? '') === 'bookings' ? 'active' : '' ?>">
-            <i class="fa-solid fa-list-ul"></i><span>Bookings</span>
-        </a>
         <a href="<?= $depth ?>views/users/schedule.php"
             class="u-bn-item <?= ($active_page ?? '') === 'schedule' ? 'active' : '' ?>">
             <i class="fa-solid fa-calendar-days"></i><span>Schedule</span>
+        </a>
+        <a href="<?= $depth ?>views/users/my-bookings.php"
+            class="u-bn-item <?= ($active_page ?? '') === 'bookings' ? 'active' : '' ?>">
+            <i class="fa-solid fa-list-ul"></i><span>My Bookings</span>
+        </a>
+        <a href="<?= $depth ?>views/users/my-payments.php"
+            class="u-bn-item <?= ($active_page ?? '') === 'payments' ? 'active' : '' ?>">
+            <i class="fa-solid fa-wallet"></i><span>Payments</span>
         </a>
         <a href="<?= $depth ?>views/users/profile.php"
             class="u-bn-item <?= ($active_page ?? '') === 'profile' ? 'active' : '' ?>">

@@ -36,6 +36,14 @@ class UserManagement
                     ORDER BY v2.submitted_at DESC, v2.document_id_pk DESC
                     LIMIT 1
                 ) AS latest_verification_status,
+                (
+                    SELECT v3.submitted_at
+                    FROM {$this->veri_table} v3
+                    WHERE v3.user_id_fk = u.user_id_pk
+                      AND (v3.status = 'pending' OR v3.status IS NULL)
+                    ORDER BY v3.submitted_at ASC, v3.document_id_pk ASC
+                    LIMIT 1
+                ) AS first_pending_at,
                 COUNT(v.document_id_pk) AS document_count,
                 SUM(CASE WHEN v.status = 'pending' OR v.status IS NULL THEN 1 ELSE 0 END) AS pending_count,
                 SUM(CASE WHEN v.status = 'rejected' THEN 1 ELSE 0 END) AS rejected_count,
@@ -44,7 +52,19 @@ class UserManagement
             LEFT JOIN {$this->veri_table} v ON u.user_id_pk = v.user_id_fk
             WHERE u.role = 'user'
             GROUP BY u.user_id_pk
-            ORDER BY u.created_at DESC
+            ORDER BY
+                CASE
+                    WHEN (
+                        SELECT COALESCE(v4.status, 'pending')
+                        FROM {$this->veri_table} v4
+                        WHERE v4.user_id_fk = u.user_id_pk
+                        ORDER BY v4.submitted_at DESC, v4.document_id_pk DESC
+                        LIMIT 1
+                    ) = 'pending' THEN 0
+                    ELSE 1
+                END ASC,
+                first_pending_at ASC,
+                u.created_at DESC
         ");
         $stmt->execute();
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);

@@ -25,6 +25,8 @@ $verif_data         = $verif->GetVerficationStatus();
 $verif_status  = $verif_data['status']           ?? null;
 $verif_type    = ucfirst($verif_data['document_type'] ?? '');
 $verif_reason  = htmlspecialchars($verif_data['rejection_reason'] ?? '');
+$approved_type = ucfirst($verif_data['approved_document_type'] ?? '');
+$has_approved  = !empty($approved_type);
 
 // Used by the profile header badge (preserved from original)
 $user_status   = $verif_data;
@@ -45,9 +47,13 @@ $type          = $verif_type;
                     <?= htmlspecialchars(ucfirst($user['lastname']  ?? '')) ?>
                 </h2>
                 <p class="u-prof-email"><?= htmlspecialchars($user['email'] ?? '') ?></p>
-                <?php if ($verif_status): ?>
-                    <span class="u-prof-badge <?= htmlspecialchars($verif_status) ?>">
-                        <?php if ($verif_status === 'pending'): ?>
+                <?php if ($verif_status || $has_approved): ?>
+                    <span class="u-prof-badge <?= htmlspecialchars($has_approved ? 'approved' : $verif_status) ?>">
+                        <?php if ($has_approved && $verif_status === 'pending'): ?>
+                            <i class="fa-solid fa-clock"></i> Verified <?= htmlspecialchars($approved_type) ?> - update under review
+                        <?php elseif ($has_approved && $verif_status === 'rejected'): ?>
+                            <i class="fa-solid fa-circle-check"></i> Verified <?= htmlspecialchars($approved_type) ?> - update rejected
+                        <?php elseif ($verif_status === 'pending'): ?>
                             <i class="fa-solid fa-clock"></i> <?= htmlspecialchars($type) ?> under review
                         <?php elseif ($verif_status === 'approved'): ?>
                             <i class="fa-solid fa-circle-check"></i> Verified <?= htmlspecialchars($type) ?>
@@ -74,7 +80,7 @@ $type          = $verif_type;
                             <i class="fa-solid fa-upload"></i> Verify Now
                         </button>
                     </div>
-                <?php elseif ($verif_status === 'pending'): ?>
+                <?php elseif ($verif_status === 'pending' && !$has_approved): ?>
                     <div class="u-verif-row">
                         <div class="u-verif-info">
                             <p class="u-verif-title">Verification Pending</p>
@@ -83,20 +89,30 @@ $type          = $verif_type;
                             </p>
                         </div>
                     </div>
-                <?php elseif ($verif_status === 'approved'): ?>
+                <?php elseif ($verif_status === 'approved' || $has_approved): ?>
                     <div class="u-verif-row">
                         <div class="u-verif-info">
-                            <p class="u-verif-title"><?= htmlspecialchars($verif_type) ?> Verified</p>
+                            <p class="u-verif-title"><?= htmlspecialchars($has_approved ? $approved_type : $verif_type) ?> Verified</p>
                             <p class="u-verif-desc">
-                                Your identity is verified. You're eligible for <?= htmlspecialchars($verif_type) ?> fare discounts.
+                                <?php if ($verif_status === 'pending'): ?>
+                                    Your current verification remains active while your update is under review.
+                                <?php elseif ($verif_status === 'rejected' && $verif_reason): ?>
+                                    Your current verification remains active. Latest update was rejected: <?= $verif_reason ?>
+                                <?php elseif ($verif_status === 'rejected'): ?>
+                                    Your current verification remains active. Latest update was rejected.
+                                <?php else: ?>
+                                    Your identity is verified. You're eligible for <?= htmlspecialchars($has_approved ? $approved_type : $verif_type) ?> fare discounts.
+                                <?php endif; ?>
                             </p>
                         </div>
-                        <button type="button"
-                                class="u-sec-link verif-trigger"
-                                data-action="update_verification"
-                                data-bs-toggle="modal" data-bs-target="#verifModal">
-                            <i class="fa-solid fa-rotate"></i> Update
-                        </button>
+                        <?php if ($verif_status !== 'pending'): ?>
+                            <button type="button"
+                                    class="u-sec-link verif-trigger"
+                                    data-action="update_verification"
+                                    data-bs-toggle="modal" data-bs-target="#verifModal">
+                                <i class="fa-solid fa-rotate"></i> Update
+                            </button>
+                        <?php endif; ?>
                     </div>
                 <?php elseif ($verif_status === 'rejected'): ?>
                     <div class="u-verif-row">

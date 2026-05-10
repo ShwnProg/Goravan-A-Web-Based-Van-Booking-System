@@ -30,6 +30,8 @@ $verification->user_id_fk = $userId;
 
 $current       = $verification->GetVerficationStatus();
 $currentStatus = $current['status'] ?? null;
+$hasApproved   = $verification->HasApprovedVerification();
+$hasPending    = $verification->HasPendingVerification();
 
 $validActions = ['submit_verification', 'resubmit_verification', 'update_verification'];
 if (!in_array($action, $validActions, true)) {
@@ -37,19 +39,19 @@ if (!in_array($action, $validActions, true)) {
     exit;
 }
 
-if ($action === 'submit_verification' && $currentStatus === 'pending') {
+if ($hasPending) {
     echo json_encode(['success' => false, 'message' => 'You already have a verification under review.']);
     exit;
 }
-if ($action === 'submit_verification' && $currentStatus === 'approved') {
+if ($action === 'submit_verification' && $hasApproved) {
     echo json_encode(['success' => false, 'message' => 'Your verification is already approved. Use "Update" instead.']);
     exit;
 }
-if ($action === 'resubmit_verification' && $currentStatus !== 'rejected') {
+if ($action === 'resubmit_verification' && ($currentStatus !== 'rejected' || $hasApproved)) {
     echo json_encode(['success' => false, 'message' => 'No rejected verification found to resubmit.']);
     exit;
 }
-if ($action === 'update_verification' && $currentStatus !== 'approved') {
+if ($action === 'update_verification' && !$hasApproved) {
     echo json_encode(['success' => false, 'message' => 'No approved verification found to update.']);
     exit;
 }
@@ -76,24 +78,16 @@ if (!isset($_FILES['verification_document']) || $_FILES['verification_document']
 $file         = $_FILES['verification_document'];
 $ext          = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
 $allowedExts  = ['jpg', 'jpeg', 'png', 'pdf'];
-$allowedMimes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
-// $maxBytes     = 5 * 1024 * 1024;
+$maxBytes     = 5 * 1024 * 1024;
 
-// if (!in_array($ext, $allowedExts, true)) {
-//     echo json_encode(['success' => false, 'message' => 'Only JPG, PNG, and PDF files are accepted.']);
-//     exit;
-// }
-// if ($file['size'] > $maxBytes) {
-//     echo json_encode(['success' => false, 'message' => 'File size must not exceed 5 MB.']);
-//     exit;
-// }
-
-// $finfo = new finfo(FILEINFO_MIME_TYPE);
-// $mime  = file($file['tmp_name']);
-// if (!in_array($mime, $allowedMimes, true)) {
-//     echo json_encode(['success' => false, 'message' => 'Only JPG, PNG, and PDF files are accepted.']);
-//     exit;
-// }
+if (!in_array($ext, $allowedExts, true)) {
+    echo json_encode(['success' => false, 'message' => 'Only JPG, PNG, and PDF files are accepted.']);
+    exit;
+}
+if ($file['size'] > $maxBytes) {
+    echo json_encode(['success' => false, 'message' => 'File size must not exceed 5 MB.']);
+    exit;
+}
 
 $uploadDir = __DIR__ . '/../../uploads/documents/';
 if (!is_dir($uploadDir) && !mkdir($uploadDir, 0755, true)) {

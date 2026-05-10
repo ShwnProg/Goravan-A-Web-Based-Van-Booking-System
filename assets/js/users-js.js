@@ -4,6 +4,8 @@ window.initUsersPage = function () {
     var countBadge = document.getElementById('user-count');
     var searchInput = document.getElementById('user-search');
     var veriFilter = document.getElementById('user-verify-filter');
+    var pageSize = 10;
+    var currentPage = 1;
 
     if (!tbody) return;
 
@@ -12,31 +14,80 @@ window.initUsersPage = function () {
 
     /* ── Count badge ─────────────────────────── */
     function updateCount() {
-        var visible = tbody.querySelectorAll('tr.user-row:not([style*="display: none"])').length;
+        var visible = tbody.querySelectorAll('tr.user-row[data-filter-match="1"]').length;
         if (countBadge) {
             countBadge.textContent = visible + ' user' + (visible !== 1 ? 's' : '');
         }
     }
-    updateCount();
 
     /* ── Search + filter ─────────────────────── */
     function applyFilters() {
         var q = searchInput ? searchInput.value.toLowerCase().trim() : '';
         var veri = veriFilter ? veriFilter.value : '';
 
-        tbody.querySelectorAll('tr.user-row').forEach(function (row) {
+        var rows = Array.from(tbody.querySelectorAll('tr.user-row'));
+        rows.forEach(function (row) {
             var matchQ = !q
                 || (row.dataset.fullname || '').toLowerCase().includes(q)
                 || (row.dataset.email || '').toLowerCase().includes(q)
                 || (row.dataset.contact || '').toLowerCase().includes(q);
             var matchV = !veri || (row.dataset.verifyStatus || '') === veri;
-            row.style.display = matchQ && matchV ? '' : 'none';
+            row.dataset.filterMatch = matchQ && matchV ? '1' : '0';
+        });
+
+        var matchedRows = rows.filter(function (row) { return row.dataset.filterMatch === '1'; });
+        var totalPages = Math.max(1, Math.ceil(matchedRows.length / pageSize));
+        currentPage = Math.min(currentPage, totalPages);
+        var start = (currentPage - 1) * pageSize;
+        var end = start + pageSize;
+
+        rows.forEach(function (row) {
+            var index = matchedRows.indexOf(row);
+            row.style.display = index >= start && index < end ? '' : 'none';
         });
         updateCount();
+        renderPagination(matchedRows.length, totalPages);
     }
 
-    if (searchInput) searchInput.addEventListener('input', applyFilters);
-    if (veriFilter) veriFilter.addEventListener('change', applyFilters);
+    if (searchInput) searchInput.addEventListener('input', function () { currentPage = 1; applyFilters(); });
+    if (veriFilter) veriFilter.addEventListener('change', function () { currentPage = 1; applyFilters(); });
+    applyFilters();
+
+    function renderPagination(total, totalPages) {
+        var card = document.querySelector('.users-card');
+        if (!card) return;
+
+        var pager = document.getElementById('user-pagination');
+        if (!pager) {
+            pager = document.createElement('div');
+            pager.id = 'user-pagination';
+            pager.className = 'admin-pagination';
+            card.appendChild(pager);
+        }
+
+        if (total <= pageSize) {
+            pager.innerHTML = '';
+            pager.style.display = 'none';
+            return;
+        }
+
+        var from = (currentPage - 1) * pageSize + 1;
+        var to = Math.min(total, currentPage * pageSize);
+        pager.style.display = '';
+        pager.innerHTML =
+            '<span>' + from + '-' + to + ' of ' + total + '</span>' +
+            '<div>' +
+                '<button type="button" data-page="prev" ' + (currentPage === 1 ? 'disabled' : '') + '>Previous</button>' +
+                '<button type="button" data-page="next" ' + (currentPage === totalPages ? 'disabled' : '') + '>Next</button>' +
+            '</div>';
+
+        pager.querySelectorAll('button').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                currentPage += btn.dataset.page === 'next' ? 1 : -1;
+                applyFilters();
+            });
+        });
+    }
 
     /* ── Row highlight ───────────────────────── */
     tbody.addEventListener('click', function (e) {

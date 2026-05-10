@@ -21,6 +21,7 @@ $bookings   = $bookingObj->GetAllBookings();
             <option value="">All Statuses</option>
             <option value="pending">Pending</option>
             <option value="approved">Approved</option>
+            <option value="completed">Completed</option>
             <option value="rejected">Rejected</option>
             <option value="cancelled">Cancelled</option>
         </select>
@@ -45,19 +46,18 @@ $bookings   = $bookingObj->GetAllBookings();
                 <thead>
                     <tr>
                         <th>#</th>
-                        <th>Reference Code</th>
+                        <th>Booking</th>
                         <th>Passenger</th>
-                        <th>Route</th>
-                        <th>Seat</th>
+                        <th>Trip</th>
+                        <th>Seats</th>
                         <th>Status</th>
-                        <th>Created</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody id="bookings-tbody">
                     <?php if (empty($bookings)): ?>
                         <tr>
-                            <td colspan="9">
+                            <td colspan="7">
                                 <div class="empty-state">
                                     <i class="fas fa-ticket-alt"></i>
                                     <p>No bookings yet.</p>
@@ -66,6 +66,18 @@ $bookings   = $bookingObj->GetAllBookings();
                         </tr>
                     <?php else: ?>
                         <?php foreach ($bookings as $i => $b):
+                            $seatNumbers = array_filter(array_map('trim', explode(',', $b['seat_numbers'] ?? '')));
+                            $paymentStatus = strtolower($b['payment_status'] ?? 'paid');
+                            $paymentLabel = 'Paid';
+                            $paymentClass = 'paid';
+                            $paymentAmount = isset($b['payment_amount']) ? (float) $b['payment_amount'] : 0;
+                            $paymentMethod = $b['payment_method'] ? ucfirst($b['payment_method']) : 'No payment';
+                            $notes = !empty($b['payment_notes']) ? json_decode($b['payment_notes'], true) : [];
+                            $notes = is_array($notes) ? $notes : [];
+                            $passengers = is_array($notes['passengers'] ?? null) ? $notes['passengers'] : [];
+                            $passengerSummary = $passengers
+                                ? implode(', ', array_map(fn($p) => ($p['seat_number'] ?? '-') . ': ' . ucfirst($p['type'] ?? 'regular'), $passengers))
+                                : ucfirst($notes['passenger_type'] ?? 'regular');
                         ?>
                             <tr class="booking-row"
                                 data-id="<?= (int) $b['book_id_pk'] ?>"
@@ -74,70 +86,62 @@ $bookings   = $bookingObj->GetAllBookings();
                                 data-user-email="<?= htmlspecialchars($b['user_email'] ?? 'N/A', ENT_QUOTES) ?>"
                                 data-user-phone="<?= htmlspecialchars($b['user_phone'] ?? 'N/A', ENT_QUOTES) ?>"
                                 data-route="<?= htmlspecialchars($b['route_display'] ?? 'N/A', ENT_QUOTES) ?>"
-                                data-seat="<?= htmlspecialchars($b['seat_number'] ?? 'N/A', ENT_QUOTES) ?>"
+                                data-seat="<?= htmlspecialchars($b['seat_numbers'] ?? 'N/A', ENT_QUOTES) ?>"
+                                data-seat-count="<?= (int) ($b['seats_count'] ?? 0) ?>"
                                 data-status="<?= htmlspecialchars($b['status'], ENT_QUOTES) ?>"
+                                data-payment="<?= htmlspecialchars($paymentLabel, ENT_QUOTES) ?>"
+                                data-payment-method="<?= htmlspecialchars($paymentMethod, ENT_QUOTES) ?>"
+                                data-payment-amount="<?= htmlspecialchars(number_format($paymentAmount, 2), ENT_QUOTES) ?>"
+                                data-passenger-types="<?= htmlspecialchars($passengerSummary, ENT_QUOTES) ?>"
                                 data-driver="<?= htmlspecialchars($b['driver_name'] ?? 'N/A', ENT_QUOTES) ?>"
-                                data-van="<?= htmlspecialchars($b['van_plate'] ?? 'N/A', ENT_QUOTES) ?>"
-                                data-departure="<?= date('M d g:i A', strtotime($b['departure_date'] . ' ' . $b['departure_time'])) ?>"
-                                data-created="<?= htmlspecialchars($b['created_at'], ENT_QUOTES) ?>"
-                                data-is-expired="<?= $isExpired ? '1' : '0' ?>">
+                                data-van="<?= htmlspecialchars(($b['van_model'] ?? 'Van') . ' (' . ($b['van_plate'] ?? 'N/A') . ')', ENT_QUOTES) ?>"
+                                data-departure="<?= date('M d, Y g:i A', strtotime($b['departure_date'] . ' ' . $b['departure_time'])) ?>"
+                                data-created="<?= htmlspecialchars($b['created_at'], ENT_QUOTES) ?>">
 
                                 <td class="text-muted-sm"><?= $i + 1 ?></td>
                                 <td>
-                                    <span class="ref-code"><?= htmlspecialchars($b['reference_code']) ?></span>
+                                    <div class="booking-ref-stack">
+                                        <span class="ref-code"><?= htmlspecialchars($b['reference_code']) ?></span>
+                                        <small><?= htmlspecialchars($paymentLabel) ?> &middot; <?= date('M d, Y', strtotime($b['created_at'])) ?></small>
+                                    </div>
                                 </td>
                                 <td>
                                     <div class="passenger-info">
                                         <span class="name"><?= htmlspecialchars($b['user_name'] ?? 'Unknown') ?></span>
-                                        <span class="email text-muted-sm"><?= htmlspecialchars($b['user_email'] ?? '') ?></span>
+                                        <span class="email text-muted-sm"><?= htmlspecialchars($passengerSummary) ?></span>
                                     </div>
                                 </td>
                                 <td>
-                                    <div class="route-info">
+                                    <div class="route-info trip-stack">
                                         <i class="fas fa-route" style="color:var(--color-accent);font-size:11px"></i>
                                         <span><?= htmlspecialchars($b['route_display'] ?? 'N/A') ?></span>
+                                        <small><?= date('M d, g:i A', strtotime($b['departure_date'] . ' ' . $b['departure_time'])) ?></small>
                                     </div>
                                 </td>
                                 <td>
-                                    <span class="seat-badge">
-                                        <i class="fas fa-chair" style="font-size:10px"></i>
-                                        <?= htmlspecialchars($b['seat_number'] ?? 'N/A') ?>
-                                    </span>
+                                    <div class="seat-chip-list">
+                                        <?php if (empty($seatNumbers)): ?>
+                                            <span class="seat-badge">N/A</span>
+                                        <?php else: ?>
+                                            <?php foreach (array_slice($seatNumbers, 0, 3) as $seatNumber): ?>
+                                                <span class="seat-badge"><i class="fas fa-chair" style="font-size:10px"></i><?= htmlspecialchars($seatNumber) ?></span>
+                                            <?php endforeach; ?>
+                                            <?php if (count($seatNumbers) > 3): ?>
+                                                <span class="seat-badge more">+<?= count($seatNumbers) - 3 ?></span>
+                                            <?php endif; ?>
+                                        <?php endif; ?>
+                                    </div>
                                 </td>
-                                <td>
-                                    <span class="badge <?= $b['status'] ?> <?= $isExpired ? 'expired' : '' ?>">
-                                        <?= ucfirst($b['status']) ?>
-                                        <!-- <?php if ($isExpired && $b['status'] === 'pending'): ?>
-                                            <i class="fas fa-exclamation-triangle" style="font-size:9px;margin-left:3px"></i>
-                                        <?php endif; ?> -->
-                                    </span>
-                                </td>
-                                <!-- <td class="<?= $isExpired ? 'text-danger' : '' ?>">
-                                    <small><?= $paymentDue ?></small>
-                                    <?php if ($isExpired): ?>
-                                        <div class="expired-label">EXPIRED</div>
-                                    <?php endif; ?>
-                                </td> -->
-                                <td class="text-muted-sm">
-                                    <small><?= date('M d, Y', strtotime($b['created_at'])) ?></small>
-                                </td>
+                                <td><span class="badge <?= htmlspecialchars($b['status']) ?>"><?= ucfirst($b['status']) ?></span></td>
                                 <td>
                                     <div class="row-actions">
-                                        <button class="icon-btn view" title="View Details">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
+                                        <button class="icon-btn view" title="View Details"><i class="fas fa-eye"></i></button>
                                         <?php if ($b['status'] === 'pending'): ?>
-                                            <!-- <button class="icon-btn approve" title="Approve">
-                                                <i class="fas fa-check"></i>
-                                            </button>
-                                            <button class="icon-btn reject" title="Reject">
-                                                <i class="fas fa-times"></i>
-                                            </button> -->
+                                            <button class="icon-btn approve" title="Approve"><i class="fas fa-check"></i></button>
+                                            <button class="icon-btn reject" title="Reject"><i class="fas fa-times"></i></button>
                                         <?php endif; ?>
-                                        <?php if (in_array($b['status'], ['pending', 'approved'])): ?>
-                                            <button class="icon-btn cancel" title="Cancel">
-                                                <i class="fas fa-ban"></i>
-                                            </button>
+                                        <?php if ($b['status'] === 'approved'): ?>
+                                            <button class="icon-btn cancel" title="Cancel"><i class="fas fa-ban"></i></button>
                                         <?php endif; ?>
                                     </div>
                                 </td>
@@ -181,8 +185,8 @@ $bookings   = $bookingObj->GetAllBookings();
                                 <span id="detail-created" class="detail-value">—</span>
                             </div>
                             <div class="detail-row">
-                                <span class="detail-label">Payment Due</span>
-                                <span id="detail-payment-due" class="detail-value">—</span>
+                                <span class="detail-label">Payment</span>
+                                <span id="detail-payment" class="detail-value">-</span>
                             </div>
                         </div>
 
@@ -226,9 +230,9 @@ $bookings   = $bookingObj->GetAllBookings();
                         </div>
 
                         <div class="detail-section">
-                            <h4 class="section-title">Seat Assignment</h4>
+                            <h4 class="section-title">Seat Assignments</h4>
                             <div class="detail-row">
-                                <span class="detail-label">Seat Number</span>
+                                <span class="detail-label">Seats</span>
                                 <span id="detail-seat" class="detail-value">—</span>
                             </div>
                         </div>

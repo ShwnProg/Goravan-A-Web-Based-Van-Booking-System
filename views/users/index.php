@@ -22,12 +22,13 @@ $routes         = (new Routes($conn))->GetActiveRoutes();  // for search dropdow
 $locations      = LOCATIONS; // Use LOCATIONS constant from autoload.php
 ?>
 
+<div class="user-home-page">
 <!-- COMPACT DASHBOARD HEADER -->
 <section class="u-dashboard-header">
     <div class="u-header-content">
         <div class="u-header-text">
-            <h1 class="u-header-title">Welcome Back, <span><?= htmlspecialchars(ucfirst($user['firstname'] ?? '')) ?>!</span></h1>
-            <p class="u-header-subtitle">Manage your bookings and schedules</p>
+            <h1 class="u-header-title">Welcome back, <?= htmlspecialchars(ucfirst($user['firstname'] ?? '')) ?></h1>
+            <p class="u-header-subtitle">Find trips, review bookings, and keep your rides organized.</p>
         </div>
         <div class="u-header-date">
             <span class="u-date-label">Today</span>
@@ -78,7 +79,7 @@ $locations      = LOCATIONS; // Use LOCATIONS constant from autoload.php
         <div class="u-sec-head">
             <h2 class="u-sec-title">Your Stats</h2>
         </div>
-        <div class="u-stats">
+        <div class="u-stats u-stats-dashboard">
             <div class="u-stat primary">
                 <div class="u-stat-icon">
                     <i class="fa-solid fa-route"></i>
@@ -86,7 +87,7 @@ $locations      = LOCATIONS; // Use LOCATIONS constant from autoload.php
                 <div class="u-stat-content">
                     <div class="u-stat-lbl">Total trips</div>
                     <div class="u-stat-val"><?= $stats['total'] ?? 0 ?></div>
-                    <div class="u-stat-trend">+12% vs last month</div>
+                    <div class="u-stat-sub">All booking references</div>
                 </div>
             </div>
             <div class="u-stat">
@@ -96,7 +97,17 @@ $locations      = LOCATIONS; // Use LOCATIONS constant from autoload.php
                 <div class="u-stat-content">
                     <div class="u-stat-lbl">Upcoming</div>
                     <div class="u-stat-val"><?= $stats['upcoming'] ?? 0 ?></div>
-                    <div class="u-stat-trend">Next trip soon</div>
+                    <div class="u-stat-sub">Approved future trips</div>
+                </div>
+            </div>
+            <div class="u-stat">
+                <div class="u-stat-icon">
+                    <i class="fa-solid fa-hourglass-half"></i>
+                </div>
+                <div class="u-stat-content">
+                    <div class="u-stat-lbl">Pending</div>
+                    <div class="u-stat-val"><?= $stats['pending'] ?? 0 ?></div>
+                    <div class="u-stat-sub">For admin review</div>
                 </div>
             </div>
             <div class="u-stat">
@@ -106,10 +117,45 @@ $locations      = LOCATIONS; // Use LOCATIONS constant from autoload.php
                 <div class="u-stat-content">
                     <div class="u-stat-lbl">Completed</div>
                     <div class="u-stat-val"><?= $stats['completed'] ?? 0 ?></div>
-                    <div class="u-stat-trend">All successful</div>
+                    <div class="u-stat-sub">Approved past trips</div>
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- Next Trip -->
+    <div class="u-sec">
+        <div class="u-sec-head">
+            <h2 class="u-sec-title">Next Trip</h2>
+        </div>
+        <?php if ($upcomingTrip): ?>
+            <a href="booking-detail.php?id=<?= urlencode(encrypt((string) $upcomingTrip['book_id_pk'])) ?>" class="u-next-trip">
+                <div class="u-next-date">
+                    <span><?= date('M', strtotime($upcomingTrip['departure_date'])) ?></span>
+                    <strong><?= date('j', strtotime($upcomingTrip['departure_date'])) ?></strong>
+                </div>
+                <div class="u-next-main">
+                    <div class="u-next-route"><?= htmlspecialchars($upcomingTrip['route_display']) ?></div>
+                    <div class="u-next-meta">
+                        <?= date('g:i A', strtotime($upcomingTrip['departure_time'])) ?>
+                        &middot; <?= (int) $upcomingTrip['seats_count'] ?> seat<?= (int) $upcomingTrip['seats_count'] === 1 ? '' : 's' ?>
+                        <?php if (!empty($upcomingTrip['seat_numbers'])): ?>
+                            &middot; <?= htmlspecialchars($upcomingTrip['seat_numbers']) ?>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                <i class="fa-solid fa-chevron-right"></i>
+            </a>
+        <?php else: ?>
+            <div class="u-next-trip empty">
+                <div class="u-next-date muted"><i class="fa-regular fa-calendar"></i></div>
+                <div class="u-next-main">
+                    <div class="u-next-route">No upcoming trip yet</div>
+                    <div class="u-next-meta">Search a route and book your next ride.</div>
+                </div>
+                <a href="schedule.php" class="u-next-cta">Book now</a>
+            </div>
+        <?php endif; ?>
     </div>
 
     <!-- Quick Actions -->
@@ -130,17 +176,17 @@ $locations      = LOCATIONS; // Use LOCATIONS constant from autoload.php
                 </div>
                 <span class="u-qa-label">My Bookings</span>
             </a>
-            <a href="#" class="u-qa-card">
+            <a href="my-payments.php" class="u-qa-card">
                 <div class="u-qa-icon">
                     <i class="fa-solid fa-receipt"></i>
                 </div>
                 <span class="u-qa-label">Receipts</span>
             </a>
-            <a href="#" class="u-qa-card">
+            <a href="profile.php" class="u-qa-card">
                 <div class="u-qa-icon">
-                    <i class="fa-solid fa-headset"></i>
+                    <i class="fa-regular fa-user"></i>
                 </div>
-                <span class="u-qa-label">Support</span>
+                <span class="u-qa-label">Profile</span>
             </a>
         </div>
     </div>
@@ -166,7 +212,7 @@ $locations      = LOCATIONS; // Use LOCATIONS constant from autoload.php
                         <span class="u-ref-code"><?= htmlspecialchars($booking['reference_code']) ?></span>
                     </div>
                     <div class="u-col-route">
-                        <span class="u-route-text"><?= htmlspecialchars($booking['origin']) ?> → <?= htmlspecialchars($booking['destination']) ?></span>
+                        <span class="u-route-text"><?= htmlspecialchars($booking['route_display']) ?></span>
                     </div>
                     <div class="u-col-date">
                         <div class="u-date-main"><?= date('M j, Y', strtotime($booking['departure_date'])) ?></div>
@@ -178,7 +224,7 @@ $locations      = LOCATIONS; // Use LOCATIONS constant from autoload.php
                         </span>
                     </div>
                     <div class="u-col-action">
-                        <a href="booking-detail.php?id=<?= $booking['id'] ?>" class="u-action-link">
+                        <a href="booking-detail.php?id=<?= urlencode(encrypt((string) $booking['book_id_pk'])) ?>" class="u-action-link">
                             <i class="fa-solid fa-chevron-right"></i>
                         </a>
                     </div>
@@ -197,6 +243,7 @@ $locations      = LOCATIONS; // Use LOCATIONS constant from autoload.php
             <?php endif; ?>
         </div>
     </div>
+</div>
 </div>
 
 <?php

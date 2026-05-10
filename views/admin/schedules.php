@@ -66,13 +66,13 @@ $vans   = $vanObj->GetAllVans();
                 <thead>
                     <tr>
                         <th>#</th>
+                        <th>Actions</th>
                         <th>Route</th>
                         <th>Driver</th>
                         <th>Van</th>
                         <th>Departure</th>
+                        <th>ETA</th>
                         <th>Status</th>
-                        <th>Created</th>
-                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody id="schedules-tbody">
@@ -91,12 +91,21 @@ $vans   = $vanObj->GetAllVans();
                                           . ' at '
                                           . date('g:i A', strtotime($s['departure_time']));
                             $status       = htmlspecialchars($s['trip_status'],     ENT_QUOTES);
+                            $stops        = array_values(array_filter($s['stops'] ?? []));
+                            $viaText      = !empty($stops) ? 'via ' . implode(', ', $stops) : '';
                             $routeDisplay = htmlspecialchars($s['route_display'] ?? 'N/A', ENT_QUOTES);
+                            $routeVia     = htmlspecialchars($viaText, ENT_QUOTES);
                             $driverName   = htmlspecialchars($s['driver_name']   ?? 'N/A', ENT_QUOTES);
                             $vanPlate     = htmlspecialchars($s['van_plate']     ?? 'N/A', ENT_QUOTES);
                             $vanCapacity  = (int) ($s['van_capacity'] ?? 0);
                             $arrivedAt    = !empty($s['arrived_at'])
                                             ? htmlspecialchars(date('M d, Y g:i A', strtotime($s['arrived_at'])), ENT_QUOTES)
+                                            : '';
+                            $etaValue     = !empty($s['estimated_arrival_at'])
+                                            ? htmlspecialchars(date('Y-m-d\TH:i', strtotime($s['estimated_arrival_at'])), ENT_QUOTES)
+                                            : '';
+                            $etaDisplay   = !empty($s['estimated_arrival_at'])
+                                            ? htmlspecialchars(date('M d, Y g:i A', strtotime($s['estimated_arrival_at'])), ENT_QUOTES)
                                             : '';
                         ?>
                             <tr class="schedule-row"
@@ -105,19 +114,40 @@ $vans   = $vanObj->GetAllVans();
                                 data-driver="<?= (int) $s['driver_id_fk'] ?>"
                                 data-van="<?= (int) $s['van_id_fk'] ?>"
                                 data-route-display="<?= $routeDisplay ?>"
+                                data-route-via="<?= $routeVia ?>"
                                 data-driver-name="<?= $driverName ?>"
                                 data-van-plate="<?= $vanPlate ?>"
                                 data-van-capacity="<?= $vanCapacity ?>"
                                 data-date="<?= htmlspecialchars($s['departure_date'], ENT_QUOTES) ?>"
                                 data-time="<?= htmlspecialchars($s['departure_time'], ENT_QUOTES) ?>"
+                                data-eta="<?= $etaValue ?>"
+                                data-eta-display="<?= $etaDisplay ?>"
                                 data-status="<?= $status ?>"
                                 data-arrived-at="<?= $arrivedAt ?>">
 
                                 <td class="text-muted-sm"><?= $i + 1 ?></td>
                                 <td>
+                                    <div class="row-actions">
+                                        <button class="icon-btn status" title="Update Status">
+                                            <i class="fas fa-exchange-alt"></i>
+                                        </button>
+                                        <button class="icon-btn edit" title="Edit">
+                                            <i class="fas fa-pen"></i>
+                                        </button>
+                                        <button class="icon-btn delete" title="Delete">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                                <td>
                                     <div class="route-display">
                                         <i class="fas fa-route" style="color:var(--color-accent);font-size:11px"></i>
-                                        <span><?= $routeDisplay ?></span>
+                                        <div class="route-stack">
+                                            <span><?= $routeDisplay ?></span>
+                                            <?php if ($viaText): ?>
+                                                <small><?= htmlspecialchars($viaText) ?></small>
+                                            <?php endif; ?>
+                                        </div>
                                     </div>
                                 </td>
                                 <td>
@@ -133,30 +163,13 @@ $vans   = $vanObj->GetAllVans();
                                     </div>
                                 </td>
                                 <td class="text-muted-sm"><?= $departure ?></td>
+                                <td class="text-muted-sm"><?= $etaDisplay ?: '—' ?></td>
                                 <td>
                                     <!-- FIX 5: ucfirst + str_replace for display,
                                          but data-status keeps the raw value for JS logic -->
                                     <span class="badge <?= $status ?>">
                                         <?= ucfirst(str_replace('_', ' ', $s['trip_status'])) ?>
                                     </span>
-                                </td>
-                                <td class="text-muted-sm">
-                                    <?= date('M d, Y', strtotime($s['created_at'])) ?>
-                                </td>
-                                <td>
-                                    <div class="row-actions">
-                                        <!-- FIX 6: data-id on each action button so JS can
-                                             find the row even when e.target is the <i> icon -->
-                                        <button class="icon-btn status" title="Update Status">
-                                            <i class="fas fa-exchange-alt"></i>
-                                        </button>
-                                        <button class="icon-btn edit" title="Edit">
-                                            <i class="fas fa-pen"></i>
-                                        </button>
-                                        <button class="icon-btn delete" title="Delete">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </div>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -202,6 +215,10 @@ $vans   = $vanObj->GetAllVans();
                     <span id="preview-departure" class="detail-value">—</span>
                 </div>
                 <div class="detail-row">
+                    <span class="detail-label">ETA</span>
+                    <span id="preview-eta" class="detail-value">—</span>
+                </div>
+                <div class="detail-row">
                     <span class="detail-label">Status</span>
                     <span id="preview-status" class="detail-badge badge" style="justify-content: center;">—</span>
                 </div>
@@ -240,8 +257,15 @@ $vans   = $vanObj->GetAllVans();
                         <select name="route_id" class="ss" data-placeholder="Select a Route" required>
                             <option value="">Select a Route</option>
                             <?php foreach ($routes as $r): if ($r['is_active']): ?>
+                                <?php
+                                    $routeStops = array_column($r['stops'] ?? [], 'stop_name');
+                                    $routeLabel = $r['origin'] . ' → ' . $r['destination'];
+                                    if (!empty($routeStops)) {
+                                        $routeLabel .= ' · via ' . implode(', ', $routeStops);
+                                    }
+                                ?>
                                 <option value="<?= $r['route_id_pk'] ?>">
-                                    <?= htmlspecialchars($r['origin'] . ' → ' . $r['destination']) ?>
+                                    <?= htmlspecialchars($routeLabel) ?>
                                 </option>
                             <?php endif; endforeach; ?>
                         </select>
@@ -283,11 +307,18 @@ $vans   = $vanObj->GetAllVans();
                     </div>
 
                     <div class="rfield">
-                        <label class="rfield-label"><i class="fas fa-info-circle"></i> Status</label>
+                        <label class="rfield-label"><i class="fas fa-flag-checkered"></i> Estimated Time of Arrival</label>
+                        <div class="rfield-inline">
+                            <input type="date" name="eta_date" class="rinput" required>
+                            <input type="time" name="eta_time" class="rinput" required>
+                        </div>
+                    </div>
+
+                    <div class="rfield">
+                        <label class="rfield-label"><i class="fas fa-info-circle"></i> Initial Status</label>
                         <select name="trip_status" class="ss" data-placeholder="Select Status">
                             <option value="boarding" selected>Boarding</option>
                             <option value="departed">Departed</option>
-                            <option value="arrived">Arrived</option>
                             <option value="cancelled">Cancelled</option>
                         </select>
                     </div>
@@ -330,8 +361,15 @@ $vans   = $vanObj->GetAllVans();
                         <select name="route_id" id="edit-route" class="ss" data-placeholder="Select a Route" required>
                             <option value="">Select a Route</option>
                             <?php foreach ($routes as $r): if ($r['is_active']): ?>
+                                <?php
+                                    $routeStops = array_column($r['stops'] ?? [], 'stop_name');
+                                    $routeLabel = $r['origin'] . ' → ' . $r['destination'];
+                                    if (!empty($routeStops)) {
+                                        $routeLabel .= ' · via ' . implode(', ', $routeStops);
+                                    }
+                                ?>
                                 <option value="<?= $r['route_id_pk'] ?>">
-                                    <?= htmlspecialchars($r['origin'] . ' → ' . $r['destination']) ?>
+                                    <?= htmlspecialchars($routeLabel) ?>
                                 </option>
                             <?php endif; endforeach; ?>
                         </select>
@@ -373,11 +411,19 @@ $vans   = $vanObj->GetAllVans();
                     </div>
 
                     <div class="rfield">
+                        <label class="rfield-label"><i class="fas fa-flag-checkered"></i> Estimated Time of Arrival</label>
+                        <div class="rfield-inline">
+                            <input type="date" name="eta_date" id="edit-eta-date" class="rinput" required>
+                            <input type="time" name="eta_time" id="edit-eta-time" class="rinput" required>
+                        </div>
+                    </div>
+
+                    <div class="rfield">
                         <label class="rfield-label"><i class="fas fa-info-circle"></i> Status</label>
                         <select name="trip_status" id="edit-status" class="ss" data-placeholder="Select Status">
                             <option value="boarding">Boarding</option>
                             <option value="departed">Departed</option>
-                            <option value="arrived">Arrived</option>
+                            <option value="arrived" disabled>Arrived (auto)</option>
                             <option value="cancelled">Cancelled</option>
                         </select>
                     </div>

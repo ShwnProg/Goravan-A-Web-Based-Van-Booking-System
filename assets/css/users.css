@@ -43,6 +43,8 @@
 .users-table-wrap {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    max-height: calc(100vh - 220px);
+    overflow-y: auto;
 }
 
 /* ── TABLE ───────────────────────────────────── */
@@ -53,6 +55,9 @@
 }
 
 .users-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
     text-align: left;
     padding: 11px 18px;
     font-size: 10.5px;

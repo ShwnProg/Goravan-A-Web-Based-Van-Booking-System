@@ -16,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !csrf_check()) {
 $schedule_id = (int) ($_POST['schedule_id'] ?? 0);
 $new_status = trim($_POST['status'] ?? '');
 
-if (!$schedule_id || !in_array($new_status, ['boarding', 'departed', 'arrived', 'cancelled'])) {
+if (!$schedule_id || !in_array($new_status, ['boarding', 'departed', 'cancelled'])) {
     $_SESSION['error'] = 'Invalid parameters.';
     header('Location: ../../views/admin/schedules.php');
     exit;

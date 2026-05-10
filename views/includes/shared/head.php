@@ -3,7 +3,9 @@
     (function () {
         if (localStorage.getItem('admin_theme') === 'dark') {
             document.documentElement.classList.add('dark-init');
-            document.body.classList.add('admin-dark-mode-active');
+            document.addEventListener('DOMContentLoaded', function () {
+                document.body.classList.add('admin-dark-mode-active');
+            });
         }
     })();
 </script>

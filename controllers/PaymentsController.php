@@ -47,5 +47,30 @@ if ($action === 'get') {
     exit;
 }
 
+if ($action === 'update_status') {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !csrf_check()) {
+        echo json_encode(['success' => false, 'message' => 'Invalid request or CSRF token.']);
+        exit;
+    }
+
+    $payment_id = (int) decrypt(trim($_POST['payment_id'] ?? ''));
+    $status = strtolower(trim($_POST['status'] ?? ''));
+
+    if (!$payment_id || !in_array($status, ['pending', 'paid', 'cancelled'], true)) {
+        echo json_encode(['success' => false, 'message' => 'Invalid payment update.']);
+        exit;
+    }
+
+    $payObj = new Payments($conn);
+    $payObj->id = $payment_id;
+    $result = $payObj->UpdateStatus($status);
+
+    echo json_encode([
+        'success' => $result['success'],
+        'message' => $result['success'] ? 'Payment status updated.' : ($result['message'] ?? 'Unable to update payment.'),
+    ]);
+    exit;
+}
+
 echo json_encode(['success' => false, 'message' => 'Invalid action.']);
 exit;

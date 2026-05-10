@@ -119,7 +119,7 @@
     }
 
     // Phone number formatting
-    var phoneInput = document.getElementById('phone');
+    var phoneInput = document.getElementById('contact');
     if (phoneInput) {
         phoneInput.addEventListener('input', function () {
             var value = this.value.replace(/\D/g, '');
@@ -200,11 +200,10 @@
             return;
         }
 
-        // Client-side size check (5 MB)
-        // if (file.size > 5 * 1024 * 1024) {
-        //     showAlert('File is too large. Maximum allowed size is 5 MB.', 'danger');
-        //     return;
-        // }
+        if (file.size > 5 * 1024 * 1024) {
+            showAlert('File is too large. Maximum allowed size is 5 MB.', 'danger');
+            return;
+        }
 
         var formData = new FormData();
         formData.append('action', action);
@@ -221,7 +220,13 @@
         })
             .then(function (res) {
                 if (!res.ok) throw new Error('Server error: ' + res.status);
-                return res.json();
+                return res.text().then(function (text) {
+                    try {
+                        return JSON.parse(text);
+                    } catch (_) {
+                        throw new Error('Server returned an invalid response.');
+                    }
+                });
             })
             .then(function (data) {
                 setLoading(false);
@@ -238,7 +243,7 @@
             })
             .catch(function (err) {
                 setLoading(false);
-                showAlert('A network error occurred. Please check your connection and try again.' + err, 'danger');
+                showAlert(err.message || 'A network error occurred. Please check your connection and try again.', 'danger');
                 console.error('VerificationController error:', err);
             });
     });

@@ -34,7 +34,11 @@ define('LOCATIONS', [
     'Bato'          => [10.3333, 124.9667],
     'Pintuyan'      => [10.1833, 125.1833],
 ]);
-
+define('discounts',[
+    'student' => 10,
+    'senior' => 15,
+    'pwd' => 20
+]);
 // Generate CSRF token once per session
 if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));

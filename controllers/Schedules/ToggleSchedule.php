@@ -25,7 +25,7 @@ if (!$schedule_id) {
     exit;
 }
 
-if (!in_array($new_status, ['boarding', 'departed', 'arrived', 'cancelled'])) {
+if (!in_array($new_status, ['boarding', 'departed', 'cancelled'])) {
     echo json_encode([
         'success' => false,
         'message' => 'Invalid status.'
