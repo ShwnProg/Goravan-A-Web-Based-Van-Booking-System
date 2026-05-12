@@ -4,6 +4,13 @@ if (!isset($_SESSION['is_login'])) {
     header('Location: ' . BASE_URL . '/views/auth/login.php');
     exit;
 }
+
+if (($_SESSION['role'] ?? '') !== 'user') {
+    $_SESSION['error'] = 'Passenger access only.';
+    header('Location: ' . BASE_URL . '/views/auth/login.php');
+    exit;
+}
+
 $userId = decrypt($_SESSION['id']);
 $um = new Users($conn);
 $um->id = $userId;

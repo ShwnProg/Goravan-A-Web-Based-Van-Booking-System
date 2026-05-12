@@ -110,6 +110,13 @@ function openSidebar() {
 
         // 1. Body class → sidebar + topbar
         document.body.classList.toggle('admin-dark-mode-active', dark);
+        document.body.classList.toggle('admin-light-mode-active', !dark);
+        document.body.style.backgroundColor = dark ? '#0f172a' : '#f8fafc';
+        document.documentElement.classList.toggle('admin-dark-mode-active', dark);
+        document.documentElement.classList.toggle('admin-light-mode-active', !dark);
+        document.documentElement.classList.toggle('dark-init', dark);
+        document.documentElement.classList.toggle('light-init', !dark);
+        document.documentElement.dataset.adminTheme = dark ? 'dark' : 'light';
 
         // 2. Page content class → all page views
         if (pc) pc.classList.toggle('admin-dark-mode', dark);

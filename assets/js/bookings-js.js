@@ -23,22 +23,48 @@ let bookingCurrentPage = 1;
 function initBookingsModule() {
     const searchInput   = document.getElementById('booking-search');
     const filterStatus  = document.getElementById('booking-filter-status');
+    const dateFrom      = document.getElementById('booking-date-from');
+    const dateTo        = document.getElementById('booking-date-to');
+    const dateClear     = document.getElementById('booking-date-clear');
+    const statusTabs    = document.getElementById('booking-status-tabs');
     const bookingsTbody = document.getElementById('bookings-tbody');
-    const detailsModal  = new bootstrap.Modal(document.getElementById('detailsModal'));
+    const detailsModalEl = document.getElementById('detailsModal');
+    const detailsModal  = detailsModalEl ? new bootstrap.Modal(detailsModalEl) : null;
 
-    if (searchInput) {
-        searchInput.addEventListener('input', () => {
-            bookingCurrentPage = 1;
-            filterBookings();
-            updateBookingCount();
+    const applyFromFilters = () => {
+        bookingCurrentPage = 1;
+        filterBookings();
+        updateBookingCount();
+    };
+    const debouncedApply = AdminUI.debounce(applyFromFilters, 350);
+
+    if (searchInput) searchInput.addEventListener('input', debouncedApply);
+
+    if (filterStatus) filterStatus.addEventListener('change', applyFromFilters);
+    if (dateFrom) dateFrom.addEventListener('change', applyFromFilters);
+    if (dateTo) dateTo.addEventListener('change', applyFromFilters);
+    if (dateClear) {
+        dateClear.addEventListener('click', () => {
+            if (searchInput) searchInput.value = '';
+            if (filterStatus) filterStatus.value = 'pending';
+            if (dateFrom) dateFrom.value = '';
+            if (dateTo) dateTo.value = '';
+            if (statusTabs) {
+                statusTabs.querySelectorAll('button').forEach(tab => {
+                    tab.classList.toggle('active', (tab.dataset.status || '') === 'pending');
+                });
+            }
+            applyFromFilters();
         });
     }
-
-    if (filterStatus) {
-        filterStatus.addEventListener('change', () => {
-            bookingCurrentPage = 1;
-            filterBookings();
-            updateBookingCount();
+    if (statusTabs) {
+        statusTabs.addEventListener('click', e => {
+            const btn = e.target.closest('button[data-status]');
+            if (!btn) return;
+            statusTabs.querySelectorAll('button').forEach(tab => tab.classList.remove('active'));
+            btn.classList.add('active');
+            if (filterStatus) filterStatus.value = btn.dataset.status || '';
+            applyFromFilters();
         });
     }
 
@@ -58,24 +84,11 @@ function showFlashMessage() {
     const error   = carrier.dataset.flashError;
 
     if (success) {
-        Swal.fire({
-            icon:              'success',
-            title:             'Done!',
-            text:              success,
-            timer:             2800,
-            showConfirmButton: false,
-            toast:             true,
-            position:          'top-end',
-        });
+        AdminUI.notify('success', success, 'Success');
     }
 
     if (error) {
-        Swal.fire({
-            icon:               'error',
-            title:              'Error',
-            text:               error,
-            confirmButtonColor: 'var(--color-primary)',
-        });
+        AdminUI.notify('error', error);
     }
 }
 
@@ -87,6 +100,8 @@ function filterBookings() {
     const filterStatus = document.getElementById('booking-filter-status');
     const searchTerm   = searchInput?.value.toLowerCase().trim() || '';
     const statusFilter = filterStatus?.value || '';
+    const fromDate     = document.getElementById('booking-date-from')?.value || '';
+    const toDate       = document.getElementById('booking-date-to')?.value || '';
 
     const rows = document.querySelectorAll('.booking-row');
     let visible = 0;
@@ -112,8 +127,9 @@ function filterBookings() {
             seats.includes(searchTerm) ||
             payment.includes(searchTerm);
         const matchesStatus = !statusFilter || status === statusFilter;
+        const matchesDate = withinDateRange(row.dataset.created || '', fromDate, toDate);
 
-        row.dataset.filterMatch = matchesSearch && matchesStatus ? '1' : '0';
+        row.dataset.filterMatch = matchesSearch && matchesStatus && matchesDate ? '1' : '0';
     });
 
     const matchedRows = Array.from(rows).filter(row => row.dataset.filterMatch === '1');
@@ -130,6 +146,7 @@ function filterBookings() {
             row.style.display = 'none';
         }
     });
+    updateBookingGroups();
 
     /* empty state */
     const tbody     = document.getElementById('bookings-tbody');
@@ -137,10 +154,10 @@ function filterBookings() {
     if (matchedRows.length === 0) {
         tbody.insertAdjacentHTML('beforeend', `
             <tr class="js-empty-row">
-                <td colspan="7">
+                <td colspan="8">
                     <div class="empty-state">
                         <i class="fas fa-search"></i>
-                        <p>No bookings match your search.</p>
+                        <p>${bookingEmptyMessage(statusFilter, !!(searchTerm || fromDate || toDate))}</p>
                     </div>
                 </td>
             </tr>`);
@@ -149,12 +166,58 @@ function filterBookings() {
     renderBookingPagination(matchedRows.length, totalPages);
 }
 
+function updateBookingGroups() {
+    const tbody = document.getElementById('bookings-tbody');
+    if (!tbody) return;
+    tbody.querySelectorAll('tr.admin-status-group-row').forEach(groupRow => {
+        const key = groupRow.dataset.groupKey || '';
+        const hasVisible = Array.from(tbody.querySelectorAll(`tr.booking-row[data-status="${key}"]`))
+            .some(row => row.style.display !== 'none');
+        groupRow.style.display = hasVisible ? '' : 'none';
+    });
+}
+
 function updateBookingCount() {
     const visible   = document.querySelectorAll('.booking-row[data-filter-match="1"]').length;
     const countSpan = document.getElementById('booking-count');
+    const titleEl = document.getElementById('booking-view-title');
+    const status = document.getElementById('booking-filter-status')?.value || '';
+    if (titleEl) titleEl.textContent = bookingViewTitle(status);
     if (countSpan) {
         countSpan.textContent = visible === 1 ? '1 booking' : `${visible} bookings`;
     }
+    AdminUI.setClearButtonState(document.getElementById('booking-date-clear'), bookingFiltersActive());
+}
+
+function bookingEmptyMessage(status, filtered) {
+    if (filtered) return 'No bookings match your current filters.';
+    const labels = {
+        pending: 'pending bookings',
+        approved: 'approved bookings',
+        completed: 'completed bookings',
+        cancelled: 'cancelled bookings',
+        rejected: 'rejected bookings'
+    };
+    return `No ${labels[status] || 'bookings'} found.`;
+}
+
+function bookingViewTitle(status) {
+    const titles = {
+        pending: 'Pending Bookings',
+        approved: 'Approved Bookings',
+        completed: 'Completed Bookings',
+        cancelled: 'Cancelled Bookings',
+        rejected: 'Rejected Bookings'
+    };
+    return titles[status] || 'All Bookings';
+}
+
+function bookingFiltersActive() {
+    const search = document.getElementById('booking-search')?.value.trim() || '';
+    const status = document.getElementById('booking-filter-status')?.value || '';
+    const from = document.getElementById('booking-date-from')?.value || '';
+    const to = document.getElementById('booking-date-to')?.value || '';
+    return !!(search || (status && status !== 'pending') || from || to);
 }
 
 function renderBookingPagination(total, totalPages) {
@@ -241,6 +304,8 @@ function showBookingDetails(row, modal) {
         ].filter(Boolean).join(' · ')
     );
 
+    set('detail-notes', summarizeBookingNotes(row.dataset.notes || ''));
+
     set('detail-created',
         row.dataset.created
             ? new Date(row.dataset.created).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
@@ -256,6 +321,23 @@ function showBookingDetails(row, modal) {
     }
 
     modal.show();
+}
+
+function summarizeBookingNotes(raw) {
+    if (!raw) return 'No booking notes available.';
+    try {
+        const notes = JSON.parse(raw);
+        const parts = [];
+        if (notes.passenger_name) parts.push(`Passenger: ${notes.passenger_name}`);
+        if (notes.passenger_type) parts.push(`Type: ${notes.passenger_type}`);
+        if (notes.seats_count) parts.push(`Seats: ${notes.seats_count}`);
+        if (Array.isArray(notes.passengers) && notes.passengers.length) {
+            parts.push(notes.passengers.map(p => `${p.seat_number || '-'}: ${p.type || 'regular'}`).join(', '));
+        }
+        return parts.length ? parts.join(' | ') : 'No booking notes available.';
+    } catch (_) {
+        return raw || 'No booking notes available.';
+    }
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -287,16 +369,13 @@ function confirmAction(btn, row, newStatus) {
     const cfg     = ACTION_CONFIG[newStatus];
     const refCode = row.dataset.refCode || '';
 
-    Swal.fire({
+    AdminUI.confirm({
         title:              cfg.title,
         html:               `Reference: <strong>${refCode}</strong>`,
         icon:               cfg.icon,
-        showCancelButton:   true,
-        confirmButtonText:  cfg.confirmText,
-        confirmButtonColor: cfg.confirmColor,
-        cancelButtonText:   'Go Back',
-        reverseButtons:     true,
-        focusCancel:        true,
+        confirmText:        cfg.confirmText,
+        confirmColor:       cfg.confirmColor,
+        cancelText:         'Go Back',
     }).then(result => {
         if (result.isConfirmed) {
             performBookingAction(btn, row, newStatus);
@@ -311,7 +390,7 @@ function performBookingAction(btn, row, newStatus) {
         document.querySelector('input[name="csrf_token"]')?.value;
 
     if (!csrfToken) {
-        Swal.fire({ icon: 'error', title: 'Security Error', text: 'CSRF token missing. Please refresh the page.' });
+        AdminUI.notify('error', 'CSRF token missing. Please refresh the page.', 'Security Error');
         return;
     }
 
@@ -319,29 +398,69 @@ function performBookingAction(btn, row, newStatus) {
     setButtonLoading(btn, true);
 
     /* ── Build and submit form ── */
-    const form   = document.createElement('form');
-    form.method  = 'POST';
-    form.action  = '../../controllers/Bookings/UpdateStatus.php';
-    form.style.display = 'none';
-
     const fields = {
         booking_id: row.dataset.id,
         status:     newStatus,
         csrf_token: csrfToken,
     };
 
-    Object.entries(fields).forEach(([name, value]) => {
-        const input   = document.createElement('input');
-        input.type    = 'hidden';
-        input.name    = name;
-        input.value   = value;
-        form.appendChild(input);
-    });
+    fetch('../../controllers/Bookings/UpdateStatus.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: new URLSearchParams(fields).toString()
+    })
+        .then(res => res.json())
+        .then(data => {
+            if (!data.success) throw new Error(data.message || 'Unable to update booking status. Please try again.');
+            updateBookingRowAfterStatus(row, data.status || newStatus);
+            AdminUI.notify('success', data.message || 'Booking status updated successfully.');
+        })
+        .catch(err => {
+            AdminUI.notify('error', err.message || 'Unable to update booking status. Please try again.');
+        })
+        .finally(() => setButtonLoading(btn, false));
+}
 
-    document.body.appendChild(form);
+function withinDateRange(raw, from, to) {
+    if (!from && !to) return true;
+    if (!raw) return false;
+    const value = String(raw).slice(0, 10);
+    if (from && value < from) return false;
+    if (to && value > to) return false;
+    return true;
+}
 
-    /* Small delay so the loading UI is visible before page unloads */
-    setTimeout(() => form.submit(), 120);
+function updateBookingRowAfterStatus(row, newStatus) {
+    const tbody = document.getElementById('bookings-tbody');
+    AdminUI.setRowStatus(row, newStatus);
+    AdminUI.moveRowToGroup(row, newStatus, bookingGroupMeta(newStatus));
+
+    const actions = row.querySelector('.row-actions');
+    if (actions) {
+        actions.querySelectorAll('.approve, .reject, .cancel').forEach(btn => btn.remove());
+        if (newStatus === 'approved') {
+            actions.insertAdjacentHTML('beforeend', '<button class="icon-btn cancel" title="Cancel"><i class="fas fa-ban"></i></button>');
+        }
+    }
+
+    filterBookings();
+    updateBookingCount();
+    AdminUI.refreshGroups(tbody, 'tr.booking-row', row => row.dataset.status || '');
+}
+
+function bookingGroupMeta(status) {
+    const groups = {
+        pending: { label: 'Pending Bookings', icon: 'fas fa-clock', hint: 'Needs review', colspan: 8 },
+        approved: { label: 'Approved Bookings', icon: 'fas fa-circle-check', hint: 'Ready for trip', colspan: 8 },
+        completed: { label: 'Completed Bookings', icon: 'fas fa-flag-checkered', hint: 'Finished trips', colspan: 8 },
+        rejected: { label: 'Rejected Bookings', icon: 'fas fa-circle-xmark', hint: 'Declined requests', colspan: 8 },
+        cancelled: { label: 'Cancelled Bookings', icon: 'fas fa-ban', hint: 'Inactive bookings', colspan: 8 }
+    };
+    return groups[status] || { label: AdminUI.statusLabel(status) + ' Bookings', icon: 'fas fa-ticket-alt', hint: 'Other bookings', colspan: 8 };
 }
 
 /* ═══════════════════════════════════════════════════════════════════

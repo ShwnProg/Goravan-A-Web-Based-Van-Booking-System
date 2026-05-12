@@ -14,7 +14,13 @@ class Admin
     public function AuthenticateAdmin()
     {
         try {
-            $stmt = $this->conn->prepare("SELECT user_id_pk, password FROM users WHERE email = :email AND role = :role");
+            $stmt = $this->conn->prepare("
+                SELECT user_id_pk, password
+                FROM users
+                WHERE LOWER(email) = LOWER(:email)
+                  AND role = :role
+                LIMIT 1
+            ");
             $stmt->execute([
                 ':email' => $this->email,
                 ':role' => $this->role
@@ -26,10 +32,11 @@ class Admin
                 return ['is_login' => true, 'id' => $admin['user_id_pk']];
             }
 
-            return ['is_login' => false, 'id' => null, 'error' => 'Invalid credentials'];
+            return ['is_login' => false, 'id' => null, 'error' => 'Invalid email or password.'];
 
         } catch (PDOException $e) {
-            return ['is_login' => false, 'id' => null, 'error' => $e->getMessage()];
+            error_log('[Admin::AuthenticateAdmin] ' . $e->getMessage());
+            return ['is_login' => false, 'id' => null, 'error' => 'Unable to sign in right now.'];
         }
     }
 

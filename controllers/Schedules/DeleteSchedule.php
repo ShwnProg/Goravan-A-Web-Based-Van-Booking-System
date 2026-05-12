@@ -3,7 +3,7 @@ require_once '../../autoload.php';
 
 header('Content-Type: application/json');
 
-/* ── CSRF CHECK ───────────────────────────────────────────────────────────── */
+/* -- CSRF CHECK ------------------------------------------------------------- */
 if (!csrf_check()) {
     echo json_encode([
         'success' => false,
@@ -12,10 +12,10 @@ if (!csrf_check()) {
     exit;
 }
 
-/* ── INPUTS ───────────────────────────────────────────────────────────────── */
+/* -- INPUTS ----------------------------------------------------------------- */
 $schedule_id = (int) ($_POST['schedule_id'] ?? 0);
 
-/* ── VALIDATION ───────────────────────────────────────────────────────────── */
+/* -- VALIDATION ------------------------------------------------------------- */
 if (!$schedule_id) {
     echo json_encode([
         'success' => false,
@@ -24,17 +24,17 @@ if (!$schedule_id) {
     exit;
 }
 
-/* ── DELETE ───────────────────────────────────────────────────────────────── */
+/* -- DELETE ----------------------------------------------------------------- */
 $schedule       = new Schedules($conn);
 $schedule->id   = $schedule_id;
 $result         = $schedule->DeleteSchedule();
 
-/* ── RESPONSE ─────────────────────────────────────────────────────────────── */
+/* -- RESPONSE --------------------------------------------------------------- */
 echo json_encode([
     'success' => $result['success'],
-    'message' => $result['success']
+    'message' => $result['message'] ?? ($result['success']
         ? 'Schedule deleted successfully.'
-        : 'Failed to delete schedule.'
+        : 'Failed to delete schedule.')
 ]);
 
 exit;

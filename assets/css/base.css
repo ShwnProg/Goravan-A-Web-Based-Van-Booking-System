@@ -28,7 +28,8 @@
 
     /* Typography - Font Stack */
     --font-base: 'Inter', 'Roboto', sans-serif;
-    --font-mono: 'Courier New', 'Courier', monospace;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    --font-reference: var(--font-mono);
 
     /* Typography - Scale (Typographic Hierarchy) */
     --text-xs: 11px;

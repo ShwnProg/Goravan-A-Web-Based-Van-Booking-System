@@ -377,6 +377,13 @@
     font-size: .835rem;
 }
 
+.auth-field-hint {
+    margin: -8px 0 16px;
+    font-size: .76rem;
+    color: #94a3b8;
+    line-height: 1.45;
+}
+
 /* Passenger dropdown */
 .select-type {
     margin-bottom: 18px;

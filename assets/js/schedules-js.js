@@ -181,8 +181,8 @@ var STATUS_META = {
 };
 
 var STATUS_TRANSITIONS = {
-    boarding : ['departed', 'cancelled'],
-    departed : ['cancelled'],
+    boarding : ['departed', 'arrived', 'cancelled'],
+    departed : ['arrived', 'cancelled'],
     arrived  : [],
     cancelled: [],
 };
@@ -202,10 +202,19 @@ window.initSchedulesPage = function () {
     /* ── Element refs ────────────────────────────────────────────────── */
     var searchInput = document.getElementById('schedule-search');
     var countBadge  = document.getElementById('schedule-count');
+    var viewTitle   = document.getElementById('schedule-view-title');
+    var dateFrom    = document.getElementById('schedule-date-from');
+    var dateTo      = document.getElementById('schedule-date-to');
+    var dateClear   = document.getElementById('schedule-date-clear');
     var openAddBtn  = document.getElementById('open-add-modal');
     var editForm    = document.getElementById('editForm');
     var addModalEl  = document.getElementById('addModal');
     var editModalEl = document.getElementById('editModal');
+    var tableWrap   = document.querySelector('.schedules-card .schedules-table-wrap');
+
+    if (tableWrap) {
+        tableWrap.scrollLeft = 0;
+    }
 
     /* ── Build SS widgets for this page ──────────────────────────────── */
     window.buildSearchableSelects(document);
@@ -231,7 +240,13 @@ window.initSchedulesPage = function () {
     function applyFilters() {
         var q      = searchInput  ? searchInput.value.toLowerCase().trim() : '';
         var status = statusFilter ? statusFilter.value : '';
+        var from   = dateFrom ? dateFrom.value : '';
+        var to     = dateTo ? dateTo.value : '';
         var rows = Array.from(tbody.querySelectorAll('tr.schedule-row'));
+        if (!rows.length) {
+            updateCount();
+            return;
+        }
 
         rows.forEach(function (row) {
             /* Build searchable text from every meaningful data attribute */
@@ -245,8 +260,9 @@ window.initSchedulesPage = function () {
 
             var matchSearch = !q      || text.includes(q);
             var matchStatus = !status || row.dataset.status === status;
+            var matchDate = withinDateRange(row.dataset.date || '', from, to);
 
-            row.dataset.filterMatch = (matchSearch && matchStatus) ? '1' : '0';
+            row.dataset.filterMatch = (matchSearch && matchStatus && matchDate) ? '1' : '0';
         });
 
         var matchedRows = rows.filter(function (row) { return row.dataset.filterMatch === '1'; });
@@ -260,8 +276,19 @@ window.initSchedulesPage = function () {
             row.style.display = index >= start && index < end ? '' : 'none';
         });
 
+        updateGroupRows();
         updateCount();
         renderSchedulePagination(matchedRows.length, totalPages);
+        renderEmptyState(matchedRows.length, status, from || to);
+    }
+
+    function updateGroupRows() {
+        tbody.querySelectorAll('tr.admin-status-group-row').forEach(function (groupRow) {
+            var key = groupRow.dataset.groupKey || '';
+            var hasVisible = Array.from(tbody.querySelectorAll('tr.schedule-row[data-status="' + key + '"]'))
+                .some(function (row) { return row.style.display !== 'none'; });
+            groupRow.style.display = hasVisible ? '' : 'none';
+        });
     }
 
     /* ── Count badge ─────────────────────────────────────────────────── */
@@ -270,12 +297,42 @@ window.initSchedulesPage = function () {
         /* :not([style*="display: none"]) misses rows hidden with display:'' reset,
            so check offsetParent instead — but simplest reliable way is to recount */
         var visible = tbody.querySelectorAll('tr.schedule-row[data-filter-match="1"]').length;
+        if (viewTitle) viewTitle.textContent = scheduleViewTitle(statusFilter ? statusFilter.value : '');
         countBadge.textContent = visible + ' schedule' + (visible !== 1 ? 's' : '');
+        AdminUI.setClearButtonState(dateClear, scheduleFiltersActive());
+    }
+
+    function scheduleViewTitle(status) {
+        var titles = {
+            boarding: 'Boarding Schedules',
+            departed: 'Departed Schedules',
+            arrived: 'Arrived Schedules',
+            cancelled: 'Cancelled Schedules'
+        };
+        return titles[status] || 'All Schedules';
+    }
+
+    function scheduleFiltersActive() {
+        return !!((searchInput && searchInput.value.trim()) ||
+            (statusFilter && statusFilter.value) ||
+            (dateFrom && dateFrom.value) ||
+            (dateTo && dateTo.value));
     }
 
     /* ── Wire events — both call the same applyFilters() ─────────────── */
-    if (searchInput)  searchInput.addEventListener('input',  function () { scheduleCurrentPage = 1; applyFilters(); });
+    var debouncedApply = AdminUI.debounce(function () { scheduleCurrentPage = 1; applyFilters(); }, 350);
+    if (searchInput)  searchInput.addEventListener('input', debouncedApply);
     if (statusFilter) statusFilter.addEventListener('change', function () { scheduleCurrentPage = 1; applyFilters(); });
+    if (dateFrom) dateFrom.addEventListener('change', function () { scheduleCurrentPage = 1; applyFilters(); });
+    if (dateTo) dateTo.addEventListener('change', function () { scheduleCurrentPage = 1; applyFilters(); });
+    if (dateClear) dateClear.addEventListener('click', function () {
+        if (searchInput) searchInput.value = '';
+        if (statusFilter) statusFilter.value = '';
+        if (dateFrom) dateFrom.value = '';
+        if (dateTo) dateTo.value = '';
+        scheduleCurrentPage = 1;
+        applyFilters();
+    });
 
     /* Run once on init so count is correct immediately */
     applyFilters();
@@ -562,6 +619,7 @@ window.initSchedulesPage = function () {
         var current     = row.dataset.status || 'boarding';
         var scheduleId  = row.dataset.id;
         var transitions = STATUS_TRANSITIONS[current] || [];
+        var pendingBookings = parseInt(row.dataset.pendingBookings || '0', 10);
 
         var dropdown       = document.createElement('div');
         dropdown.className = 'sched-status-dropdown';
@@ -570,7 +628,12 @@ window.initSchedulesPage = function () {
            document listener that would immediately close it */
         dropdown.addEventListener('click', function (e) { e.stopPropagation(); });
 
-        if (transitions.length === 0) {
+        if (pendingBookings > 0) {
+            var pendingMsg       = document.createElement('div');
+            pendingMsg.className = 'sched-status-item sched-status-disabled';
+            pendingMsg.textContent = 'Resolve pending bookings first';
+            dropdown.appendChild(pendingMsg);
+        } else if (transitions.length === 0) {
             var msg       = document.createElement('div');
             msg.className = 'sched-status-item sched-status-disabled';
             msg.textContent = 'No further transitions';
@@ -624,6 +687,11 @@ window.initSchedulesPage = function () {
             if (data.success) {
                 /* Update row dataset */
                 row.dataset.status = newStatus;
+                row.dataset.arrivedAt = newStatus === 'arrived' ? formatDateTime(new Date()) : '';
+                row.classList.forEach(function (className) {
+                    if (className.indexOf('status-') === 0) row.classList.remove(className);
+                });
+                row.classList.add('status-' + newStatus);
 
                 /* Update status badge inside row */
                 var badge = row.querySelector('td .badge');
@@ -637,13 +705,36 @@ window.initSchedulesPage = function () {
                     showPreview(row);
                 }
 
-                Swal.fire({ icon: 'success', title: 'Updated!', text: 'Status changed to ' + formatStatus(newStatus) + '.', timer: 1800, showConfirmButton: false });
+                AdminUI.moveRowToGroup(row, newStatus, scheduleGroupMeta(newStatus));
+                applyFilters();
+                AdminUI.refreshGroups(tbody, 'tr.schedule-row', function (row) { return row.dataset.status || ''; });
+
+                AdminUI.notify('success', data.message || 'Schedule status updated successfully.');
             } else {
-                Swal.fire({ icon: 'error', title: 'Error', text: data.message || 'Failed to update status.' });
+                AdminUI.notify('error', data.message || 'Unable to update schedule status. Please try again.');
             }
         }).catch(function () {
-            Swal.fire('Error', 'Network error. Please try again.', 'error');
+            AdminUI.notify('error', 'Unable to update schedule status. Please try again.');
         });
+    }
+
+    function renderEmptyState(total, status, dateFiltered) {
+        tbody.querySelectorAll('.js-empty-row').forEach(function (row) { row.remove(); });
+        if (total > 0) return;
+        var label = status ? formatStatus(status).toLowerCase() + ' schedules' : 'schedules';
+        var message = dateFiltered
+            ? 'No ' + label + ' found for the selected date range.'
+            : 'No ' + label + ' match your current filters.';
+        tbody.insertAdjacentHTML('beforeend', '<tr class="js-empty-row"><td colspan="7"><div class="empty-state"><i class="fas fa-search"></i><p>' + message + '</p></div></td></tr>');
+    }
+
+    function withinDateRange(raw, from, to) {
+        if (!from && !to) return true;
+        if (!raw) return false;
+        var value = String(raw).slice(0, 10);
+        if (from && value < from) return false;
+        if (to && value > to) return false;
+        return true;
     }
 
     /* ══════════════════════════════════════════════════════════════════
@@ -689,6 +780,28 @@ window.initSchedulesPage = function () {
         var meta = STATUS_META[status];
         if (meta) return meta.label;
         return status.charAt(0).toUpperCase() + status.slice(1).replace(/_/g, ' ');
+    }
+
+    function scheduleGroupMeta(status) {
+        var groups = {
+            boarding: { label: 'Boarding Schedules', icon: 'fas fa-door-open', hint: 'Accepting passengers', colspan: 7 },
+            departed: { label: 'Departed Schedules', icon: 'fas fa-route', hint: 'On the road', colspan: 7 },
+            arrived: { label: 'Arrived Schedules', icon: 'fas fa-flag-checkered', hint: 'Reached destination', colspan: 7 },
+            cancelled: { label: 'Cancelled Schedules', icon: 'fas fa-ban', hint: 'Not running', colspan: 7 }
+        };
+        return groups[status] || { label: formatStatus(status) + ' Schedules', icon: 'fas fa-calendar-check', hint: 'Other schedules', colspan: 7 };
+    }
+
+    function formatDateTime(date) {
+        var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        var hours = date.getHours();
+        var minutes = String(date.getMinutes()).padStart(2, '0');
+        var period = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12 || 12;
+        return months[date.getMonth()] + ' ' +
+            String(date.getDate()).padStart(2, '0') + ', ' +
+            date.getFullYear() + ' ' +
+            hours + ':' + minutes + ' ' + period;
     }
 
 }; // end initSchedulesPage

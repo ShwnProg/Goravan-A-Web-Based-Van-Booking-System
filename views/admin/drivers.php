@@ -16,6 +16,11 @@ $drivers   = $driverObj->GetAllDrivers();
         <i class="fas fa-search"></i>
         <input type="text" id="driver-search" placeholder="Search drivers...">
     </div>
+    <div class="admin-date-filters" data-filter-scope="drivers">
+        <label><span>From</span><input type="date" id="driver-date-from"></label>
+        <label><span>To</span><input type="date" id="driver-date-to"></label>
+        <button type="button" class="filter-btn ghost" id="driver-date-clear">Clear</button>
+    </div>
     <button class="btn-add" id="open-add-modal">
         <i class="fas fa-plus"></i> Add Driver
     </button>
@@ -23,7 +28,6 @@ $drivers   = $driverObj->GetAllDrivers();
 
 <div class="drivers-wrapper">
 
-    <!-- TABLE CARD -->
     <div class="drivers-card">
         <div class="drivers-card-header">
             <h2>
@@ -56,13 +60,34 @@ $drivers   = $driverObj->GetAllDrivers();
                             </td>
                         </tr>
                     <?php else: ?>
-                        <?php foreach ($drivers as $i => $d): ?>
-                            <tr class="driver-row"
+                        <?php
+                        $driverStatusGroups = [
+                            'active' => ['label' => 'Active Drivers', 'icon' => 'fas fa-circle-check', 'hint' => 'Available for schedules'],
+                            'inactive' => ['label' => 'Inactive Drivers', 'icon' => 'fas fa-ban', 'hint' => 'Not assignable'],
+                        ];
+                        $currentGroup = '';
+                        foreach ($drivers as $i => $d):
+                            $group = $driverStatusGroups[$d['status']] ?? ['label' => 'Other Drivers', 'icon' => 'fas fa-user-tie', 'hint' => 'Other statuses'];
+                            if ($currentGroup !== $d['status']):
+                                $currentGroup = $d['status'];
+                        ?>
+                            <tr class="admin-status-group-row" data-group-key="<?= htmlspecialchars($currentGroup, ENT_QUOTES) ?>">
+                                <td colspan="7">
+                                    <div class="admin-status-group-label">
+                                        <i class="<?= htmlspecialchars($group['icon'], ENT_QUOTES) ?>"></i>
+                                        <span><?= htmlspecialchars($group['label']) ?></span>
+                                        <small><?= htmlspecialchars($group['hint']) ?></small>
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php endif; ?>
+                            <tr class="driver-row status-<?= htmlspecialchars($d['status'], ENT_QUOTES) ?>"
                                 data-id="<?= $d['driver_id_pk'] ?>"
                                 data-fullname="<?= htmlspecialchars($d['full_name'], ENT_QUOTES) ?>"
                                 data-license="<?= htmlspecialchars($d['license_number'], ENT_QUOTES) ?>"
                                 data-contact="<?= htmlspecialchars($d['contact_number'], ENT_QUOTES) ?>"
-                                data-status="<?= htmlspecialchars($d['status'], ENT_QUOTES) ?>">
+                                data-status="<?= htmlspecialchars($d['status'], ENT_QUOTES) ?>"
+                                data-created="<?= htmlspecialchars($d['created_at'] ?? '', ENT_QUOTES) ?>">
 
                                 <td class="text-muted-sm"><?= $i + 1 ?></td>
 

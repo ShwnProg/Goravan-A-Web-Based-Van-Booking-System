@@ -132,6 +132,81 @@
             }
         });
     }
+
+    initNotificationPreferences();
+
+    function initNotificationPreferences() {
+        var prefInputs = document.querySelectorAll('[data-notif-pref]');
+        if (!prefInputs.length) return;
+
+        var storageKey = 'gv-user-notif-prefs';
+        var defaults = {
+            booking: true,
+            reminder: true,
+            payment: true,
+            verification: true,
+            schedule: true
+        };
+
+        applyPrefs(readPrefs());
+
+        var saveBtn = document.getElementById('saveNotificationPrefs');
+        var resetBtn = document.getElementById('resetNotificationPrefs');
+
+        if (saveBtn) {
+            saveBtn.addEventListener('click', function () {
+                var prefs = {};
+                prefInputs.forEach(function (input) {
+                    prefs[input.dataset.notifPref] = input.checked;
+                });
+                localStorage.setItem(storageKey, JSON.stringify(Object.assign({}, defaults, prefs)));
+                window.dispatchEvent(new Event('gv-notif-prefs-updated'));
+                closePreferencesModal();
+                notifyPreferenceChange('Notification preferences saved.');
+            });
+        }
+
+        if (resetBtn) {
+            resetBtn.addEventListener('click', function () {
+                localStorage.setItem(storageKey, JSON.stringify(defaults));
+                applyPrefs(defaults);
+                window.dispatchEvent(new Event('gv-notif-prefs-updated'));
+                notifyPreferenceChange('Notification preferences reset.');
+            });
+        }
+
+        function readPrefs() {
+            try {
+                return Object.assign({}, defaults, JSON.parse(localStorage.getItem(storageKey) || '{}'));
+            } catch (e) {
+                return defaults;
+            }
+        }
+
+        function applyPrefs(prefs) {
+            prefInputs.forEach(function (input) {
+                input.checked = prefs[input.dataset.notifPref] !== false;
+            });
+        }
+
+        function notifyPreferenceChange(message) {
+            if (window.Swal) {
+                Swal.fire({
+                    icon: 'success',
+                    title: message,
+                    timer: 1200,
+                    showConfirmButton: false
+                });
+            }
+        }
+
+        function closePreferencesModal() {
+            var modalEl = document.getElementById('notificationPreferencesModal');
+            if (!modalEl || !window.bootstrap) return;
+            var modal = bootstrap.Modal.getInstance(modalEl);
+            if (modal) modal.hide();
+        }
+    }
 })();
 
 

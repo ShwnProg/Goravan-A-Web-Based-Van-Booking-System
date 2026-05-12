@@ -27,6 +27,11 @@ $vans = $vanObj->GetAllVans();
             <option value="inactive">Inactive</option>
         </select>
     </div>
+    <div class="admin-date-filters" data-filter-scope="vans">
+        <label><span>From</span><input type="date" id="van-date-from"></label>
+        <label><span>To</span><input type="date" id="van-date-to"></label>
+        <button type="button" class="filter-btn ghost" id="van-date-clear">Clear</button>
+    </div>
     <button class="btn-add" id="open-add-modal">
         <i class="fas fa-plus"></i> Add Van
     </button>
@@ -66,7 +71,28 @@ $vans = $vanObj->GetAllVans();
                         </td>
                     </tr>
                 <?php else: ?>
-                    <?php foreach ($vans as $i => $v):
+                    <?php
+                    $vanStatusGroups = [
+                        'active' => ['label' => 'Active Vans', 'icon' => 'fas fa-circle-check', 'hint' => 'Available for schedules'],
+                        'inactive' => ['label' => 'Inactive Vans', 'icon' => 'fas fa-ban', 'hint' => 'Not assignable'],
+                    ];
+                    $currentGroup = '';
+                    foreach ($vans as $i => $v):
+                        $group = $vanStatusGroups[$v['status']] ?? ['label' => 'Other Vans', 'icon' => 'fas fa-van-shuttle', 'hint' => 'Other statuses'];
+                        if ($currentGroup !== $v['status']):
+                            $currentGroup = $v['status'];
+                    ?>
+                        <tr class="admin-status-group-row" data-group-key="<?= htmlspecialchars($currentGroup, ENT_QUOTES) ?>">
+                            <td colspan="7">
+                                <div class="admin-status-group-label">
+                                    <i class="<?= htmlspecialchars($group['icon'], ENT_QUOTES) ?>"></i>
+                                    <span><?= htmlspecialchars($group['label']) ?></span>
+                                    <small><?= htmlspecialchars($group['hint']) ?></small>
+                                </div>
+                            </td>
+                        </tr>
+                    <?php
+                        endif;
                         $seatsJson = htmlspecialchars(
                             json_encode(array_map(fn($s) => [
                                 'seat_number' => $s['seat_number'],
@@ -77,11 +103,12 @@ $vans = $vanObj->GetAllVans();
                             'UTF-8'
                         );
                         ?>
-                        <tr class="van-row" data-id="<?= $v['van_id_pk'] ?>"
+                        <tr class="van-row status-<?= htmlspecialchars($v['status'], ENT_QUOTES) ?>" data-id="<?= $v['van_id_pk'] ?>"
                             data-plate="<?= htmlspecialchars($v['plate_number'], ENT_QUOTES) ?>"
                             data-model="<?= htmlspecialchars($v['model'], ENT_QUOTES) ?>"
                             data-capacity="<?= (int) $v['capacity'] ?>" data-passenger-capacity="<?= (int) $v['capacity'] ?>"
                             data-status="<?= htmlspecialchars($v['status'], ENT_QUOTES) ?>"
+                            data-created="<?= htmlspecialchars($v['created_at'] ?? '', ENT_QUOTES) ?>"
                             data-seats="<?= $seatsJson ?>">
 
                             <td class="text-muted-sm"><?= $i + 1 ?></td>

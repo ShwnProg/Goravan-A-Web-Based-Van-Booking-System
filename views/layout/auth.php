@@ -12,7 +12,6 @@ require_once "../../autoload.php";
 </head>
 
 <body>
-    <!-- SUCCESS ALERT -->
     <?php if (isset($_SESSION['success'])): ?>
         <script>
             document.addEventListener('DOMContentLoaded', () => {
@@ -23,12 +22,16 @@ require_once "../../autoload.php";
     <?php endif; ?>
 
 
-    <!-- ERROR ALERT -->
     <?php if (isset($_SESSION['error'])): ?>
-        <?php $firstError = is_array($_SESSION['error']) ? $_SESSION['error'][0] : $_SESSION['error']; ?>
+        <?php
+            $authErrors = is_array($_SESSION['error']) ? $_SESSION['error'] : [$_SESSION['error']];
+            $errorHtml = count($authErrors) > 1
+                ? '<ul style="text-align:left;margin:0;padding-left:18px;">' . implode('', array_map(fn($error) => '<li>' . htmlspecialchars((string) $error, ENT_QUOTES) . '</li>', $authErrors)) . '</ul>'
+                : htmlspecialchars((string) ($authErrors[0] ?? 'Something went wrong.'), ENT_QUOTES);
+        ?>
         <script>
             document.addEventListener('DOMContentLoaded', () => {
-                Swal.fire({ title: 'Error', text: <?= json_encode($firstError) ?>, icon: 'error' });
+                Swal.fire({ title: 'Please check the form', html: <?= json_encode($errorHtml) ?>, icon: 'error' });
             });
         </script>
         <?php unset($_SESSION['error']); ?>
@@ -36,7 +39,6 @@ require_once "../../autoload.php";
 
     <main class="auth-page">
 
-        <!-- Left Panel -->
         <div class="left-panel">
             <div class="left-panel__brand">
                 <a href="../../index.php"><img src="/images/logo_white.png" alt="GoraVan logo" class="brand-logo"></a>
@@ -48,7 +50,6 @@ require_once "../../autoload.php";
                 <p><?= htmlspecialchars($left_desc ?? '') ?></p>
             </div>
 
-            <!-- FEATURES -->
             <?php if (!empty($left_features)): ?>
                 <ul class="left-panel__features">
                     <?php foreach ($left_features as $feature): ?>
@@ -64,7 +65,6 @@ require_once "../../autoload.php";
             <?php endif; ?>
         </div>
 
-        <!-- Right Panel -->
         <div class="right-panel">
             <?= $content ?>
         </div>

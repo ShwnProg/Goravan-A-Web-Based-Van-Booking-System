@@ -20,7 +20,8 @@ class Routes
     public function GetAllRoutes(): array
     {
         $routes = $this->conn->prepare("
-            SELECT * FROM $this->table ORDER BY route_id_pk DESC
+            SELECT * FROM $this->table
+            ORDER BY is_active DESC, route_id_pk DESC
         ");
 
         $routes->execute();
@@ -183,6 +184,17 @@ class Routes
     public function DeleteRoute(): array
     {
         try {
+            if (!$this->id) {
+                return ['success' => false, 'message' => 'Invalid route.'];
+            }
+
+            if ($this->CountAssignedSchedules((int) $this->id) > 0) {
+                return [
+                    'success' => false,
+                    'message' => 'This route is assigned to one or more schedules, so it cannot be deleted. Set it inactive instead to keep schedule history intact.'
+                ];
+            }
+
             $this->conn->beginTransaction();
 
             $this->_deleteStops($this->id);
@@ -197,7 +209,11 @@ class Routes
 
         } catch (PDOException $e) {
             $this->conn->rollBack();
-            return ['success' => false, 'error' => $e->getMessage()];
+            return [
+                'success' => false,
+                'message' => 'Unable to delete this route because it is still linked to other records.',
+                'error' => $e->getMessage()
+            ];
         }
     }
 
@@ -246,6 +262,22 @@ class Routes
         ");
         $stmt->execute([':id' => $routeId]);
     }
+
+    private function CountAssignedSchedules(int $routeId): int
+    {
+        if (!$routeId) {
+            return 0;
+        }
+
+        $stmt = $this->conn->prepare("
+            SELECT COUNT(*)
+            FROM schedules
+            WHERE route_id_fk = :id
+        ");
+        $stmt->execute([':id' => $routeId]);
+        return (int) $stmt->fetchColumn();
+    }
+
     public function GetActiveRoutes(){
         $stmt=$this->conn->prepare("SELECT * FROM routes WHERE is_active=1");
         $stmt->execute();

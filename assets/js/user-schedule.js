@@ -8,26 +8,26 @@
     }
 
     var ROUTE_COORDS = window.ROUTE_COORDS || {
-        'Maasin City': [10.1322, 124.8426],
-        'Bontoc': [10.2167, 124.8833],
-        'Sogod': [10.3833, 124.9833],
-        'Malitbog': [10.1667, 124.8167],
-        'Padre Burgos': [10.0167, 125.0167],
-        'Limasawa': [9.9000, 125.1000],
-        'Liloan': [10.1000, 124.7167],
-        'Macrohon': [10.0667, 124.9167],
-        'San Juan': [10.2333, 125.1667],
-        'Silago': [10.5167, 125.1833],
-        'Hinunangan': [10.4000, 125.2000],
-        'Hinundayan': [10.3667, 125.1333],
-        'St. Bernard': [10.4833, 125.1333],
-        'San Ricardo': [10.2667, 125.2167],
-        'Tomas Oppus': [10.2500, 124.9833],
-        'San Francisco': [10.2000, 125.0167],
-        'Libagon': [10.1500, 124.9667],
-        'Anahawan': [10.1000, 125.0333],
-        'Bato': [10.3333, 124.9667],
-        'Pintuyan': [10.0833, 125.1833]
+        "Maasin City": [10.1335, 124.8460],
+        "Bontoc": [10.3559, 124.9693],
+        "Sogod": [10.3856, 124.9806],
+        "Malitbog": [10.1581, 125.0012],
+        "Padre Burgos": [10.0296, 125.0170],
+        "Limasawa": [9.9303, 125.0746],
+        "Liloan": [10.1581, 125.1253],
+        "Macrohon": [10.0766, 124.9401],
+        "San Juan": [10.2641, 125.1735],
+        "Silago": [10.5284, 125.1627],
+        "Hinunangan": [10.3946, 125.1985],
+        "Hinundayan": [10.3511, 125.2510],
+        "St. Bernard": [10.2801, 125.1383],
+        "San Ricardo": [9.9130, 125.2763],
+        "Tomas Oppus": [10.2548, 124.9856],
+        "San Francisco": [10.0575, 125.1576],
+        "Libagon": [10.2968, 125.0505],
+        "Anahawan": [10.2740, 125.2578],
+        "Bato": [10.3279, 124.7919],
+        "Pintuyan": [9.9446, 125.2492],
     };
 
     var DISCOUNTS = window.GV_DISCOUNTS || { student: 10, senior: 15, pwd: 20 };
@@ -462,15 +462,15 @@
             return '<div class="passenger-seat-row" data-seat-id="' + esc(seat.seat_id) + '">' +
                 '<div class="passenger-seat-label"><span>Seat ' + esc(seat.seat_number) + '</span><strong>' + esc(labelPassengerType(type)) + '</strong></div>' +
                 '<select class="passenger-seat-type" data-field="type"' + (isVerifiedSeat ? ' disabled data-verified-seat="1"' : '') + '>' +
-                    passengerTypeOption('regular', type) +
-                    passengerTypeOption('student', type) +
-                    passengerTypeOption('senior', type) +
-                    passengerTypeOption('pwd', type) +
+                passengerTypeOption('regular', type) +
+                passengerTypeOption('student', type) +
+                passengerTypeOption('senior', type) +
+                passengerTypeOption('pwd', type) +
                 '</select>' +
                 '<span class="passenger-seat-discount' + (isVerifiedSeat ? ' verified' : '') + '">' +
-                    discountForType(type) + '% off' + (isVerifiedSeat ? ' · verified' : '') +
+                discountForType(type) + '% off' + (isVerifiedSeat ? ' · verified' : '') +
                 '</span>' +
-            '</div>';
+                '</div>';
         }).join('');
     }
 

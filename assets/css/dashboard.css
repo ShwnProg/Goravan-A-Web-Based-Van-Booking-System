@@ -249,13 +249,15 @@
 }
 
 .db-ref {
-    font-family: var(--font-mono, 'Courier New', monospace);
+    font-family: var(--font-reference);
+    font-variant-numeric: tabular-nums;
     font-size: 11px;
     font-weight: 600;
     background: #f1f5f9;
     color: var(--color-primary, #2E3A4D);
     padding: 2px 6px;
     border-radius: 4px;
+    letter-spacing: 0;
 }
 
 .db-muted {
@@ -351,10 +353,21 @@
     font-weight: 600;
 }
 
+.db-act__detail {
+    font-size: 11.5px;
+    color: #64748b;
+    line-height: 1.35;
+    margin-top: 1px;
+}
+
 .db-act__time {
     font-size: 11px;
     color: #c0c0c0;
     margin-top: 2px;
+}
+
+.db-act--empty {
+    padding: 18px 0;
 }
 
 
@@ -371,4 +384,93 @@
 @media (max-width: 600px) {
     .db-top-row { grid-template-columns: repeat(2, 1fr); }
     .db-stat__val { font-size: 22px; }
+}
+
+/* Dashboard readability polish */
+.db-stat,
+.db-card,
+.db-tbl-card {
+    border-radius: 8px;
+    box-shadow: none;
+}
+
+.db-stat {
+    min-height: 116px;
+    justify-content: space-between;
+}
+
+.db-stat__label,
+.db-card__title {
+    letter-spacing: 0;
+}
+
+.db-stat__val {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0;
+}
+
+.db-seg__track {
+    height: 7px;
+}
+
+.db-chart-wrap {
+    min-height: 210px;
+}
+
+.db-table tbody td {
+    padding-top: 12px;
+    padding-bottom: 12px;
+}
+
+.db-activity {
+    gap: 2px;
+}
+
+.db-act {
+    padding: 12px 0;
+}
+
+body.admin-dark-mode-active .db-stat,
+body.admin-dark-mode-active .db-card,
+body.admin-dark-mode-active .db-tbl-card {
+    background: #1b2233;
+    border-color: rgba(148, 163, 184, .18);
+}
+
+body.admin-dark-mode-active .db-stat::before {
+    background: rgba(148, 163, 184, .14);
+}
+
+body.admin-dark-mode-active .db-stat--accent::before {
+    background: var(--color-accent);
+}
+
+body.admin-dark-mode-active .db-stat__val,
+body.admin-dark-mode-active .db-card__title,
+body.admin-dark-mode-active .db-seg__name,
+body.admin-dark-mode-active .db-act__text,
+body.admin-dark-mode-active .db-act__text b,
+body.admin-dark-mode-active .db-ref {
+    color: #f1f5f9;
+}
+
+body.admin-dark-mode-active .db-stat__label,
+body.admin-dark-mode-active .db-stat__sub,
+body.admin-dark-mode-active .db-seg__count,
+body.admin-dark-mode-active .db-act__detail,
+body.admin-dark-mode-active .db-muted {
+    color: #94a3b8;
+}
+
+body.admin-dark-mode-active .db-pill,
+body.admin-dark-mode-active .db-ref,
+body.admin-dark-mode-active .db-seg__track {
+    background: #252d3f;
+}
+
+body.admin-dark-mode-active .db-tbl-head,
+body.admin-dark-mode-active .db-table thead th,
+body.admin-dark-mode-active .db-table tbody tr,
+body.admin-dark-mode-active .db-act {
+    border-color: rgba(148, 163, 184, .12);
 }

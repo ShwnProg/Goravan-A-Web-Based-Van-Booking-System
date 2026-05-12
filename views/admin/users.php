@@ -14,6 +14,16 @@ ob_start();
 $userObj = new UserManagement($conn);
 $users   = $userObj->GetAllUsers();
 
+$verificationOrder = ['pending' => 0, 'approved' => 1, 'rejected' => 2, 'no_submission' => 3];
+usort($users, function (array $a, array $b) use ($verificationOrder): int {
+    $rankA = $verificationOrder[$a['verification_status'] ?? 'no_submission'] ?? 99;
+    $rankB = $verificationOrder[$b['verification_status'] ?? 'no_submission'] ?? 99;
+    if ($rankA !== $rankB) {
+        return $rankA <=> $rankB;
+    }
+    return ((int) ($b['user_id_pk'] ?? 0)) <=> ((int) ($a['user_id_pk'] ?? 0));
+});
+
 /**
  * Returns badge HTML based on verification_status.
  * 'no_submission' → Gray → "No Submission"
@@ -39,16 +49,19 @@ function verificationBadge(string $status): string
         <i class="fas fa-search"></i>
         <input type="text" id="user-search" placeholder="Search users…">
     </div>
-    <div class="filter-group">
-        <select class="filter-select" id="user-verify-filter">
-            <option value="">All Status</option>
-            <option value="approved">Verified</option>
-            <option value="pending">Pending</option>
-            <option value="rejected">Rejected</option>
-            <option value="no_submission">No Submission</option>
-        </select>
+    <div class="admin-date-filters" data-filter-scope="users">
+        <label><span>From</span><input type="date" id="user-date-from"></label>
+        <label><span>To</span><input type="date" id="user-date-to"></label>
+        <button type="button" class="filter-btn ghost" id="user-date-clear">Clear</button>
     </div>
 </div>
+<div class="admin-status-tabs" id="user-status-tabs" aria-label="User verification filters">
+    <button type="button" class="active" data-status="pending">Pending Verifications</button>
+    <button type="button" data-status="approved">Verified Users</button>
+    <button type="button" data-status="rejected">Rejected Verifications</button>
+    <button type="button" data-status="">All Users</button>
+</div>
+<input type="hidden" id="user-verify-filter" value="pending">
 
 <input type="hidden" id="page-csrf-token"
     value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '', ENT_QUOTES) ?>">
@@ -57,7 +70,7 @@ function verificationBadge(string $status): string
     <div class="users-card-header">
         <h2>
             <i class="fas fa-users" style="margin-right:7px;color:var(--color-accent)"></i>
-            All Users
+            <span id="user-view-title">Pending Verifications</span>
         </h2>
         <span id="user-count"></span>
     </div>
@@ -86,18 +99,41 @@ function verificationBadge(string $status): string
                         </td>
                     </tr>
                 <?php else: ?>
-                    <?php foreach ($users as $i => $u):
+                    <?php
+                    $userStatusGroups = [
+                        'pending' => ['label' => 'Pending Users', 'icon' => 'fas fa-clock', 'hint' => 'Documents need review'],
+                        'approved' => ['label' => 'Verified Users', 'icon' => 'fas fa-circle-check', 'hint' => 'Approved verification'],
+                        'rejected' => ['label' => 'Rejected Users', 'icon' => 'fas fa-circle-xmark', 'hint' => 'Verification rejected'],
+                        'no_submission' => ['label' => 'No Submission Users', 'icon' => 'fas fa-inbox', 'hint' => 'No documents yet'],
+                    ];
+                    $currentGroup = '';
+                    foreach ($users as $i => $u):
                         $encId  = encrypt((string) $u['user_id_pk']);
                         $vStatus = $u['verification_status'];
+                        $group = $userStatusGroups[$vStatus] ?? ['label' => 'Other Users', 'icon' => 'fas fa-users', 'hint' => 'Other statuses'];
+                        if ($currentGroup !== $vStatus):
+                            $currentGroup = $vStatus;
                     ?>
-                        <tr class="user-row"
+                        <tr class="admin-status-group-row" data-group-key="<?= htmlspecialchars($currentGroup, ENT_QUOTES) ?>">
+                            <td colspan="8">
+                                <div class="admin-status-group-label">
+                                    <i class="<?= htmlspecialchars($group['icon'], ENT_QUOTES) ?>"></i>
+                                    <span><?= htmlspecialchars($group['label']) ?></span>
+                                    <small><?= htmlspecialchars($group['hint']) ?></small>
+                                </div>
+                            </td>
+                        </tr>
+                    
+                        <?php endif; ?>
+                        <tr class="user-row status-<?= htmlspecialchars(str_replace('_', '-', $vStatus), ENT_QUOTES) ?>"
                             data-id="<?= htmlspecialchars($encId, ENT_QUOTES) ?>"
                             data-fullname="<?= htmlspecialchars($u['fullname'], ENT_QUOTES) ?>"
                             data-email="<?= htmlspecialchars($u['email'], ENT_QUOTES) ?>"
                             data-contact="<?= htmlspecialchars($u['contact_number'] ?? '', ENT_QUOTES) ?>"
                             data-birthdate="<?= htmlspecialchars($u['birthdate'] ?? '', ENT_QUOTES) ?>"
                             data-verify-status="<?= htmlspecialchars($vStatus, ENT_QUOTES) ?>"
-                            data-doc-count="<?= (int) $u['document_count'] ?>">
+                            data-doc-count="<?= (int) $u['document_count'] ?>"
+                            data-created="<?= htmlspecialchars($u['created_at'] ?? '', ENT_QUOTES) ?>">
 
                             <td class="text-muted-sm"><?= $i + 1 ?></td>
 
@@ -139,7 +175,10 @@ function verificationBadge(string $status): string
                                         data-fullname="<?= htmlspecialchars($u['fullname'], ENT_QUOTES) ?>"
                                         data-email="<?= htmlspecialchars($u['email'], ENT_QUOTES) ?>"
                                         data-contact="<?= htmlspecialchars($u['contact_number'] ?? '', ENT_QUOTES) ?>"
-                                        data-birthdate="<?= htmlspecialchars($u['birthdate'] ?? '', ENT_QUOTES) ?>">
+                                        data-birthdate="<?= htmlspecialchars($u['birthdate'] ?? '', ENT_QUOTES) ?>"
+                                        data-verify-status="<?= htmlspecialchars($vStatus, ENT_QUOTES) ?>"
+                                        data-doc-count="<?= (int) $u['document_count'] ?>"
+                                        data-created="<?= htmlspecialchars($u['created_at'] ?? '', ENT_QUOTES) ?>">
                                         <i class="fas fa-eye"></i>
                                     </button>
                                 </div>
@@ -160,7 +199,7 @@ function verificationBadge(string $status): string
                 <div class="rmodal-icon"><i class="fas fa-file-circle-check"></i></div>
                 <div>
                     <h6 class="rmodal-title">User Details</h6>
-                    <p class="rmodal-sub">Verification documents</p>
+                    <p class="rmodal-sub">Account and verification review</p>
                 </div>
                 <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal"></button>
             </div>
@@ -168,7 +207,7 @@ function verificationBadge(string $status): string
                 <div class="user-details-viewer">
 
                     <div class="udv-info-section">
-                        <h6 class="udv-section-title">User Information</h6>
+                        <h6 class="udv-section-title">Personal Information</h6>
                         <div class="udv-info-grid">
                             <div class="udv-info-item">
                                 <span class="udv-label">Name</span>
@@ -185,6 +224,30 @@ function verificationBadge(string $status): string
                             <div class="udv-info-item">
                                 <span class="udv-label">Birthdate</span>
                                 <span class="udv-value" id="view-birthdate">—</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="udv-info-section">
+                        <h6 class="udv-section-title">Verification Information</h6>
+                        <div class="udv-info-grid">
+                            <div class="udv-info-item">
+                                <span class="udv-label">Status</span>
+                                <span class="udv-value"><span id="view-verification-status" class="badge no-submission">No Submission</span></span>
+                            </div>
+                            <div class="udv-info-item">
+                                <span class="udv-label">Documents</span>
+                                <span class="udv-value" id="view-doc-count">â€”</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="udv-info-section">
+                        <h6 class="udv-section-title">Account Information</h6>
+                        <div class="udv-info-grid">
+                            <div class="udv-info-item">
+                                <span class="udv-label">Created</span>
+                                <span class="udv-value" id="view-created">â€”</span>
                             </div>
                         </div>
                     </div>

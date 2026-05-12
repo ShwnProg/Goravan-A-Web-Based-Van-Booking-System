@@ -20,7 +20,9 @@ class Drivers
     {
         $stmt = $this->conn->prepare("
             SELECT * FROM {$this->table}
-            ORDER BY driver_id_pk DESC
+            ORDER BY
+                CASE WHEN status = 'active' THEN 0 ELSE 1 END,
+                driver_id_pk DESC
         ");
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -106,13 +108,31 @@ class Drivers
     public function DeleteDriver(): array
     {
         try {
+            if (!$this->id) {
+                return ['success' => false, 'message' => 'Invalid driver ID.'];
+            }
+
+            if ($this->CountAssignedSchedules((int) $this->id) > 0) {
+                return [
+                    'success' => false,
+                    'message' => 'This driver is assigned to one or more schedules, so they cannot be deleted. Set the driver inactive instead to keep schedule history intact.'
+                ];
+            }
+
             $stmt = $this->conn->prepare("
                 DELETE FROM {$this->table} WHERE driver_id_pk = :id
             ");
             $stmt->execute([':id' => $this->id]);
-            return ['success' => true];
+            return [
+                'success' => $stmt->rowCount() > 0,
+                'message' => $stmt->rowCount() > 0 ? 'Driver deleted successfully.' : 'Driver not found.'
+            ];
         } catch (PDOException $e) {
-            return ['success' => false, 'error' => $e->getMessage()];
+            return [
+                'success' => false,
+                'message' => 'Unable to delete this driver because they are still linked to other records.',
+                'error' => $e->getMessage()
+            ];
         }
     }
 
@@ -133,6 +153,21 @@ class Drivers
         } catch (PDOException $e) {
             return ['success' => false, 'error' => $e->getMessage()];
         }
+    }
+
+    private function CountAssignedSchedules(int $driverId): int
+    {
+        if (!$driverId) {
+            return 0;
+        }
+
+        $stmt = $this->conn->prepare("
+            SELECT COUNT(*)
+            FROM schedules
+            WHERE driver_id_fk = :id
+        ");
+        $stmt->execute([':id' => $driverId]);
+        return (int) $stmt->fetchColumn();
     }
 }
 ?>

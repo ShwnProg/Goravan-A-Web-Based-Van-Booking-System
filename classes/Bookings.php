@@ -123,6 +123,7 @@ class Bookings
                 r.fare as route_fare,
                 s.departure_date,
                 s.departure_time,
+                s.estimated_arrival_at,
                 s.trip_status as schedule_status,
                 s.arrived_at,
                 d.full_name as driver_name,
@@ -350,8 +351,8 @@ class Bookings
                 'route' => $schedule['origin'] . ' -> ' . $schedule['destination'],
             ]);
 
-            $paymentStatus = 'paid';
-            $paidAt = date('Y-m-d H:i:s');
+            $paymentStatus = 'pending';
+            $paidAt = null;
 
             $paymentStmt = $this->conn->prepare("
                 INSERT INTO payments
@@ -421,6 +422,9 @@ class Bookings
     public function UpdateStatusByReferenceCode(string $referenceCode): array
     {
         try {
+            $this->EnsureModernPaymentStatusColumn();
+            $this->conn->beginTransaction();
+
             $stmt = $this->conn->prepare("
                 UPDATE {$this->table}
                 SET status = :status, updated_at = NOW()
@@ -431,8 +435,56 @@ class Bookings
                 ':reference_code' => $referenceCode,
             ]);
 
+            $paymentStatus = null;
+            if ($this->status === 'approved') {
+                $paymentStatus = 'paid';
+            } elseif ($this->status === 'rejected') {
+                $paymentStatus = 'cancelled';
+            }
+
+            if ($paymentStatus) {
+                $pay = $this->conn->prepare("
+                    UPDATE payments p
+                    INNER JOIN {$this->table} b ON p.book_id_fk = b.book_id_pk
+                    SET p.status = :payment_status,
+                        p.paid_at = CASE
+                            WHEN :paid_status = 'paid' THEN COALESCE(p.paid_at, p.created_at, NOW())
+                            ELSE NULL
+                        END
+                    WHERE b.reference_code = :reference_code
+                      AND p.status NOT IN ('refund_requested', 'refunded')
+                ");
+                $pay->execute([
+                    ':payment_status' => $paymentStatus,
+                    ':paid_status' => $paymentStatus,
+                    ':reference_code' => $referenceCode,
+                ]);
+            }
+
+            if ($this->status === 'cancelled') {
+                $pay = $this->conn->prepare("
+                    UPDATE payments p
+                    INNER JOIN {$this->table} b ON p.book_id_fk = b.book_id_pk
+                    SET p.status = CASE
+                            WHEN p.status = 'paid' THEN 'refund_requested'
+                            ELSE 'cancelled'
+                        END,
+                        p.paid_at = CASE
+                            WHEN p.status = 'paid' THEN p.paid_at
+                            ELSE NULL
+                        END
+                    WHERE b.reference_code = :reference_code
+                      AND p.status NOT IN ('refund_requested', 'refunded')
+                ");
+                $pay->execute([':reference_code' => $referenceCode]);
+            }
+
+            $this->conn->commit();
             return ['success' => true, 'affected' => $stmt->rowCount()];
         } catch (PDOException $e) {
+            if ($this->conn->inTransaction()) {
+                $this->conn->rollBack();
+            }
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
@@ -453,6 +505,26 @@ class Bookings
     }
 
     // ── HELPER: Get all statuses ──────────────────────────────────
+
+    private function EnsureModernPaymentStatusColumn(): void
+    {
+        try {
+            $stmt = $this->conn->prepare("
+                SELECT DATA_TYPE
+                FROM INFORMATION_SCHEMA.COLUMNS
+                WHERE TABLE_SCHEMA = DATABASE()
+                  AND TABLE_NAME = 'payments'
+                  AND COLUMN_NAME = 'status'
+                LIMIT 1
+            ");
+            $stmt->execute();
+            if (strtolower((string) $stmt->fetchColumn()) === 'enum') {
+                $this->conn->exec("ALTER TABLE payments MODIFY status VARCHAR(32) NOT NULL DEFAULT 'pending'");
+            }
+        } catch (Throwable $e) {
+            error_log('[Bookings::EnsureModernPaymentStatusColumn] ' . $e->getMessage());
+        }
+    }
 
     public static function GetAllStatuses(): array
     {
@@ -503,38 +575,6 @@ class Bookings
                 WHERE s.trip_status = 'cancelled'
                   AND b.status NOT IN ('rejected', 'cancelled', 'completed')
             ");
-
-            $select = $this->conn->prepare("
-                SELECT schedule_id_pk
-                FROM schedules
-                WHERE trip_status IN ('boarding', 'departed')
-                  AND estimated_arrival_at IS NOT NULL
-                  AND estimated_arrival_at <= NOW()
-                FOR UPDATE
-            ");
-            $select->execute();
-            $scheduleIds = array_map('intval', $select->fetchAll(PDO::FETCH_COLUMN));
-
-            if (!empty($scheduleIds)) {
-                $placeholders = implode(',', array_fill(0, count($scheduleIds), '?'));
-                $updateSchedules = $this->conn->prepare("
-                    UPDATE schedules
-                    SET trip_status = 'arrived',
-                        arrived_at = COALESCE(arrived_at, estimated_arrival_at, NOW()),
-                        updated_at = NOW()
-                    WHERE schedule_id_pk IN ($placeholders)
-                ");
-                $updateSchedules->execute($scheduleIds);
-
-                $updateBookings = $this->conn->prepare("
-                    UPDATE {$this->table}
-                    SET status = 'completed',
-                        updated_at = NOW()
-                    WHERE schedule_id_fk IN ($placeholders)
-                      AND status = 'approved'
-                ");
-                $updateBookings->execute($scheduleIds);
-            }
 
             $this->conn->commit();
         } catch (PDOException $e) {
@@ -643,7 +683,7 @@ class Bookings
                     CASE
                         WHEN SUM(CASE WHEN b.status = 'pending' THEN 1 ELSE 0 END) > 0 THEN 'pending'
                         WHEN SUM(CASE WHEN b.status = 'approved' THEN 1 ELSE 0 END) > 0 THEN 'approved'
-                        WHEN SUM(CASE WHEN b.status = 'completed' THEN 1 ELSE 0 END) > 0 THEN 'completed'
+                        WHEN SUM(CASE WHEN s.trip_status = 'arrived' THEN 1 ELSE 0 END) > 0 THEN 'completed'
                         WHEN SUM(CASE WHEN b.status = 'rejected' THEN 1 ELSE 0 END) > 0 THEN 'rejected'
                         ELSE 'cancelled'
                     END as status,
@@ -744,7 +784,7 @@ class Bookings
                 CASE
                     WHEN SUM(CASE WHEN b.status = 'pending' THEN 1 ELSE 0 END) > 0 THEN 'pending'
                     WHEN SUM(CASE WHEN b.status = 'approved' THEN 1 ELSE 0 END) > 0 THEN 'approved'
-                    WHEN SUM(CASE WHEN b.status = 'completed' THEN 1 ELSE 0 END) > 0 THEN 'completed'
+                    WHEN SUM(CASE WHEN s.trip_status = 'arrived' THEN 1 ELSE 0 END) > 0 THEN 'completed'
                     WHEN SUM(CASE WHEN b.status = 'rejected' THEN 1 ELSE 0 END) > 0 THEN 'rejected'
                     ELSE 'cancelled'
                 END as status,
@@ -754,6 +794,7 @@ class Bookings
                 r.fare as route_fare,
                 s.departure_date,
                 s.departure_time,
+                s.estimated_arrival_at,
                 s.trip_status as schedule_status,
                 s.arrived_at,
                 d.full_name as driver_name,
@@ -780,7 +821,7 @@ class Bookings
             )
             WHERE b.user_id_fk = :user_id AND b.reference_code = :reference_code
             GROUP BY b.reference_code, r.origin, r.destination, r.fare, s.departure_date,
-                     s.departure_time, s.trip_status, s.arrived_at, d.full_name, v.plate_number,
+                     s.departure_time, s.estimated_arrival_at, s.trip_status, s.arrived_at, d.full_name, v.plate_number,
                      v.model, p.amount, p.payment_method, p.payment_reference, p.status, p.notes
             LIMIT 1
         ");

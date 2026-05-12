@@ -5,7 +5,7 @@ $title = "Login";
 $page_js = '../../assets/js/user.js';
 
 $left_headline  = "Your seat is<br><em>waiting.</em>";
-$left_desc      = "Sign back in to GoraVan ands manage bookings, check schedules, and travel across Southern Leyte with ease.";
+$left_desc      = "Sign back in to GoraVan and manage bookings, check schedules, and travel across Southern Leyte with ease.";
 $left_features  = [
     [
         'icon'  => 'fas fa-couch',
@@ -23,6 +23,9 @@ $left_features  = [
         'desc'  => 'Know when your van is boarding, departed, or has arrived.',
     ],
 ];
+
+$oldLogin = $_SESSION['old_login'] ?? [];
+unset($_SESSION['old_login']);
 ?>
 
 <section class="auth-container">
@@ -36,13 +39,15 @@ $left_features  = [
 
         <div class="input-group">
             <label for="email">Email Address</label>
-            <input type="email" name="email" id="email" placeholder="example@gmail.com" required>
+            <input type="email" name="email" id="email" value="<?= htmlspecialchars($oldLogin['email'] ?? '') ?>"
+                placeholder="example@gmail.com" autocomplete="email" required>
         </div>
 
         <div class="input-group">
             <label for="password">Password</label>
             <div class="password-wrapper">
-                <input type="password" name="password" id="password" placeholder="Enter your password" required>
+                <input type="password" name="password" id="password" placeholder="Enter your password"
+                    autocomplete="current-password" required>
                 <button type="button" class="password-toggle" aria-label="Toggle password visibility">
                     <i class="fas fa-eye"></i>
                 </button>

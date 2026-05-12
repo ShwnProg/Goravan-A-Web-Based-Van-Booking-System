@@ -35,7 +35,8 @@ class Users
 
             return $this->conn->lastInsertId();
         } catch (PDOException $e) {
-            return $e->getMessage();
+            error_log('[Users::AddUser] ' . $e->getMessage());
+            return false;
         }
     }
     public function GetUserById()
@@ -54,7 +55,7 @@ class Users
             $stmt = $this->conn->prepare("
             SELECT COUNT(*) 
             FROM $this->table 
-            WHERE email = :email
+            WHERE LOWER(email) = LOWER(:email)
         ");
 
             $stmt->execute([
@@ -74,7 +75,13 @@ class Users
     public function AuthenticateUser()
     {
         try {
-            $stmt = $this->conn->prepare("SELECT user_id_pk,password FROM $this->table WHERE email = :email ");
+            $stmt = $this->conn->prepare("
+                SELECT user_id_pk, password
+                FROM $this->table
+                WHERE LOWER(email) = LOWER(:email)
+                  AND role = 'user'
+                LIMIT 1
+            ");
             $stmt->execute([':email' => $this->email]);
 
             $user = $stmt->fetch();
@@ -82,9 +89,10 @@ class Users
             if ($user && password_verify($this->password, $user['password'])) {
                 return ['is_login' => true, 'id' => $user['user_id_pk']];
             }
-            return ['is_login' => false, 'id' => null, 'error' => 'Invalid credentials'];
+            return ['is_login' => false, 'id' => null, 'error' => 'Invalid email or password.'];
         } catch (PDOException $e) {
-            return $e->getMessage();
+            error_log('[Users::AuthenticateUser] ' . $e->getMessage());
+            return ['is_login' => false, 'id' => null, 'error' => 'Unable to sign in right now.'];
         }
     }
     public function UpdateProfile()
@@ -115,17 +123,36 @@ class Users
         }
     }
 
+    public function UpdatePasswordByEmail()
+    {
+        try {
+            $stmt = $this->conn->prepare("UPDATE $this->table SET password = :password WHERE email = :email");
+            return $stmt->execute([
+                ':password' => $this->password,
+                ':email' => $this->email
+            ]);
+        } catch (PDOException $e) {
+            return $e->getMessage();
+        }
+    }
+
     public function GetRole()
     {
         try {
-            $stmt = $this->conn->prepare("SELECT role from $this->table WHERE email = :email");
+            $stmt = $this->conn->prepare("
+                SELECT role
+                FROM $this->table
+                WHERE LOWER(email) = LOWER(:email)
+                LIMIT 1
+            ");
 
             $stmt->execute([':email' => $this->email]);
 
             $user = $stmt->fetch();
-            return $user['role'];
+            return $user['role'] ?? null;
         } catch (PDOException $e) {
-            return $e->getMessage();
+            error_log('[Users::GetRole] ' . $e->getMessage());
+            return null;
         }
     }
     

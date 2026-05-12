@@ -177,8 +177,8 @@ $breakdown = [
 
 <!-- ── CHART DATA (PHP → JS) ─────────────────────────────────────────────────── -->
 <script>
-const dailyLabels = <?= json_encode($chartDailyLabels) ?>;
-const dailyData   = <?= json_encode($chartDailyData)   ?>;
+window.dailyLabels = <?= json_encode($chartDailyLabels) ?>;
+window.dailyData   = <?= json_encode($chartDailyData)   ?>;
 </script>
 
 

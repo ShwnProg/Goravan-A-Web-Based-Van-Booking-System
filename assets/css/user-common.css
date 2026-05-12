@@ -1051,7 +1051,8 @@ body.user-page.dark {
 }
 
 .u-col-ref .u-ref-code {
-    font-family: 'Courier New', monospace;
+    font-family: var(--font-reference);
+    font-variant-numeric: tabular-nums;
     font-size: 12px;
     font-weight: 700;
     color: var(--u-accent);
@@ -1059,6 +1060,7 @@ body.user-page.dark {
     padding: 6px 10px;
     border-radius: 6px;
     display: inline-block;
+    letter-spacing: 0;
 }
 
 .u-col-route .u-route-text {

@@ -4,6 +4,9 @@ window.initVansPage = function () {
     var countBadge = document.getElementById('van-count');
     var searchInput = document.getElementById('van-search');
     var statusFilter = document.getElementById('van-status-filter');
+    var dateFrom = document.getElementById('van-date-from');
+    var dateTo = document.getElementById('van-date-to');
+    var dateClear = document.getElementById('van-date-clear');
     var openAddBtn = document.getElementById('open-add-modal');
 
     if (!tbody) return;
@@ -33,26 +36,59 @@ window.initVansPage = function () {
         if (countBadge) {
             countBadge.textContent = visible + ' van' + (visible !== 1 ? 's' : '');
         }
+        AdminUI.setClearButtonState(dateClear, filtersActive());
+    }
+
+    function filtersActive() {
+        return !!((searchInput && searchInput.value.trim()) ||
+            (statusFilter && statusFilter.value) ||
+            (dateFrom && dateFrom.value) ||
+            (dateTo && dateTo.value));
+    }
+
+    function updateGroupRows() {
+        tbody.querySelectorAll('tr.admin-status-group-row').forEach(function (groupRow) {
+            var key = groupRow.dataset.groupKey || '';
+            var hasVisible = Array.from(tbody.querySelectorAll('tr.van-row[data-status="' + key + '"]'))
+                .some(function (row) { return row.style.display !== 'none'; });
+            groupRow.style.display = hasVisible ? '' : 'none';
+        });
     }
     updateCount();
+    updateGroupRows();
 
     /* ── Search + status filter ───────────────── */
     function applyFilters() {
+        if (!tbody.querySelector('tr.van-row')) return;
         var q = searchInput ? searchInput.value.toLowerCase().trim() : '';
         var status = statusFilter ? statusFilter.value : '';
+        var from = dateFrom ? dateFrom.value : '';
+        var to = dateTo ? dateTo.value : '';
 
         tbody.querySelectorAll('tr.van-row').forEach(function (row) {
             var matchQ = !q
                 || (row.dataset.plate || '').toLowerCase().includes(q)
                 || (row.dataset.model || '').toLowerCase().includes(q);
             var matchS = !status || row.dataset.status === status;
-            row.style.display = (matchQ && matchS) ? '' : 'none';
+            var matchD = withinDate(row.dataset.created || '', from, to);
+            row.style.display = (matchQ && matchS && matchD) ? '' : 'none';
         });
         updateCount();
+        updateGroupRows();
+        renderEmptyState(status, from || to);
     }
 
-    if (searchInput) searchInput.addEventListener('input', applyFilters);
+    if (searchInput) searchInput.addEventListener('input', AdminUI.debounce(applyFilters, 350));
     if (statusFilter) statusFilter.addEventListener('change', applyFilters);
+    if (dateFrom) dateFrom.addEventListener('change', applyFilters);
+    if (dateTo) dateTo.addEventListener('change', applyFilters);
+    if (dateClear) dateClear.addEventListener('click', function () {
+        if (searchInput) searchInput.value = '';
+        if (statusFilter) statusFilter.value = '';
+        if (dateFrom) dateFrom.value = '';
+        if (dateTo) dateTo.value = '';
+        applyFilters();
+    });
 
     /* ── Row highlight on click ───────────────── */
     tbody.addEventListener('click', function (e) {
@@ -236,6 +272,8 @@ window.initVansPage = function () {
 
                     const row = toggleBtn.closest('tr');
                     row.dataset.status = nextStatus;
+                    row.classList.remove('status-' + currentStatus);
+                    row.classList.add('status-' + nextStatus);
 
                     const badge = row.querySelector('.badge');
                     if (badge) {
@@ -249,15 +287,22 @@ window.initVansPage = function () {
                         icon.className = 'fas fa-' + (nextStatus === 'active' ? 'toggle-on' : 'toggle-off');
                     }
 
+                    AdminUI.moveRowToGroup(row, nextStatus, {
+                        label: nextStatus === 'active' ? 'Active Vans' : 'Inactive Vans',
+                        icon: 'fas fa-van-shuttle',
+                        hint: nextStatus === 'active' ? 'Available for trips' : 'Not in service',
+                        colspan: 7
+                    });
                     applyFilters();
-                    Swal.fire('Success', 'Status updated!', 'success');
+                    AdminUI.refreshGroups(tbody, 'tr.van-row', function (row) { return row.dataset.status || ''; });
+                    AdminUI.notify('success', d.message || 'Van status updated successfully.');
 
                 } else {
-                    Swal.fire('Error', d.message || 'Toggle failed.', 'error');
+                    AdminUI.notify('error', d.message || 'Unable to update van status. Please try again.');
                 }
 
             }).catch(function () {
-                Swal.fire('Error', 'Network error.', 'error');
+                AdminUI.notify('error', 'Unable to update van status. Please try again.');
             });
         });
     });
@@ -458,6 +503,26 @@ window.initVansPage = function () {
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: body,
         }).then(function (r) { return r.json(); });
+    }
+
+    function renderEmptyState(status, dateFiltered) {
+        tbody.querySelectorAll('.js-empty-row').forEach(function (row) { row.remove(); });
+        var hasVisible = Array.from(tbody.querySelectorAll('tr.van-row')).some(function (row) {
+            return row.style.display !== 'none';
+        });
+        if (hasVisible) return;
+        var label = status ? status + ' vans' : 'vans';
+        var message = dateFiltered ? 'No ' + label + ' found for the selected date range.' : 'No ' + label + ' match your current filters.';
+        tbody.insertAdjacentHTML('beforeend', '<tr class="js-empty-row"><td colspan="7"><div class="empty-state"><i class="fas fa-search"></i><p>' + message + '</p></div></td></tr>');
+    }
+
+    function withinDate(raw, from, to) {
+        if (!from && !to) return true;
+        if (!raw) return false;
+        var value = String(raw).slice(0, 10);
+        if (from && value < from) return false;
+        if (to && value > to) return false;
+        return true;
     }
 
 }; // end initVansPage

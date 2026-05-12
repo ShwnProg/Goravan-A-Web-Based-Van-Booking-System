@@ -16,6 +16,11 @@ $routes = $route->GetAllRoutes();
         <i class="fas fa-search"></i>
         <input type="text" id="route-search" placeholder="Search routes...">
     </div>
+    <div class="admin-date-filters" data-filter-scope="routes">
+        <label><span>From</span><input type="date" id="route-date-from"></label>
+        <label><span>To</span><input type="date" id="route-date-to"></label>
+        <button type="button" class="filter-btn ghost" id="route-date-clear">Clear</button>
+    </div>
     <button class="btn-add" id="open-add-modal">
         <i class="fas fa-plus"></i> Add Route
     </button>
@@ -56,17 +61,40 @@ $routes = $route->GetAllRoutes();
                             </td>
                         </tr>
                     <?php else: ?>
-                        <?php foreach ($routes as $i => $r):
+                        <?php
+                        $routeStatusGroups = [
+                            1 => ['label' => 'Active Routes', 'icon' => 'fas fa-circle-check', 'hint' => 'Visible for booking'],
+                            0 => ['label' => 'Inactive Routes', 'icon' => 'fas fa-ban', 'hint' => 'Hidden from booking'],
+                        ];
+                        $currentGroup = null;
+                        foreach ($routes as $i => $r):
+                            $activeKey = (int) $r['is_active'];
+                            $group = $routeStatusGroups[$activeKey] ?? ['label' => 'Other Routes', 'icon' => 'fas fa-road', 'hint' => 'Other statuses'];
+                            if ($currentGroup !== $activeKey):
+                                $currentGroup = $activeKey;
+                        ?>
+                            <tr class="admin-status-group-row" data-group-key="<?= $activeKey ? 'active' : 'inactive' ?>">
+                                <td colspan="7">
+                                    <div class="admin-status-group-label">
+                                        <i class="<?= htmlspecialchars($group['icon'], ENT_QUOTES) ?>"></i>
+                                        <span><?= htmlspecialchars($group['label']) ?></span>
+                                        <small><?= htmlspecialchars($group['hint']) ?></small>
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php
+                            endif;
                             $stops     = $r['stops'] ?? [];
                             $stopNames = array_column($stops, 'stop_name');
                             $stopsJson = htmlspecialchars(json_encode($stopNames), ENT_QUOTES, 'UTF-8');
                         ?>
-                            <tr class="route-row"
+                            <tr class="route-row status-<?= $r['is_active'] ? 'active' : 'inactive' ?>"
                                 data-id="<?= $r['route_id_pk'] ?>"
                                 data-origin="<?= htmlspecialchars($r['origin'], ENT_QUOTES) ?>"
                                 data-destination="<?= htmlspecialchars($r['destination'], ENT_QUOTES) ?>"
                                 data-fare="<?= htmlspecialchars($r['fare'], ENT_QUOTES) ?>"
                                 data-active="<?= (int) $r['is_active'] ?>"
+                                data-created="<?= htmlspecialchars($r['created_at'] ?? '', ENT_QUOTES) ?>"
                                 data-stops="<?= $stopsJson ?>">
 
                                 <td class="text-muted-sm"><?= $i + 1 ?></td>

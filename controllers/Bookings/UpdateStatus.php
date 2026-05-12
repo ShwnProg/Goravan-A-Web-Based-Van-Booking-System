@@ -1,10 +1,27 @@
 <?php
 require_once '../../autoload.php';
 
-if (!csrf_check()) {
-    $_SESSION['error'] = 'Invalid or expired CSRF token. Please refresh and try again.';
+function wants_json(): bool
+{
+    return str_contains($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json')
+        || strtolower($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === 'xmlhttprequest';
+}
+
+function booking_response(bool $success, string $message, array $extra = []): void
+{
+    if (wants_json()) {
+        header('Content-Type: application/json');
+        echo json_encode(array_merge(['success' => $success, 'message' => $message], $extra));
+        exit;
+    }
+
+    $_SESSION[$success ? 'success' : 'error'] = $message;
     header('Location: ../../views/admin/bookings.php');
     exit;
+}
+
+if (!csrf_check()) {
+    booking_response(false, 'Invalid or expired CSRF token. Please refresh and try again.');
 }
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -17,18 +34,14 @@ $new_status = trim(strtolower($_POST['status'] ?? ''));
 $allowed = ['approved', 'rejected', 'cancelled'];
 
 if (!$booking_id || !in_array($new_status, $allowed, true)) {
-    $_SESSION['error'] = 'Invalid booking ID or status.';
-    header('Location: ../../views/admin/bookings.php');
-    exit;
+    booking_response(false, 'Invalid booking ID or status.');
 }
 
 $bookingObj = new Bookings($conn);
 $rows = $bookingObj->GetBookingGroupByID($booking_id);
 
 if (empty($rows)) {
-    $_SESSION['error'] = 'Booking not found.';
-    header('Location: ../../views/admin/bookings.php');
-    exit;
+    booking_response(false, 'Booking not found.');
 }
 
 $referenceCode = $rows[0]['reference_code'];
@@ -38,32 +51,23 @@ $isApprovable = count(array_diff($currentStatuses, ['pending', 'approved'])) ===
 $isCancellable = count(array_diff($currentStatuses, ['pending', 'approved'])) === 0;
 
 if ($new_status === 'approved' && !$isApprovable) {
-    $_SESSION['error'] = 'Only pending or partially approved bookings can be approved.';
-    header('Location: ../../views/admin/bookings.php');
-    exit;
+    booking_response(false, 'Only pending or partially approved bookings can be approved.');
 }
 
 if ($new_status === 'rejected' && !$isAllPending) {
-    $_SESSION['error'] = 'Only pending bookings can be rejected.';
-    header('Location: ../../views/admin/bookings.php');
-    exit;
+    booking_response(false, 'Only pending bookings can be rejected.');
 }
 
 if ($new_status === 'cancelled' && !$isCancellable) {
-    $_SESSION['error'] = 'This booking cannot be cancelled.';
-    header('Location: ../../views/admin/bookings.php');
-    exit;
+    booking_response(false, 'This booking cannot be cancelled.');
 }
 
 $bookingObj->status = $new_status;
 $result = $bookingObj->UpdateStatusByReferenceCode($referenceCode);
 
 if (!$result['success']) {
-    $_SESSION['error'] = 'Failed to update booking status. Please try again.';
-    header('Location: ../../views/admin/bookings.php');
-    exit;
+    booking_response(false, 'Unable to update booking status. Please try again.');
 }
 
-$_SESSION['success'] = 'Booking ' . $new_status . ' successfully. Updated ' . count($rows) . ' seat(s).';
-header('Location: ../../views/admin/bookings.php');
-exit;
+$message = 'Booking status updated successfully. Updated ' . count($rows) . ' seat(s).';
+booking_response(true, $message, ['status' => $new_status, 'reference_code' => $referenceCode]);

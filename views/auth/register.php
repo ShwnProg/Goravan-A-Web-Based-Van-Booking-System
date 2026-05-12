@@ -42,35 +42,36 @@ unset($_SESSION['old']);
             <div class="name-field">
                 <label for="first_name">First Name</label>
                 <input type="text" name="first_name" id="first_name" value="<?= htmlspecialchars($old['first_name'] ?? '') ?>"
-                    placeholder="Enter first name" Required>
+                    placeholder="Enter first name" autocomplete="given-name" required>
             </div>
             <div class="name-field">
                 <label for="last_name">Last Name</label>
                 <input type="text" name="last_name" id="last_name" value="<?= htmlspecialchars($old['last_name'] ?? '') ?>"
-                    placeholder="Enter last name" Required>
+                    placeholder="Enter last name" autocomplete="family-name" required>
             </div>
         </div>
 
         <div class="input-group">
             <label for="email">Email Address</label>
             <input type="email" name="email" id="email" value="<?= htmlspecialchars($old['email'] ?? '') ?>"
-                placeholder="example@gmail.com" Required>
+                placeholder="example@gmail.com" autocomplete="email" required>
         </div>
 
         <div class="input-group">
             <label for="contact">Contact Number</label>
             <input type="text" name="contact" id="contact" value="<?= htmlspecialchars($old['contact'] ?? '') ?>"
-                placeholder="1234-567-8912" Required>
+                placeholder="09XX XXX XXXX" autocomplete="tel" inputmode="numeric" required>
         </div>
         <div class="input-group">
             <label for="birthdate">Birthdate</label>
-            <input type="date" name="birthdate" id="birthdate" required>
+            <input type="date" name="birthdate" id="birthdate" value="<?= htmlspecialchars($old['birthdate'] ?? '') ?>" required>
         </div>
         <div class="password-group">
             <div class="pw-field">
                 <label for="password">Password</label>
                 <div class="password-wrapper">
-                    <input type="password" name="password" id="password" placeholder="Min. 8 characters" Required>
+                    <input type="password" name="password" id="password" placeholder="Min. 8 characters"
+                        autocomplete="new-password" required>
                     <button type="button" class="password-toggle" aria-label="Toggle password visibility">
                         <i class="fas fa-eye"></i>
                     </button>
@@ -79,17 +80,19 @@ unset($_SESSION['old']);
             <div class="pw-field">
                 <label for="confirm_password">Confirm Password</label>
                 <div class="password-wrapper">
-                    <input type="password" name="confirm_password" id="confirm_password" placeholder="Re-enter password" Required>
+                    <input type="password" name="confirm_password" id="confirm_password" placeholder="Re-enter password"
+                        autocomplete="new-password" required>
                     <button type="button" class="password-toggle" aria-label="Toggle password visibility">
                         <i class="fas fa-eye"></i>
                     </button>
                 </div>
             </div>
         </div>
+        <p class="auth-field-hint">For your security, password fields are cleared after an unsuccessful submit.</p>
 
         <div class="select-type">
             <label for="type">Passenger Type</label>
-            <select name="type" id="type">
+            <select name="type" id="type" required>
                 <option value="">Select passenger type</option>
 
                 <option value="regular" <?= ($old['type'] ?? '') == 'regular' ? 'selected' : '' ?>>Regular</option>

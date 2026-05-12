@@ -36,6 +36,11 @@ $vans   = $vanObj->GetAllVans();
             <option value="cancelled">Cancelled</option>
         </select>
     </div>
+    <div class="admin-date-filters" data-filter-scope="schedules">
+        <label><span>From</span><input type="date" id="schedule-date-from"></label>
+        <label><span>To</span><input type="date" id="schedule-date-to"></label>
+        <button type="button" class="filter-btn ghost" id="schedule-date-clear">Clear</button>
+    </div>
     <button class="btn-add" id="open-add-modal">
         <i class="fas fa-plus"></i> Add Schedule
     </button>
@@ -56,7 +61,7 @@ $vans   = $vanObj->GetAllVans();
         <div class="schedules-card-header">
             <h2>
                 <i class="fas fa-calendar-check" style="margin-right:7px;color:var(--color-accent)"></i>
-                All Schedules
+                <span id="schedule-view-title">All Schedules</span>
             </h2>
             <!-- FIX 4: Removed data-label attribute — JS now handles pluralisation itself -->
             <span id="schedule-count"></span>
@@ -71,14 +76,13 @@ $vans   = $vanObj->GetAllVans();
                         <th>Driver</th>
                         <th>Van</th>
                         <th>Departure</th>
-                        <th>ETA</th>
                         <th>Status</th>
                     </tr>
                 </thead>
                 <tbody id="schedules-tbody">
                     <?php if (empty($schedules)): ?>
                         <tr>
-                            <td colspan="8">
+                            <td colspan="7">
                                 <div class="empty-state">
                                     <i class="fas fa-calendar-check"></i>
                                     <p>No schedules yet. Add your first schedule.</p>
@@ -86,7 +90,31 @@ $vans   = $vanObj->GetAllVans();
                             </td>
                         </tr>
                     <?php else: ?>
-                        <?php foreach ($schedules as $i => $s):
+                        <?php
+                        $scheduleStatusGroups = [
+                            'boarding' => ['label' => 'Boarding Schedules', 'icon' => 'fas fa-door-open', 'hint' => 'Accepting passengers'],
+                            'departed' => ['label' => 'Departed Schedules', 'icon' => 'fas fa-route', 'hint' => 'On the road'],
+                            'arrived' => ['label' => 'Arrived Schedules', 'icon' => 'fas fa-flag-checkered', 'hint' => 'Reached destination'],
+                            'cancelled' => ['label' => 'Cancelled Schedules', 'icon' => 'fas fa-ban', 'hint' => 'Not running'],
+                        ];
+                        $currentGroup = '';
+                        foreach ($schedules as $i => $s):
+                            $rawStatus = (string) ($s['trip_status'] ?? '');
+                            $group = $scheduleStatusGroups[$rawStatus] ?? ['label' => ucwords($rawStatus) . ' Schedules', 'icon' => 'fas fa-calendar-check', 'hint' => 'Other schedules'];
+                            if ($currentGroup !== $rawStatus):
+                                $currentGroup = $rawStatus;
+                        ?>
+                            <tr class="admin-status-group-row" data-group-key="<?= htmlspecialchars($currentGroup, ENT_QUOTES) ?>">
+                                <td colspan="7">
+                                    <div class="admin-status-group-label">
+                                        <i class="<?= htmlspecialchars($group['icon'], ENT_QUOTES) ?>"></i>
+                                        <span><?= htmlspecialchars($group['label']) ?></span>
+                                        <small><?= htmlspecialchars($group['hint']) ?></small>
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php
+                            endif;
                             $departure    = date('M d', strtotime($s['departure_date']))
                                           . ' at '
                                           . date('g:i A', strtotime($s['departure_time']));
@@ -105,10 +133,11 @@ $vans   = $vanObj->GetAllVans();
                                             ? htmlspecialchars(date('Y-m-d\TH:i', strtotime($s['estimated_arrival_at'])), ENT_QUOTES)
                                             : '';
                             $etaDisplay   = !empty($s['estimated_arrival_at'])
-                                            ? htmlspecialchars(date('M d, Y g:i A', strtotime($s['estimated_arrival_at'])), ENT_QUOTES)
+                                            ? htmlspecialchars(date('M d', strtotime($s['estimated_arrival_at'])) . ' at ' . date('g:i A', strtotime($s['estimated_arrival_at'])), ENT_QUOTES)
                                             : '';
+                            $pendingBookings = (int) ($s['pending_bookings_count'] ?? 0);
                         ?>
-                            <tr class="schedule-row"
+                            <tr class="schedule-row status-<?= $status ?>"
                                 data-id="<?= (int) $s['schedule_id_pk'] ?>"
                                 data-route="<?= (int) $s['route_id_fk'] ?>"
                                 data-driver="<?= (int) $s['driver_id_fk'] ?>"
@@ -123,6 +152,7 @@ $vans   = $vanObj->GetAllVans();
                                 data-eta="<?= $etaValue ?>"
                                 data-eta-display="<?= $etaDisplay ?>"
                                 data-status="<?= $status ?>"
+                                data-pending-bookings="<?= $pendingBookings ?>"
                                 data-arrived-at="<?= $arrivedAt ?>">
 
                                 <td class="text-muted-sm"><?= $i + 1 ?></td>
@@ -163,7 +193,6 @@ $vans   = $vanObj->GetAllVans();
                                     </div>
                                 </td>
                                 <td class="text-muted-sm"><?= $departure ?></td>
-                                <td class="text-muted-sm"><?= $etaDisplay ?: '—' ?></td>
                                 <td>
                                     <!-- FIX 5: ucfirst + str_replace for display,
                                          but data-status keeps the raw value for JS logic -->
@@ -423,7 +452,7 @@ $vans   = $vanObj->GetAllVans();
                         <select name="trip_status" id="edit-status" class="ss" data-placeholder="Select Status">
                             <option value="boarding">Boarding</option>
                             <option value="departed">Departed</option>
-                            <option value="arrived" disabled>Arrived (auto)</option>
+                            <option value="arrived">Arrived</option>
                             <option value="cancelled">Cancelled</option>
                         </select>
                     </div>

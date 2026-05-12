@@ -1,3 +1,22 @@
+<?php
+require_once __DIR__ . '/autoload.php';
+
+$landingSchedules = [];
+$landingSeatPreview = [];
+
+try {
+    $scheduleObj = new Schedules($conn);
+    $landingSchedules = array_slice($scheduleObj->GetAvailableSchedules(), 0, 3);
+
+    if (!empty($landingSchedules[0]['schedule_id_pk'])) {
+        $availability = $scheduleObj->GetSeatAvailability((int) $landingSchedules[0]['schedule_id_pk']);
+        $landingSeatPreview = array_slice($availability['seats'] ?? [], 0, 10);
+    }
+} catch (Throwable $e) {
+    $landingSchedules = [];
+    $landingSeatPreview = [];
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -53,7 +72,7 @@
             <div class="hero-badge">Southern Leyte Transportation</div>
             <h1>Book Your <span>Van Ride</span><br>Online, Anytime</h1>
             <p>GoraVan makes commuting between Southern Leyte destinations easier. Reserve your seat, view schedules,
-                and confirm your booking — all without going to the terminal.</p>
+                and confirm your booking - all without going to the terminal.</p>
             <div class="hero-actions">
                 <a href="views/auth/register.php" class="cta-btn">Book a Ride</a>
                 <a href="views/auth/login.php" class="cta-outline">Log In</a>
@@ -63,29 +82,46 @@
         <div class="hero-visual">
             <div class="hero-card">
                 <div class="hero-card-header">
-                    <span class="card-label">Routes </span>
+                    <span class="card-label">Live Routes</span>
                 </div>
                 <div class="route-list">
+                    <?php if (!empty($landingSchedules)): ?>
+                        <?php foreach ($landingSchedules as $schedule): ?>
+                            <div class="route-item">
+                                <span class="route-name">
+                                    <?= htmlspecialchars(($schedule['origin'] ?? 'Origin') . ' -> ' . ($schedule['destination'] ?? 'Destination')) ?>
+                                </span>
+                                <span class="route-time">
+                                    <?= date('M j, g:i A', strtotime(($schedule['departure_date'] ?? '') . ' ' . ($schedule['departure_time'] ?? ''))) ?>
+                                </span>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php else: ?>
                     <div class="route-item">
-                        <span class="route-name">Sogod → Maasin</span>
-                        <span class="route-time">6:00 AM</span>
+                        <span class="route-name">No boarding schedules yet</span>
+                        <span class="route-time">Check back soon</span>
                     </div>
-                    <div class="route-item">
-                        <span class="route-name">Maasin → Sogod</span>
-                        <span class="route-time">8:30 AM</span>
-                    </div>
-                    <div class="route-item">
-                        <span class="route-name">Sogod → Liloan</span>
-                        <span class="route-time">10:00 AM</span>
-                    </div>
+                    <?php endif; ?>
                 </div>
             </div>
 
             <div class="hero-card">
                 <div class="hero-card-header">
-                    <span class="card-label">Seat Availability — Sogod → Maasin</span>
+                    <span class="card-label">
+                        Seat Availability
+                        <?php if (!empty($landingSchedules[0])): ?>
+                            - <?= htmlspecialchars(($landingSchedules[0]['origin'] ?? 'Origin') . ' -> ' . ($landingSchedules[0]['destination'] ?? 'Destination')) ?>
+                        <?php endif; ?>
+                    </span>
                 </div>
                 <div class="seat-grid">
+                    <?php if (!empty($landingSeatPreview)): ?>
+                        <?php foreach ($landingSeatPreview as $seat): ?>
+                            <div class="seat <?= !empty($seat['is_booked']) ? 'taken' : 'available' ?>">
+                                <?= htmlspecialchars($seat['seat_number'] ?? '') ?>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php else: ?>
                     <div class="seat available">1A</div>
                     <div class="seat available">1B</div>
                     <div class="seat taken">1C</div>
@@ -96,10 +132,10 @@
                     <div class="seat available">3B</div>
                     <div class="seat taken">3C</div>
                     <div class="seat available">4A</div>
+                    <?php endif; ?>
                 </div>
                 <div class="seat-legend">
                     <span><span class="legend-box available-box"></span> Available</span>
-                    <span><span class="legend-box selected-box"></span> Selected</span>
                     <span><span class="legend-box taken-box"></span> Taken</span>
                 </div>
             </div>
@@ -138,20 +174,19 @@
                 </div>
                 <h3>Route-Based Booking</h3>
                 <p>
-                    Browse trips by route — origin, destination, and via points. Find the right schedule that fits your
+                    Browse trips by route - origin, destination, and via points. Find the right schedule that fits your
                     travel plan.
                 </p>
             </div>
 
-            <!-- Secure Payment Upload -->
+            <!-- Online Payment -->
             <div class="feature-card">
                 <div class="icon-wrap">
                     <i class="fa-solid fa-receipt"></i>
                 </div>
-                <h3>Secure Payment Upload</h3>
+                <h3>Online Payment</h3>
                 <p>
-                    Pay through your preferred method and simply upload a photo of your receipt. Our admin verifies it
-                    before confirming your booking.
+                    Pay through GCash, PayMaya, or card inside the booking flow and keep your receipt in My Payments.
                 </p>
             </div>
 
@@ -162,7 +197,7 @@
                 </div>
                 <h3>Trip Status Tracking</h3>
                 <p>
-                    Know where your van is in its journey — Scheduled, Boarding, Departed, or Arrived — updated in real
+                    Know where your van is in its journey - Scheduled, Boarding, Departed, or Arrived - updated in real
                     time by our operators.
                 </p>
             </div>
@@ -192,6 +227,28 @@
                 </p>
             </div>
 
+            <!-- Payment History -->
+            <div class="feature-card">
+                <div class="icon-wrap">
+                    <i class="fa-solid fa-wallet"></i>
+                </div>
+                <h3>Payment History</h3>
+                <p>
+                    Review paid bookings, payment references, and refund updates in one organized My Payments page.
+                </p>
+            </div>
+
+            <!-- Passenger Notifications -->
+            <div class="feature-card">
+                <div class="icon-wrap">
+                    <i class="fa-solid fa-bell"></i>
+                </div>
+                <h3>Passenger Notifications</h3>
+                <p>
+                    Get timely updates for booking approvals, trip reminders, verification results, and payment changes.
+                </p>
+            </div>
+
         </div>
     </section>
 
@@ -199,10 +256,9 @@
     <section class="how" id="how">
         <div class="how-header">
             <div class="badge-dark">How It Works</div>
-            <h2>Book in <span>Four Simple Steps</span></h2>
+            <h2>Book in <span>Five Simple Steps</span></h2>
             <p>
-                From registration to boarding, the GoraVan process is designed to be fast, straightforward, and
-                user-friendly.
+                The public booking flow follows the same guided process passengers see inside GoraVan.
             </p>
         </div>
 
@@ -210,26 +266,32 @@
 
             <div class="how-card">
                 <div class="how-step">1</div>
-                <h3>Register or Log In</h3>
-                <p>Create a free account or sign in to access all booking features.</p>
+                <h3>Choose Route</h3>
+                <p>Pick an available schedule and review the route, stops, van, fare, and departure time.</p>
             </div>
 
             <div class="how-card">
                 <div class="how-step">2</div>
-                <h3>Select Route & Seat</h3>
-                <p>Choose your destination, pick a schedule, and reserve your preferred seat.</p>
+                <h3>Select Seats</h3>
+                <p>Use the live seat map to choose available seats and see the fare update instantly.</p>
             </div>
 
             <div class="how-card">
                 <div class="how-step">3</div>
-                <h3>Upload Payment</h3>
-                <p>Pay through any channel and upload your proof of payment for admin review.</p>
+                <h3>Add Passenger</h3>
+                <p>Confirm passenger details and choose the right passenger type for each selected seat.</p>
             </div>
 
             <div class="how-card">
                 <div class="how-step">4</div>
-                <h3>Board & Travel</h3>
-                <p>Receive your reference code and present it. That's it!</p>
+                <h3>Pay Online</h3>
+                <p>Select GCash, PayMaya, or card, then review the full order summary before submitting.</p>
+            </div>
+
+            <div class="how-card">
+                <div class="how-step">5</div>
+                <h3>Confirm Booking</h3>
+                <p>Get your booking reference and track the trip status from My Bookings.</p>
             </div>
 
         </div>
@@ -247,14 +309,14 @@
 
         <div class="routes-grid">
 
-            <div class="route-card">Sogod → Maasin</div>
-            <div class="route-card">Maasin → Sogod</div>
-            <div class="route-card">Sogod → Liloan</div>
-            <div class="route-card">Maasin → Bato</div>
-            <div class="route-card">Bato → Sogod</div>
-            <div class="route-card">Sogod → Malitbog</div>
-            <div class="route-card">Maasin → Pintuyan</div>
-            <div class="route-card">Sogod → San Juan</div>
+            <div class="route-card">Sogod -> Maasin</div>
+            <div class="route-card">Maasin -> Sogod</div>
+            <div class="route-card">Sogod -> Liloan</div>
+            <div class="route-card">Maasin -> Bato</div>
+            <div class="route-card">Bato -> Sogod</div>
+            <div class="route-card">Sogod -> Malitbog</div>
+            <div class="route-card">Maasin -> Pintuyan</div>
+            <div class="route-card">Sogod -> San Juan</div>
 
         </div>
     </section> -->
@@ -297,9 +359,9 @@
             <!-- Routes -->
             <!-- <div class="footer-box">
                 <h3>Routes</h3>
-                <p>Sogod — Maasin</p>
-                <p>Maasin — Sogod</p>
-                <p>Sogod — Liloan</p>
+                <p>Sogod - Maasin</p>
+                <p>Maasin - Sogod</p>
+                <p>Sogod - Liloan</p>
                 <p>All Routes</p>
             </div> -->
 

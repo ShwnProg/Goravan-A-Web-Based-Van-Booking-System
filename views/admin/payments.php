@@ -13,6 +13,26 @@ ob_start();
 
 $payObj   = new Payments($conn);
 $payments = $payObj->GetAllPayments();
+
+$paymentDisplayStatus = function (array $payment): string {
+    $status = strtolower((string) ($payment['status'] ?? 'pending'));
+    $bookingStatus = strtolower((string) ($payment['booking_status'] ?? ''));
+
+    return $bookingStatus === 'rejected' ? 'rejected' : $status;
+};
+
+$paymentGroupMeta = function (string $displayStatus): array {
+    $groups = [
+        'pending' => ['key' => 'pending', 'label' => 'Pending Payments', 'icon' => 'fas fa-clock', 'hint' => 'Waiting for approval'],
+        'paid' => ['key' => 'paid', 'label' => 'Paid Payments', 'icon' => 'fas fa-circle-check', 'hint' => 'Completed payments'],
+        'rejected' => ['key' => 'rejected', 'label' => 'Rejected Payments', 'icon' => 'fas fa-circle-xmark', 'hint' => 'Booking rejected'],
+        'refund_requested' => ['key' => 'refund', 'label' => 'Refund Requests', 'icon' => 'fas fa-rotate-left', 'hint' => 'Needs admin review'],
+        'cancelled' => ['key' => 'cancelled', 'label' => 'Cancelled Payments', 'icon' => 'fas fa-ban', 'hint' => 'Inactive payments'],
+        'refunded' => ['key' => 'refunded', 'label' => 'Refunded Payments', 'icon' => 'fas fa-receipt', 'hint' => 'Refund completed'],
+    ];
+
+    return $groups[$displayStatus] ?? ['key' => 'other', 'label' => 'Other Payments', 'icon' => 'fas fa-credit-card', 'hint' => 'Other statuses'];
+};
 ?>
 
 <div class="toolbar">
@@ -20,14 +40,22 @@ $payments = $payObj->GetAllPayments();
         <i class="fas fa-search"></i>
         <input type="text" id="payment-search" placeholder="Search payments…">
     </div>
-    <div class="filter-group">
-        <select class="filter-select" id="payment-status-filter">
-            <option value="">All Status</option>
-            <option value="paid">Paid</option>
-            <option value="cancelled">Cancelled</option>
-        </select>
+    <div class="admin-date-filters" data-filter-scope="payments">
+        <label><span>From</span><input type="date" id="payment-date-from"></label>
+        <label><span>To</span><input type="date" id="payment-date-to"></label>
+        <button type="button" class="filter-btn ghost" id="payment-date-clear">Clear</button>
     </div>
 </div>
+<div class="admin-status-tabs" id="payment-status-tabs" aria-label="Payment status filters">
+    <button type="button" class="active" data-status="pending">Pending Payments</button>
+    <button type="button" data-status="paid">Paid Payments</button>
+    <button type="button" data-status="refund_requested">Refund Requests</button>
+    <button type="button" data-status="refunded">Refunded Payments</button>
+    <button type="button" data-status="cancelled">Cancelled Payments</button>
+    <button type="button" data-status="rejected">Rejected Payments</button>
+    <button type="button" data-status="">All Payments</button>
+</div>
+<input type="hidden" id="payment-status-filter" value="pending">
 
 <input type="hidden" id="page-csrf-token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '', ENT_QUOTES) ?>">
 
@@ -35,7 +63,7 @@ $payments = $payObj->GetAllPayments();
     <div class="payments-card-header">
         <h2>
             <i class="fas fa-credit-card" style="margin-right:7px;color:var(--color-accent)"></i>
-            All Payments
+            <span id="payment-view-title">Pending Payments</span>
         </h2>
         <span id="payment-count"></span>
     </div>
@@ -65,31 +93,61 @@ $payments = $payObj->GetAllPayments();
                         </td>
                     </tr>
                 <?php else: ?>
-                    <?php foreach ($payments as $i => $p):
-                        $status    = $p['status'] ?? 'pending';
-                        $encId     = encrypt((string) $p['payment_id_pk']);
+                    <?php
+                    $currentGroup = '';
+                    $paymentIndex = 0;
+                    foreach ($payments as $p):
+                        $status        = strtolower((string) ($p['status'] ?? 'pending'));
+                        $displayStatus = $paymentDisplayStatus($p);
+                        $group         = $paymentGroupMeta($displayStatus);
+                        $encId         = encrypt((string) $p['payment_id_pk']);
+
+                        if ($currentGroup !== $group['key']):
+                            $currentGroup = $group['key'];
                     ?>
-                        <tr class="payment-row"
+                        <tr class="payment-group-row" data-group-key="<?= htmlspecialchars($group['key'], ENT_QUOTES) ?>">
+                            <td colspan="9">
+                                <div class="payment-group-label">
+                                    <i class="<?= htmlspecialchars($group['icon'], ENT_QUOTES) ?>"></i>
+                                    <span><?= htmlspecialchars($group['label']) ?></span>
+                                    <small><?= htmlspecialchars($group['hint']) ?></small>
+                                </div>
+                            </td>
+                        </tr>
+                    <?php
+                        endif;
+                        $paymentIndex++;
+                    ?>
+                        <tr class="payment-row status-<?= htmlspecialchars($displayStatus, ENT_QUOTES) ?>"
                             data-id="<?= htmlspecialchars($encId, ENT_QUOTES) ?>"
+                            data-group-key="<?= htmlspecialchars($group['key'], ENT_QUOTES) ?>"
                             data-booking-ref="<?= htmlspecialchars($p['booking_ref'] ?? 'N/A', ENT_QUOTES) ?>"
+                            data-booking-status="<?= htmlspecialchars($p['booking_status'] ?? '', ENT_QUOTES) ?>"
                             data-user-name="<?= htmlspecialchars($p['user_name'] ?? 'N/A', ENT_QUOTES) ?>"
                             data-user-email="<?= htmlspecialchars($p['user_email'] ?? '', ENT_QUOTES) ?>"
                             data-user-phone="<?= htmlspecialchars($p['user_phone'] ?? '', ENT_QUOTES) ?>"
                             data-amount="<?= number_format((float) $p['amount'], 2, '.', '') ?>"
                             data-method="<?= htmlspecialchars($p['payment_method'] ?? 'N/A', ENT_QUOTES) ?>"
                             data-ref="<?= htmlspecialchars($p['payment_reference'] ?? 'N/A', ENT_QUOTES) ?>"
-                            data-status="<?= htmlspecialchars($status, ENT_QUOTES) ?>"
+                            data-status="<?= htmlspecialchars($displayStatus, ENT_QUOTES) ?>"
+                            data-payment-status="<?= htmlspecialchars($status, ENT_QUOTES) ?>"
+                            data-processed-by="<?= htmlspecialchars($p['processed_by_name'] ?? '', ENT_QUOTES) ?>"
+                            data-seats-count="<?= (int) ($p['seats_count'] ?? 1) ?>"
+                            data-seat-numbers="<?= htmlspecialchars($p['seat_numbers'] ?? '', ENT_QUOTES) ?>"
                             data-paid-at="<?= htmlspecialchars($p['paid_at'] ?? '', ENT_QUOTES) ?>"
                             data-created="<?= htmlspecialchars($p['created_at'] ?? '', ENT_QUOTES) ?>"
                             data-notes="<?= htmlspecialchars($p['notes'] ?? '', ENT_QUOTES) ?>"
                             data-route="<?= htmlspecialchars($p['route_display'] ?? 'N/A', ENT_QUOTES) ?>">
 
-                            <td class="text-muted-sm"><?= $i + 1 ?></td>
+                            <td class="text-muted-sm"><?= $paymentIndex ?></td>
 
                             <td>
                                 <div class="booking-ref-display">
                                     <i class="fas fa-ticket-alt" style="color:#9ca3af;font-size:11px"></i>
-                                    <span class="ref-code"><?= htmlspecialchars($p['booking_ref'] ?? 'N/A') ?></span>
+                                    <span>
+                                        <span class="ref-code"><?= htmlspecialchars($p['booking_ref'] ?? 'N/A') ?></span>
+                                        <small><?= (int) ($p['seats_count'] ?? 1) ?> seat<?= (int) ($p['seats_count'] ?? 1) === 1 ? '' : 's' ?></small>
+                                    </span>
                                 </div>
                             </td>
 
@@ -120,8 +178,8 @@ $payments = $payObj->GetAllPayments();
                             </td>
 
                             <td>
-                                <span class="badge <?= htmlspecialchars($status) ?>">
-                                    <?= ucfirst(htmlspecialchars($status)) ?>
+                                <span class="badge <?= htmlspecialchars($displayStatus) ?>">
+                                    <?= htmlspecialchars(ucwords(str_replace('_', ' ', $displayStatus))) ?>
                                 </span>
                             </td>
 
@@ -134,19 +192,34 @@ $payments = $payObj->GetAllPayments();
                                     <button class="icon-btn view" title="View Details"
                                         data-id="<?= htmlspecialchars($encId, ENT_QUOTES) ?>"
                                         data-booking-ref="<?= htmlspecialchars($p['booking_ref'] ?? 'N/A', ENT_QUOTES) ?>"
+                                        data-booking-status="<?= htmlspecialchars($p['booking_status'] ?? '', ENT_QUOTES) ?>"
                                         data-user-name="<?= htmlspecialchars($p['user_name'] ?? 'N/A', ENT_QUOTES) ?>"
                                         data-user-email="<?= htmlspecialchars($p['user_email'] ?? '', ENT_QUOTES) ?>"
                                         data-user-phone="<?= htmlspecialchars($p['user_phone'] ?? '', ENT_QUOTES) ?>"
                                         data-amount="<?= number_format((float) $p['amount'], 2, '.', '') ?>"
                                         data-method="<?= htmlspecialchars($p['payment_method'] ?? 'N/A', ENT_QUOTES) ?>"
                                         data-ref="<?= htmlspecialchars($p['payment_reference'] ?? 'N/A', ENT_QUOTES) ?>"
-                                        data-status="<?= htmlspecialchars($status, ENT_QUOTES) ?>"
+                                        data-status="<?= htmlspecialchars($displayStatus, ENT_QUOTES) ?>"
+                                        data-payment-status="<?= htmlspecialchars($status, ENT_QUOTES) ?>"
+                                        data-processed-by="<?= htmlspecialchars($p['processed_by_name'] ?? '', ENT_QUOTES) ?>"
+                                        data-seats-count="<?= (int) ($p['seats_count'] ?? 1) ?>"
+                                        data-seat-numbers="<?= htmlspecialchars($p['seat_numbers'] ?? '', ENT_QUOTES) ?>"
                                         data-paid-at="<?= htmlspecialchars($p['paid_at'] ?? '', ENT_QUOTES) ?>"
                                         data-created="<?= htmlspecialchars($p['created_at'] ?? '', ENT_QUOTES) ?>"
                                         data-notes="<?= htmlspecialchars($p['notes'] ?? '', ENT_QUOTES) ?>"
                                         data-route="<?= htmlspecialchars($p['route_display'] ?? 'N/A', ENT_QUOTES) ?>">
                                         <i class="fas fa-eye"></i>
                                     </button>
+                                    <?php if ($status === 'refund_requested'): ?>
+                                        <button class="icon-btn refund-review" title="Review Refund"
+                                            data-id="<?= htmlspecialchars($encId, ENT_QUOTES) ?>"
+                                            data-booking-ref="<?= htmlspecialchars($p['booking_ref'] ?? 'N/A', ENT_QUOTES) ?>"
+                                            data-user-name="<?= htmlspecialchars($p['user_name'] ?? 'N/A', ENT_QUOTES) ?>"
+                                            data-amount="<?= number_format((float) $p['amount'], 2, '.', '') ?>"
+                                            data-notes="<?= htmlspecialchars($p['notes'] ?? '', ENT_QUOTES) ?>">
+                                            <i class="fas fa-rotate-left"></i>
+                                        </button>
+                                    <?php endif; ?>
                                 </div>
                             </td>
                         </tr>
@@ -154,6 +227,52 @@ $payments = $payObj->GetAllPayments();
                 <?php endif; ?>
             </tbody>
         </table>
+    </div>
+</div>
+
+<div class="modal fade" id="refundReviewModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rmodal">
+            <div class="rmodal-header">
+                <div class="rmodal-icon"><i class="fas fa-rotate-left"></i></div>
+                <div>
+                    <h6 class="rmodal-title">Review Refund</h6>
+                    <p class="rmodal-sub" id="refund-review-sub">Refund request details</p>
+                </div>
+                <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="rmodal-body">
+                <input type="hidden" id="refund-review-payment-id" value="">
+                <div class="refund-request-box" id="refund-request-summary">No refund note found.</div>
+                <div class="refund-review-grid">
+                    <label>
+                        <span>Decision</span>
+                        <select id="refund-review-decision">
+                            <option value="approve">Approve refund</option>
+                            <option value="reject">Reject refund</option>
+                        </select>
+                    </label>
+                    <label>
+                        <span>Admin note</span>
+                        <select id="refund-review-reason">
+                            <option value="valid_request">Valid refund request</option>
+                            <option value="duplicate_payment">Duplicate payment</option>
+                            <option value="schedule_issue">Schedule issue</option>
+                            <option value="policy_not_met">Policy not met</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </label>
+                    <label class="span-full">
+                        <span>Custom note</span>
+                        <textarea id="refund-review-custom" rows="4" placeholder="Optional internal note"></textarea>
+                    </label>
+                </div>
+            </div>
+            <div class="rmodal-footer">
+                <button type="button" class="rbtn rbtn-ghost" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="rbtn rbtn-primary" id="submit-refund-review">Save Review</button>
+            </div>
+        </div>
     </div>
 </div>
 

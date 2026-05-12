@@ -4,6 +4,11 @@ window.initUsersPage = function () {
     var countBadge = document.getElementById('user-count');
     var searchInput = document.getElementById('user-search');
     var veriFilter = document.getElementById('user-verify-filter');
+    var dateFrom = document.getElementById('user-date-from');
+    var dateTo = document.getElementById('user-date-to');
+    var dateClear = document.getElementById('user-date-clear');
+    var statusTabs = document.getElementById('user-status-tabs');
+    var viewTitle = document.getElementById('user-view-title');
     var pageSize = 10;
     var currentPage = 1;
 
@@ -11,28 +16,54 @@ window.initUsersPage = function () {
 
     /* ── Modal instances ─────────────────────── */
     var viewModal = _modal('viewModal');
+    var currentViewedUserRow = null;
 
     /* ── Count badge ─────────────────────────── */
     function updateCount() {
         var visible = tbody.querySelectorAll('tr.user-row[data-filter-match="1"]').length;
+        if (viewTitle) viewTitle.textContent = userViewTitle(veriFilter ? veriFilter.value : '');
         if (countBadge) {
             countBadge.textContent = visible + ' user' + (visible !== 1 ? 's' : '');
         }
+        AdminUI.setClearButtonState(dateClear, filtersActive());
+    }
+
+    function userViewTitle(status) {
+        var titles = {
+            pending: 'Pending Verifications',
+            approved: 'Verified Users',
+            rejected: 'Rejected Verifications'
+        };
+        return titles[status] || 'All Users';
+    }
+
+    function filtersActive() {
+        return !!((searchInput && searchInput.value.trim()) ||
+            (veriFilter && veriFilter.value && veriFilter.value !== 'pending') ||
+            (dateFrom && dateFrom.value) ||
+            (dateTo && dateTo.value));
     }
 
     /* ── Search + filter ─────────────────────── */
     function applyFilters() {
         var q = searchInput ? searchInput.value.toLowerCase().trim() : '';
         var veri = veriFilter ? veriFilter.value : '';
+        var from = dateFrom ? dateFrom.value : '';
+        var to = dateTo ? dateTo.value : '';
 
         var rows = Array.from(tbody.querySelectorAll('tr.user-row'));
+        if (!rows.length) {
+            updateCount();
+            return;
+        }
         rows.forEach(function (row) {
             var matchQ = !q
                 || (row.dataset.fullname || '').toLowerCase().includes(q)
                 || (row.dataset.email || '').toLowerCase().includes(q)
                 || (row.dataset.contact || '').toLowerCase().includes(q);
             var matchV = !veri || (row.dataset.verifyStatus || '') === veri;
-            row.dataset.filterMatch = matchQ && matchV ? '1' : '0';
+            var matchD = withinDate(row.dataset.created || '', from, to);
+            row.dataset.filterMatch = matchQ && matchV && matchD ? '1' : '0';
         });
 
         var matchedRows = rows.filter(function (row) { return row.dataset.filterMatch === '1'; });
@@ -45,12 +76,50 @@ window.initUsersPage = function () {
             var index = matchedRows.indexOf(row);
             row.style.display = index >= start && index < end ? '' : 'none';
         });
+        updateGroupRows();
         updateCount();
         renderPagination(matchedRows.length, totalPages);
+        renderEmptyState(matchedRows.length, veri, from || to);
     }
 
-    if (searchInput) searchInput.addEventListener('input', function () { currentPage = 1; applyFilters(); });
+    function updateGroupRows() {
+        tbody.querySelectorAll('tr.admin-status-group-row').forEach(function (groupRow) {
+            var key = groupRow.dataset.groupKey || '';
+            var hasVisible = Array.from(tbody.querySelectorAll('tr.user-row[data-verify-status="' + key + '"]'))
+                .some(function (row) { return row.style.display !== 'none'; });
+            groupRow.style.display = hasVisible ? '' : 'none';
+        });
+    }
+
+    var debouncedApply = AdminUI.debounce(function () { currentPage = 1; applyFilters(); }, 350);
+    if (searchInput) searchInput.addEventListener('input', debouncedApply);
     if (veriFilter) veriFilter.addEventListener('change', function () { currentPage = 1; applyFilters(); });
+    if (dateFrom) dateFrom.addEventListener('change', function () { currentPage = 1; applyFilters(); });
+    if (dateTo) dateTo.addEventListener('change', function () { currentPage = 1; applyFilters(); });
+    if (dateClear) dateClear.addEventListener('click', function () {
+        if (searchInput) searchInput.value = '';
+        if (veriFilter) veriFilter.value = 'pending';
+        if (dateFrom) dateFrom.value = '';
+        if (dateTo) dateTo.value = '';
+        if (statusTabs) {
+            statusTabs.querySelectorAll('button').forEach(function (tab) {
+                tab.classList.toggle('active', (tab.dataset.status || '') === 'pending');
+            });
+        }
+        currentPage = 1;
+        applyFilters();
+    });
+    if (statusTabs) {
+        statusTabs.addEventListener('click', function (e) {
+            var btn = e.target.closest('button[data-status]');
+            if (!btn) return;
+            statusTabs.querySelectorAll('button').forEach(function (tab) { tab.classList.remove('active'); });
+            btn.classList.add('active');
+            if (veriFilter) veriFilter.value = btn.dataset.status || '';
+            currentPage = 1;
+            applyFilters();
+        });
+    }
     applyFilters();
 
     function renderPagination(total, totalPages) {
@@ -105,6 +174,7 @@ window.initUsersPage = function () {
         var btn = e.target.closest('.icon-btn.view');
         if (!btn || !viewModal) return;
         e.stopPropagation();
+        currentViewedUserRow = btn.closest('tr.user-row');
 
         document.getElementById('view-fullname').textContent = btn.dataset.fullname || '—';
         document.getElementById('view-email').textContent = btn.dataset.email || '—';
@@ -112,6 +182,16 @@ window.initUsersPage = function () {
         document.getElementById('view-birthdate').textContent = btn.dataset.birthdate
             ? new Date(btn.dataset.birthdate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
             : 'N/A';
+        document.getElementById('view-doc-count').textContent = (btn.dataset.docCount || '0') + ' document(s)';
+        document.getElementById('view-created').textContent = btn.dataset.created
+            ? new Date(btn.dataset.created).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+            : 'N/A';
+        var statusBadge = document.getElementById('view-verification-status');
+        var verifyStatus = btn.dataset.verifyStatus || 'no_submission';
+        if (statusBadge) {
+            statusBadge.className = 'badge ' + (verifyStatus === 'no_submission' ? 'no-submission' : verifyStatus);
+            statusBadge.textContent = verifyStatus === 'approved' ? 'Verified' : AdminUI.statusLabel(verifyStatus);
+        }
 
         var docsContainer = document.getElementById('udv-docs-container');
         docsContainer.innerHTML = '<p class="text-muted-sm">Loading documents…</p>';
@@ -196,7 +276,17 @@ window.initUsersPage = function () {
                 e.stopPropagation();
                 var docId = btn.dataset.docId;
                 var status = btn.classList.contains('approve') ? 'approved' : 'rejected';
-                _updateDocStatus(docId, status);
+                AdminUI.confirm({
+                    title: status === 'approved' ? 'Approve Verification?' : 'Reject Verification?',
+                    text: status === 'approved'
+                        ? 'This user verification will be marked as approved.'
+                        : 'This user verification will be marked as rejected.',
+                    icon: status === 'approved' ? 'question' : 'warning',
+                    confirmText: status === 'approved' ? 'Approve' : 'Reject',
+                    confirmColor: status === 'approved' ? '#16a34a' : '#ef4444'
+                }).then(function (result) {
+                    if (result.isConfirmed) _updateDocStatus(docId, status);
+                });
             });
         });
     }
@@ -245,12 +335,62 @@ window.initUsersPage = function () {
             csrf_token: _csrf()
         }).then(function (d) {
             if (d.success) {
-                Swal.fire({ icon: 'success', title: 'Done', text: d.message })
-                    .then(function () { location.reload(); });
+                var docItem = document.querySelector('.udv-btn-small[data-doc-id="' + docId + '"]')?.closest('.udv-doc-item');
+                if (docItem) {
+                    var badge = docItem.querySelector('.badge');
+                    if (badge) {
+                        badge.className = 'badge ' + status;
+                        badge.textContent = _ucFirst(status);
+                    }
+                    var actions = docItem.querySelector('.udv-doc-actions');
+                    if (actions) actions.remove();
+                }
+
+                if (currentViewedUserRow) {
+                    currentViewedUserRow.dataset.verifyStatus = status;
+                    AdminUI.setRowStatus(currentViewedUserRow, status, { datasetKey: 'verifyStatus' });
+                    AdminUI.moveRowToGroup(currentViewedUserRow, status, userGroupMeta(status));
+                    var rowBadge = currentViewedUserRow.querySelector('.badge');
+                    if (rowBadge && status === 'approved') rowBadge.textContent = 'Verified';
+                    var modalBadge = document.getElementById('view-verification-status');
+                    if (modalBadge) {
+                        modalBadge.className = 'badge ' + status;
+                        modalBadge.textContent = status === 'approved' ? 'Verified' : AdminUI.statusLabel(status);
+                    }
+                    applyFilters();
+                    AdminUI.refreshGroups(tbody, 'tr.user-row', function (row) { return row.dataset.verifyStatus || ''; });
+                }
+
+                AdminUI.notify('success', d.message || (status === 'approved' ? 'User verification approved successfully.' : 'User verification rejected successfully.'));
             } else {
-                Swal.fire({ icon: 'error', title: 'Error', text: d.message });
+                AdminUI.notify('error', d.message || 'Unable to update verification status. Please try again.');
             }
-        }).catch(function () { Swal.fire('Error', 'Network error.', 'error'); });
+        }).catch(function () { AdminUI.notify('error', 'Unable to update verification status. Please try again.'); });
+    }
+
+    function renderEmptyState(total, status, dateFiltered) {
+        tbody.querySelectorAll('.js-empty-row').forEach(function (row) { row.remove(); });
+        if (total > 0) return;
+        var labels = {
+            pending: 'pending verifications',
+            approved: 'verified users',
+            rejected: 'rejected verifications',
+            no_submission: 'users without submissions'
+        };
+        var label = labels[status] || 'users';
+        var message = dateFiltered
+            ? 'No ' + label + ' found for the selected date range.'
+            : 'No ' + label + ' available.';
+        tbody.insertAdjacentHTML('beforeend', '<tr class="js-empty-row"><td colspan="8"><div class="empty-state"><i class="fas fa-search"></i><p>' + message + '</p></div></td></tr>');
+    }
+
+    function withinDate(raw, from, to) {
+        if (!from && !to) return true;
+        if (!raw) return false;
+        var value = String(raw).slice(0, 10);
+        if (from && value < from) return false;
+        if (to && value > to) return false;
+        return true;
     }
 
     /* ── Helpers ─────────────────────────────── */
@@ -290,6 +430,16 @@ window.initUsersPage = function () {
 
     function _ucFirst(str) {
         return String(str).charAt(0).toUpperCase() + String(str).slice(1);
+    }
+
+    function userGroupMeta(status) {
+        var groups = {
+            pending: { label: 'Pending Verifications', icon: 'fas fa-clock', hint: 'Needs review', colspan: 8 },
+            approved: { label: 'Approved Verifications', icon: 'fas fa-circle-check', hint: 'Verified users', colspan: 8 },
+            rejected: { label: 'Rejected Verifications', icon: 'fas fa-circle-xmark', hint: 'Needs resubmission', colspan: 8 },
+            no_submission: { label: 'No Submission', icon: 'fas fa-inbox', hint: 'No documents yet', colspan: 8 }
+        };
+        return groups[status] || { label: AdminUI.statusLabel(status), icon: 'fas fa-users', hint: 'Other statuses', colspan: 8 };
     }
 
     function _resetAddForm() {

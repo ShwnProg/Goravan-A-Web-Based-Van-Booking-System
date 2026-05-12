@@ -3,7 +3,7 @@ require_once '../../autoload.php';
 
 header('Content-Type: application/json');
 
-/* ── CSRF CHECK ───────────────────────────────────────────────────────────── */
+/* -- CSRF CHECK ------------------------------------------------------------- */
 if (!csrf_check()) {
     echo json_encode([
         'success' => false,
@@ -12,11 +12,11 @@ if (!csrf_check()) {
     exit;
 }
 
-/* ── INPUTS ───────────────────────────────────────────────────────────────── */
+/* -- INPUTS ----------------------------------------------------------------- */
 $schedule_id = (int) ($_POST['schedule_id'] ?? 0);
 $new_status = trim($_POST['status'] ?? '');
 
-/* ── VALIDATION ───────────────────────────────────────────────────────────── */
+/* -- VALIDATION ------------------------------------------------------------- */
 if (!$schedule_id) {
     echo json_encode([
         'success' => false,
@@ -25,7 +25,7 @@ if (!$schedule_id) {
     exit;
 }
 
-if (!in_array($new_status, ['boarding', 'departed', 'cancelled'])) {
+if (!in_array($new_status, ['boarding', 'departed', 'arrived', 'cancelled'])) {
     echo json_encode([
         'success' => false,
         'message' => 'Invalid status.'
@@ -33,19 +33,19 @@ if (!in_array($new_status, ['boarding', 'departed', 'cancelled'])) {
     exit;
 }
 
-/* ── UPDATE STATUS ────────────────────────────────────────────────────────── */
+/* -- UPDATE STATUS ---------------------------------------------------------- */
 $schedule = new Schedules($conn);
 $schedule->id = $schedule_id;
 $schedule->trip_status = $new_status;
 
 $result = $schedule->UpdateStatus();
 
-/* ── RESPONSE ─────────────────────────────────────────────────────────────── */
+/* -- RESPONSE --------------------------------------------------------------- */
 echo json_encode([
     'success' => $result['success'],
     'message' => $result['success']
         ? 'Schedule status updated successfully.'
-        : 'Failed to update schedule status.'
+        : ($result['message'] ?? $result['error'] ?? 'Failed to update schedule status.')
 ]);
 
 exit;

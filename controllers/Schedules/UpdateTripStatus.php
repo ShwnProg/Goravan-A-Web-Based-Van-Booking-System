@@ -16,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !csrf_check()) {
 $schedule_id = (int) ($_POST['schedule_id'] ?? 0);
 $new_status = trim($_POST['status'] ?? '');
 
-if (!$schedule_id || !in_array($new_status, ['boarding', 'departed', 'cancelled'])) {
+if (!$schedule_id || !in_array($new_status, ['boarding', 'departed', 'arrived', 'cancelled'])) {
     $_SESSION['error'] = 'Invalid parameters.';
     header('Location: ../../views/admin/schedules.php');
     exit;
@@ -24,6 +24,12 @@ if (!$schedule_id || !in_array($new_status, ['boarding', 'departed', 'cancelled'
 
 $schedule = new Schedules($conn);
 $schedule->id = $schedule_id;
+
+if ($schedule->HasPendingBookings()) {
+    $_SESSION['error'] = 'Resolve pending bookings before changing this schedule status.';
+    header('Location: ../../views/admin/schedules.php');
+    exit;
+}
 
 // Validate transition
 $allowed = $schedule->canUpdateStatus($new_status);
@@ -38,7 +44,7 @@ $result = $schedule->UpdateStatus();
 
 $_SESSION[$result['success'] ? 'success' : 'error'] = $result['success']
     ? 'Status updated successfully.'
-    : 'Failed to update status: ' . ($result['error'] ?? 'Unknown error.');
+    : 'Failed to update status: ' . ($result['message'] ?? $result['error'] ?? 'Unknown error.');
 
 header('Location: ../../views/admin/schedules.php');
 exit;

@@ -355,6 +355,129 @@ body.admin-dark-mode-active {
     background: #9ca3af;
 }
 
+.badge.boarding,
+.badge.refund_requested {
+    background: rgba(249, 115, 22, .08);
+    color: var(--color-accent);
+}
+
+.badge.boarding::before,
+.badge.refund_requested::before {
+    background: var(--color-accent);
+}
+
+.badge.departed,
+.badge.completed,
+.badge.paid,
+.badge.refunded {
+    background: rgba(59, 130, 246, .08);
+    color: #2563eb;
+}
+
+.badge.departed::before,
+.badge.completed::before,
+.badge.paid::before,
+.badge.refunded::before {
+    background: #2563eb;
+}
+
+.badge.arrived {
+    background: rgba(22, 163, 74, .08);
+    color: #16a34a;
+}
+
+.badge.arrived::before {
+    background: #16a34a;
+}
+
+.vans-table tbody tr[class*="status-"],
+.drivers-table tbody tr[class*="status-"],
+.routes-table tbody tr[class*="status-"],
+.schedules-table tbody tr[class*="status-"],
+.bookings-table tbody tr[class*="status-"],
+.users-table tbody tr[class*="status-"] {
+    box-shadow: inset 3px 0 0 transparent;
+}
+
+.vans-table tbody tr.status-active,
+.drivers-table tbody tr.status-active,
+.routes-table tbody tr.status-active,
+.schedules-table tbody tr.status-arrived,
+.bookings-table tbody tr.status-approved,
+.users-table tbody tr.status-approved {
+    box-shadow: inset 3px 0 0 #16a34a;
+}
+
+.schedules-table tbody tr.status-departed,
+.bookings-table tbody tr.status-completed {
+    box-shadow: inset 3px 0 0 #2563eb;
+}
+
+.schedules-table tbody tr.status-boarding,
+.bookings-table tbody tr.status-pending,
+.users-table tbody tr.status-pending {
+    box-shadow: inset 3px 0 0 var(--color-accent);
+}
+
+.vans-table tbody tr.status-inactive,
+.drivers-table tbody tr.status-inactive,
+.routes-table tbody tr.status-inactive,
+.schedules-table tbody tr.status-cancelled,
+.bookings-table tbody tr.status-cancelled,
+.users-table tbody tr.status-no-submission {
+    box-shadow: inset 3px 0 0 #6b7280;
+}
+
+.bookings-table tbody tr.status-rejected,
+.users-table tbody tr.status-rejected {
+    box-shadow: inset 3px 0 0 #ef4444;
+}
+
+.admin-status-group-row {
+    background: #f8fafc;
+    cursor: default;
+    box-shadow: none !important;
+}
+
+.admin-status-group-row:hover {
+    background: #f8fafc !important;
+}
+
+.admin-status-group-row td {
+    padding: 8px 16px !important;
+    color: #64748b;
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    width: auto !important;
+    min-width: 100%;
+}
+
+.admin-status-group-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: .45px;
+    text-transform: uppercase;
+    min-width: max-content;
+}
+
+.admin-status-group-label i {
+    color: var(--color-accent);
+    font-size: 11px;
+}
+
+.admin-status-group-label small {
+    margin-left: auto;
+    color: #94a3b8;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
 /* ── ROW ACTIONS ─────────────────────────────── */
 .row-actions {
     display: flex;
@@ -1094,6 +1217,19 @@ body.admin-dark-mode-active .bookings-table tbody td {
 
 body.admin-dark-mode-active .text-muted-sm {
     color: #94a3b8;
+}
+
+body.admin-dark-mode-active .admin-status-group-row,
+body.admin-dark-mode-active .admin-status-group-row:hover {
+    background: #111827 !important;
+}
+
+body.admin-dark-mode-active .admin-status-group-row td {
+    color: #94a3b8;
+}
+
+body.admin-dark-mode-active .admin-status-group-label small {
+    color: #64748b;
 }
 
 body.admin-dark-mode-active .admin-pagination {

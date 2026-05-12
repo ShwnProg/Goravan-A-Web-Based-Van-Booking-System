@@ -83,7 +83,7 @@
     width: 100%;
     border-collapse: collapse;
     font-size: 12.5px;
-    min-width: 940px;
+    min-width: 820px;
     table-layout: fixed;
 }
 
@@ -94,17 +94,17 @@
 
 .schedules-card .schedules-table th:nth-child(2),
 .schedules-card .schedules-table td:nth-child(2) {
-    width: 124px;
+    width: 110px;
 }
 
 .schedules-card .schedules-table th:nth-child(3),
 .schedules-card .schedules-table td:nth-child(3) {
-    width: 260px;
+    width: 250px;
 }
 
 .schedules-card .schedules-table th:nth-child(4),
 .schedules-card .schedules-table td:nth-child(4) {
-    width: 150px;
+    width: 135px;
 }
 
 .schedules-card .schedules-table th:nth-child(5),
@@ -113,15 +113,25 @@
 }
 
 .schedules-card .schedules-table th:nth-child(6),
-.schedules-card .schedules-table td:nth-child(6),
-.schedules-card .schedules-table th:nth-child(7),
-.schedules-card .schedules-table td:nth-child(7) {
-    width: 132px;
+.schedules-card .schedules-table td:nth-child(6) {
+    width: 145px;
 }
 
-.schedules-card .schedules-table th:nth-child(8),
-.schedules-card .schedules-table td:nth-child(8) {
+.schedules-card .schedules-table th:nth-child(7),
+.schedules-card .schedules-table td:nth-child(7) {
     width: 96px;
+}
+
+.schedules-card .schedules-table .admin-status-group-row td {
+    width: auto !important;
+    min-width: 100%;
+    position: sticky;
+    left: 0;
+    z-index: 1;
+}
+
+.schedules-card .admin-status-group-label {
+    width: min(100%, 720px);
 }
 
 /* ── TH ── */

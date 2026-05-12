@@ -212,3 +212,50 @@
     border-color: rgba(255, 255, 255, 0.22);
     box-shadow: none;
 }
+
+/* Compact home quick actions */
+.user-home-page .u-qa-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.user-home-page .u-qa-card {
+    min-height: 58px;
+    padding: 10px 12px;
+    gap: 9px;
+    border-radius: 10px;
+}
+
+.user-home-page .u-qa-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    font-size: 13px;
+}
+
+.user-home-page .u-qa-label {
+    font-size: 12.5px;
+    font-weight: 750;
+}
+
+@media (max-width: 768px) {
+    .user-home-page .u-qa-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    .user-home-page .u-qa-card {
+        min-height: 54px;
+        padding: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .user-home-page .u-qa-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .user-home-page .u-qa-card {
+        min-height: 52px;
+    }
+}

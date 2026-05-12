@@ -16,16 +16,21 @@ $bookings   = $bookingObj->GetAllBookings();
         <i class="fas fa-search"></i>
         <input type="text" id="booking-search" placeholder="Search bookings...">
     </div>
-    <div class="filter-group">
-        <select id="booking-filter-status" class="filter-select">
-            <option value="">All Statuses</option>
-            <option value="pending">Pending</option>
-            <option value="approved">Approved</option>
-            <option value="completed">Completed</option>
-            <option value="rejected">Rejected</option>
-            <option value="cancelled">Cancelled</option>
-        </select>
+    <input type="hidden" id="booking-filter-status" value="pending">
+    <div class="admin-date-filters" data-filter-scope="bookings">
+        <label><span>From</span><input type="date" id="booking-date-from"></label>
+        <label><span>To</span><input type="date" id="booking-date-to"></label>
+        <button type="button" class="filter-btn ghost" id="booking-date-clear">Clear</button>
     </div>
+</div>
+
+<div class="admin-status-tabs" id="booking-status-tabs" aria-label="Booking status filters">
+    <button type="button" class="active" data-status="pending">Pending Bookings</button>
+    <button type="button" data-status="approved">Approved Bookings</button>
+    <button type="button" data-status="completed">Completed Bookings</button>
+    <button type="button" data-status="cancelled">Cancelled Bookings</button>
+    <button type="button" data-status="rejected">Rejected Bookings</button>
+    <button type="button" data-status="">All Bookings</button>
 </div>
 
 <?= csrf_field() ?>
@@ -37,7 +42,7 @@ $bookings   = $bookingObj->GetAllBookings();
         <div class="bookings-card-header">
             <h2>
                 <i class="fas fa-ticket-alt" style="margin-right:7px;color:var(--color-accent)"></i>
-                All Bookings
+                <span id="booking-view-title">Pending Bookings</span>
             </h2>
             <span id="booking-count"></span>
         </div>
@@ -50,6 +55,7 @@ $bookings   = $bookingObj->GetAllBookings();
                         <th>Passenger</th>
                         <th>Trip</th>
                         <th>Seats</th>
+                        <th>Payment</th>
                         <th>Status</th>
                         <th>Actions</th>
                     </tr>
@@ -57,15 +63,39 @@ $bookings   = $bookingObj->GetAllBookings();
                 <tbody id="bookings-tbody">
                     <?php if (empty($bookings)): ?>
                         <tr>
-                            <td colspan="7">
+                            <td colspan="8">
                                 <div class="empty-state">
                                     <i class="fas fa-ticket-alt"></i>
                                     <p>No bookings yet.</p>
                                 </div>
                             </td>
                         </tr>
-                    <?php else: ?>
-                        <?php foreach ($bookings as $i => $b):
+                <?php else: ?>
+                        <?php
+                        $bookingStatusGroups = [
+                            'pending' => ['label' => 'Pending Bookings', 'icon' => 'fas fa-clock', 'hint' => 'Needs review'],
+                            'approved' => ['label' => 'Approved Bookings', 'icon' => 'fas fa-circle-check', 'hint' => 'Ready for trip'],
+                            'completed' => ['label' => 'Completed Bookings', 'icon' => 'fas fa-flag-checkered', 'hint' => 'Finished trips'],
+                            'rejected' => ['label' => 'Rejected Bookings', 'icon' => 'fas fa-circle-xmark', 'hint' => 'Declined requests'],
+                            'cancelled' => ['label' => 'Cancelled Bookings', 'icon' => 'fas fa-ban', 'hint' => 'Inactive bookings'],
+                        ];
+                        $currentGroup = '';
+                        foreach ($bookings as $i => $b):
+                            $group = $bookingStatusGroups[$b['status']] ?? ['label' => ucwords($b['status']) . ' Bookings', 'icon' => 'fas fa-ticket-alt', 'hint' => 'Other bookings'];
+                            if ($currentGroup !== $b['status']):
+                                $currentGroup = $b['status'];
+                        ?>
+                            <tr class="admin-status-group-row" data-group-key="<?= htmlspecialchars($currentGroup, ENT_QUOTES) ?>">
+                                <td colspan="8">
+                                    <div class="admin-status-group-label">
+                                        <i class="<?= htmlspecialchars($group['icon'], ENT_QUOTES) ?>"></i>
+                                        <span><?= htmlspecialchars($group['label']) ?></span>
+                                        <small><?= htmlspecialchars($group['hint']) ?></small>
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php
+                            endif;
                             $seatNumbers = array_filter(array_map('trim', explode(',', $b['seat_numbers'] ?? '')));
                             $paymentStatus = strtolower($b['payment_status'] ?? 'paid');
                             $paymentLabel = 'Paid';
@@ -79,7 +109,7 @@ $bookings   = $bookingObj->GetAllBookings();
                                 ? implode(', ', array_map(fn($p) => ($p['seat_number'] ?? '-') . ': ' . ucfirst($p['type'] ?? 'regular'), $passengers))
                                 : ucfirst($notes['passenger_type'] ?? 'regular');
                         ?>
-                            <tr class="booking-row"
+                            <tr class="booking-row status-<?= htmlspecialchars($b['status'], ENT_QUOTES) ?>"
                                 data-id="<?= (int) $b['book_id_pk'] ?>"
                                 data-ref-code="<?= htmlspecialchars($b['reference_code'], ENT_QUOTES) ?>"
                                 data-user-name="<?= htmlspecialchars($b['user_name'] ?? 'N/A', ENT_QUOTES) ?>"
@@ -92,6 +122,7 @@ $bookings   = $bookingObj->GetAllBookings();
                                 data-payment="<?= htmlspecialchars($paymentLabel, ENT_QUOTES) ?>"
                                 data-payment-method="<?= htmlspecialchars($paymentMethod, ENT_QUOTES) ?>"
                                 data-payment-amount="<?= htmlspecialchars(number_format($paymentAmount, 2), ENT_QUOTES) ?>"
+                                data-notes="<?= htmlspecialchars($b['payment_notes'] ?? '', ENT_QUOTES) ?>"
                                 data-passenger-types="<?= htmlspecialchars($passengerSummary, ENT_QUOTES) ?>"
                                 data-driver="<?= htmlspecialchars($b['driver_name'] ?? 'N/A', ENT_QUOTES) ?>"
                                 data-van="<?= htmlspecialchars(($b['van_model'] ?? 'Van') . ' (' . ($b['van_plate'] ?? 'N/A') . ')', ENT_QUOTES) ?>"
@@ -102,7 +133,7 @@ $bookings   = $bookingObj->GetAllBookings();
                                 <td>
                                     <div class="booking-ref-stack">
                                         <span class="ref-code"><?= htmlspecialchars($b['reference_code']) ?></span>
-                                        <small><?= htmlspecialchars($paymentLabel) ?> &middot; <?= date('M d, Y', strtotime($b['created_at'])) ?></small>
+                                        <small><?= date('M d, Y', strtotime($b['created_at'])) ?></small>
                                     </div>
                                 </td>
                                 <td>
@@ -132,6 +163,7 @@ $bookings   = $bookingObj->GetAllBookings();
                                         <?php endif; ?>
                                     </div>
                                 </td>
+                                <td><span class="payment-badge <?= htmlspecialchars($paymentClass) ?>"><?= htmlspecialchars($paymentLabel) ?></span></td>
                                 <td><span class="badge <?= htmlspecialchars($b['status']) ?>"><?= ucfirst($b['status']) ?></span></td>
                                 <td>
                                     <div class="row-actions">
@@ -187,6 +219,14 @@ $bookings   = $bookingObj->GetAllBookings();
                             <div class="detail-row">
                                 <span class="detail-label">Payment</span>
                                 <span id="detail-payment" class="detail-value">-</span>
+                            </div>
+                        </div>
+
+                        <div class="detail-section">
+                            <h4 class="section-title">Notes or Remarks</h4>
+                            <div class="detail-row">
+                                <span class="detail-label">Notes</span>
+                                <span id="detail-notes" class="detail-value">No booking notes available.</span>
                             </div>
                         </div>
 

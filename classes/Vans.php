@@ -21,7 +21,9 @@ class Vans
     {
         $stmt = $this->conn->prepare("
             SELECT * FROM {$this->table}
-            ORDER BY van_id_pk DESC
+            ORDER BY
+                CASE WHEN status = 'active' THEN 0 ELSE 1 END,
+                van_id_pk DESC
         ");
         $stmt->execute();
         $vans = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -162,6 +164,17 @@ class Vans
     public function DeleteVan(): array
     {
         try {
+            if (!$this->id) {
+                return ['success' => false, 'message' => 'Invalid van.'];
+            }
+
+            if ($this->CountAssignedSchedules((int) $this->id) > 0) {
+                return [
+                    'success' => false,
+                    'message' => 'This van is assigned to one or more schedules, so it cannot be deleted. Set it inactive instead to keep schedule and booking history intact.'
+                ];
+            }
+
             $this->conn->beginTransaction();
             $this->_deleteSeats($this->id);
 
@@ -174,7 +187,11 @@ class Vans
             return ['success' => true];
         } catch (PDOException $e) {
             $this->conn->rollBack();
-            return ['success' => false, 'error' => $e->getMessage()];
+            return [
+                'success' => false,
+                'message' => 'Unable to delete this van because it is still linked to other records.',
+                'error' => $e->getMessage()
+            ];
         }
     }
 
@@ -237,6 +254,21 @@ class Vans
     {
         $stmt = $this->conn->prepare("DELETE FROM seats WHERE van_id_fk = :id");
         $stmt->execute([':id' => $vanId]);
+    }
+
+    private function CountAssignedSchedules(int $vanId): int
+    {
+        if (!$vanId) {
+            return 0;
+        }
+
+        $stmt = $this->conn->prepare("
+            SELECT COUNT(*)
+            FROM schedules
+            WHERE van_id_fk = :id
+        ");
+        $stmt->execute([':id' => $vanId]);
+        return (int) $stmt->fetchColumn();
     }
 }
 ?>

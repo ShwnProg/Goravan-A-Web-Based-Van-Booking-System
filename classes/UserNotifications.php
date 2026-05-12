@@ -175,7 +175,7 @@ class UserNotifications
         try {
             $timeColumn = $this->columnExists('payments', 'paid_at') ? 'COALESCE(p.paid_at, p.created_at)' : 'COALESCE(p.reviewed_at, p.uploaded_at)';
             $amountSelect = $this->columnExists('payments', 'amount') ? 'p.amount' : 'NULL AS amount';
-            $statusFilter = $this->columnExists('payments', 'paid_at') ? "p.status IN ('paid', 'approved')" : "p.status = 'approved'";
+            $statusFilter = $this->columnExists('payments', 'paid_at') ? "p.status IN ('paid', 'approved', 'refund_requested', 'refunded')" : "p.status = 'approved'";
 
             $stmt = $this->conn->prepare("
                 SELECT
@@ -198,15 +198,28 @@ class UserNotifications
 
             return array_map(function ($row) {
                 $amount = $row['amount'] !== null ? ' Payment: PHP ' . number_format((float) $row['amount'], 2) . '.' : '';
+                $status = strtolower($row['status'] ?? 'paid');
+                $title = [
+                    'refund_requested' => 'Refund requested',
+                    'refunded' => 'Payment refunded',
+                ][$status] ?? 'Payment successful';
+                $icon = [
+                    'refund_requested' => 'fa-solid fa-rotate-left',
+                    'refunded' => 'fa-solid fa-circle-check',
+                ][$status] ?? 'fa-solid fa-receipt';
+                $tone = [
+                    'refund_requested' => 'payment reminder',
+                    'refunded' => 'payment successful',
+                ][$status] ?? 'payment successful';
                 return $this->item(
-                    'payment-' . $row['payment_id_pk'],
+                    'payment-' . $row['payment_id_pk'] . '-' . $status,
                     'payment',
-                    'Payment successful',
+                    $title,
                     ($row['reference_code'] ?? 'Booking') . ' - ' . ($row['route_display'] ?? 'Trip') . '.' . $amount,
                     $row['event_time'],
-                    'fa-solid fa-receipt',
+                    $icon,
                     'my-payments.php',
-                    'payment successful'
+                    $tone
                 );
             }, $stmt->fetchAll(PDO::FETCH_ASSOC));
         } catch (Throwable $e) {

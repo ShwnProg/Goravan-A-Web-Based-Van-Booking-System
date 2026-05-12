@@ -231,6 +231,14 @@ if (!window._ssWidgetReady) {
         if (!toggle || !panel || !list) return;
 
         var storageKey = 'gv-user-notif-read';
+        var prefStorageKey = 'gv-user-notif-prefs';
+        var prefDefaults = {
+            booking: true,
+            reminder: true,
+            payment: true,
+            verification: true,
+            schedule: true
+        };
         var items = [];
         var loaded = false;
         var visibleLimit = 5;
@@ -261,7 +269,11 @@ if (!window._ssWidgetReady) {
         });
 
         markRead && markRead.addEventListener('click', function () {
-            saveReadIds(items.map(function (item) { return item.id; }));
+            saveReadIds(filterByPrefs(items).map(function (item) { return item.id; }));
+            renderNotifications(items);
+        });
+
+        window.addEventListener('gv-notif-prefs-updated', function () {
             renderNotifications(items);
         });
 
@@ -298,27 +310,31 @@ if (!window._ssWidgetReady) {
         }
 
         function renderNotifications(data) {
+            var visibleData = filterByPrefs(data);
             var readIds = getReadIds();
-            var unreadCount = data.filter(function (item) {
+            var unreadCount = visibleData.filter(function (item) {
                 return readIds.indexOf(item.id) === -1;
             }).length;
+            var hiddenByPrefs = Math.max(0, data.length - visibleData.length);
 
             if (dot) dot.hidden = unreadCount === 0;
             if (markRead) markRead.disabled = unreadCount === 0;
             if (summary) {
-                summary.textContent = data.length
-                    ? unreadCount + ' unread of ' + data.length
+                summary.textContent = visibleData.length
+                    ? unreadCount + ' unread of ' + visibleData.length
+                    : hiddenByPrefs
+                        ? 'Hidden by preferences'
                     : 'No activity yet';
             }
 
-            if (!data.length) {
-                list.innerHTML = emptyMarkup('fa-regular fa-bell', 'No notifications yet.');
+            if (!visibleData.length) {
+                list.innerHTML = emptyMarkup('fa-regular fa-bell', hiddenByPrefs ? 'Notifications hidden by preferences.' : 'No notifications yet.');
                 return;
             }
 
             var currentGroup = '';
-            var visibleItems = data.slice(0, visibleLimit);
-            var hiddenCount = Math.max(0, data.length - visibleItems.length);
+            var visibleItems = visibleData.slice(0, visibleLimit);
+            var hiddenCount = Math.max(0, visibleData.length - visibleItems.length);
 
             list.innerHTML = visibleItems.map(function (item) {
                 var group = groupLabel(item.time);
@@ -335,6 +351,22 @@ if (!window._ssWidgetReady) {
                 visibleLimit += 5;
                 renderNotifications(items);
             });
+        }
+
+        function filterByPrefs(data) {
+            var prefs = getPrefs();
+            return data.filter(function (item) {
+                var type = item.type || 'booking';
+                return prefs[type] !== false;
+            });
+        }
+
+        function getPrefs() {
+            try {
+                return Object.assign({}, prefDefaults, JSON.parse(localStorage.getItem(prefStorageKey) || '{}'));
+            } catch (e) {
+                return prefDefaults;
+            }
         }
 
         function itemMarkup(item, unread) {

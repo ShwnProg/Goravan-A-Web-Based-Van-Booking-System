@@ -3,7 +3,7 @@ require_once '../../autoload.php';
 
 header('Content-Type: application/json');
 
-/* ── CSRF CHECK ───────────────────────────────────────────────────────────── */
+/* -- CSRF CHECK ------------------------------------------------------------- */
 if (!csrf_check()) {
     echo json_encode([
         'success' => false,
@@ -12,10 +12,10 @@ if (!csrf_check()) {
     exit;
 }
 
-/* ── INPUTS ───────────────────────────────────────────────────────────────── */
+/* -- INPUTS ----------------------------------------------------------------- */
 $routeId = (int)($_POST['route_id'] ?? 0);
 
-/* ── VALIDATION ───────────────────────────────────────────────────────────── */
+/* -- VALIDATION ------------------------------------------------------------- */
 if (!$routeId) {
     echo json_encode([
         'success' => false,
@@ -24,17 +24,17 @@ if (!$routeId) {
     exit;
 }
 
-/* ── DELETE ───────────────────────────────────────────────────────────────── */
+/* -- DELETE ----------------------------------------------------------------- */
 $route     = new Routes($conn);
 $route->id = $routeId;
 $result    = $route->DeleteRoute();
 
-/* ── RESPONSE ─────────────────────────────────────────────────────────────── */
+/* -- RESPONSE --------------------------------------------------------------- */
 echo json_encode([
     'success' => $result['success'],
-    'message' => $result['success']
+    'message' => $result['message'] ?? ($result['success']
         ? 'Route deleted successfully.'
-        : 'Failed to delete route.'
+        : 'Failed to delete route.')
 ]);
 
 exit;

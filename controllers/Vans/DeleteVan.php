@@ -28,8 +28,8 @@ $result = $van->DeleteVan();
 
 echo json_encode([
     'success' => $result['success'],
-    'message' => $result['success']
+    'message' => $result['message'] ?? ($result['success']
         ? 'Van deleted successfully.'
-        : 'Failed to delete van.'
+        : 'Failed to delete van.')
 ]);
 exit;

@@ -19,9 +19,19 @@ $bk = new Bookings($conn);
 $booking = $bk->GetUserBookingGroupByID($bookingId, $userId);
 
 if (!$booking) { header('Location: my-bookings.php'); exit; }
+
+$scheduleStatus = strtolower($booking['schedule_status'] ?? '');
+$departureAt = strtotime(trim(($booking['departure_date'] ?? '') . ' ' . ($booking['departure_time'] ?? '')));
+$arrivedAt = !empty($booking['arrived_at']) ? strtotime($booking['arrived_at']) : false;
+$estimatedArrivalAt = !empty($booking['estimated_arrival_at']) ? strtotime($booking['estimated_arrival_at']) : false;
+$validArrivedAt = $arrivedAt && (!$departureAt || $arrivedAt >= $departureAt);
+$displayArrivalAt = $validArrivedAt ? $booking['arrived_at'] : '';
+
+$hasArrived = $scheduleStatus === 'arrived' && !empty($displayArrivalAt);
+$hasEstimatedArrival = !$hasArrived && $estimatedArrivalAt && !in_array($scheduleStatus, ['cancelled'], true);
 ?>
 
-<div class="u-body">
+<div class="u-body booking-detail-page">
     <div class="u-back-link">
         <a href="my-bookings.php" class="u-back-btn">
             <i class="fa-solid fa-arrow-left"></i> Back to My Bookings
@@ -98,10 +108,15 @@ if (!$booking) { header('Location: my-bookings.php'); exit; }
                 <span class="u-info-value"><?= ucfirst($booking['schedule_status']) ?></span>
             </div>
 
-            <?php if (!empty($booking['arrived_at'])): ?>
+            <?php if ($hasArrived): ?>
             <div class="u-info-row">
                 <span class="u-info-label"><i class="fa-solid fa-flag-checkered"></i> Arrived At:</span>
-                <span class="u-info-value"><?= date('M j, Y', strtotime($booking['arrived_at'])) ?> &middot; <?= date('g:i A', strtotime($booking['arrived_at'])) ?></span>
+                <span class="u-info-value"><?= date('M j, Y', strtotime($displayArrivalAt)) ?> &middot; <?= date('g:i A', strtotime($displayArrivalAt)) ?></span>
+            </div>
+            <?php elseif ($hasEstimatedArrival): ?>
+            <div class="u-info-row">
+                <span class="u-info-label"><i class="fa-regular fa-clock"></i> Estimated Arrival:</span>
+                <span class="u-info-value"><?= date('M j, Y', strtotime($booking['estimated_arrival_at'])) ?> &middot; <?= date('g:i A', strtotime($booking['estimated_arrival_at'])) ?></span>
             </div>
             <?php endif; ?>
 

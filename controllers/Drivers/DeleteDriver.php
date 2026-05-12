@@ -28,9 +28,9 @@ $result = $driver->DeleteDriver();
 
 echo json_encode([
     'success' => $result['success'],
-    'message' => $result['success']
-        ? 'Driver deleted successfully'
-        : 'Failed to delete driver'
+    'message' => $result['message'] ?? ($result['success']
+        ? 'Driver deleted successfully.'
+        : 'Failed to delete driver.')
 ]);
 
 exit;

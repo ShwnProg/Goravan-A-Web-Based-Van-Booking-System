@@ -117,7 +117,8 @@
 /* ── Reference code ──────────────────────────── */
 .ref-code {
     display: inline-block;
-    font-family: var(--font-mono);
+    font-family: var(--font-reference);
+    font-variant-numeric: tabular-nums;
     font-size: 11.5px;
     font-weight: 700;
     color: var(--color-primary);
@@ -125,8 +126,14 @@
     border: 1px solid rgba(46, 58, 77, .1);
     padding: 2px 7px;
     border-radius: 5px;
-    letter-spacing: .4px;
+    letter-spacing: 0;
     white-space: nowrap;
+}
+
+#detail-ref-code {
+    font-family: var(--font-reference);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0;
 }
 
 .booking-ref-stack {

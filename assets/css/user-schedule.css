@@ -356,6 +356,7 @@ select.ss {
 #bookingModal .modal-body {
     padding: 20px 22px 22px;
     background: var(--u-surface);
+    overflow-x: hidden;
 }
 
 .booking-progress {
@@ -425,6 +426,7 @@ select.ss {
 
 .booking-step {
     display: none;
+    min-width: 0;
     opacity: 0;
     transform: translateY(8px);
     transition: opacity .18s ease, transform .18s ease;
@@ -774,12 +776,14 @@ select.ss {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 14px;
+    min-width: 0;
 }
 
 .u-form-group {
     display: flex;
     flex-direction: column;
     gap: 6px;
+    min-width: 0;
 }
 
 .u-form-group.full {
@@ -844,11 +848,12 @@ select.ss {
 
 .passenger-seat-list {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-    gap: 8px;
-    max-height: 250px;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 10px;
+    max-height: 235px;
     overflow-y: auto;
-    padding-right: 4px;
+    overflow-x: hidden;
+    padding: 2px 4px 2px 0;
 }
 
 .passenger-seat-empty {
@@ -861,10 +866,11 @@ select.ss {
 
 .passenger-seat-row {
     display: grid;
-    grid-template-columns: minmax(64px, .7fr) minmax(104px, 1fr) auto;
-    align-items: center;
-    gap: 8px;
-    padding: 10px;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: stretch;
+    gap: 7px;
+    min-width: 0;
+    padding: 10px 11px;
     border: 1px solid var(--u-border);
     border-radius: 10px;
     background: var(--u-surface2);
@@ -872,14 +878,17 @@ select.ss {
 
 .passenger-seat-label {
     display: flex;
-    flex-direction: column;
-    gap: 2px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    min-width: 0;
 }
 
 .passenger-seat-label span {
     color: var(--u-accent);
     font-size: 12px;
     font-weight: 900;
+    white-space: nowrap;
 }
 
 .passenger-seat-label strong,
@@ -890,8 +899,9 @@ select.ss {
 }
 
 .passenger-seat-discount {
-    min-width: 48px;
-    text-align: right;
+    min-width: 0;
+    text-align: left;
+    line-height: 1.25;
 }
 
 .passenger-seat-discount.verified {
@@ -899,6 +909,8 @@ select.ss {
 }
 
 .passenger-seat-type {
+    width: 100%;
+    min-width: 0;
     min-height: 38px !important;
     border-radius: 9px !important;
     padding: 0 10px !important;
@@ -1061,9 +1073,11 @@ select.ss {
     background: var(--u-accent-soft);
     color: var(--u-accent);
     padding: 10px 14px;
-    font-family: 'Courier New', monospace;
+    font-family: var(--font-reference);
+    font-variant-numeric: tabular-nums;
     font-size: 18px;
     font-weight: 900;
+    letter-spacing: 0;
 }
 
 .copy-ref {
@@ -1145,10 +1159,6 @@ select.ss {
     .passenger-seat-list {
         grid-template-columns: 1fr;
         max-height: 220px;
-    }
-
-    .passenger-seat-row {
-        grid-template-columns: minmax(58px, .6fr) minmax(110px, 1fr) auto;
     }
 
     #bookingModal .modal-dialog {

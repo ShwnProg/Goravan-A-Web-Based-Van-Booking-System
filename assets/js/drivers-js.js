@@ -262,15 +262,31 @@ document.getElementById('drivers-tbody')?.addEventListener('click', function (e)
                 .then(res => {
 
                     if (res.success) {
-                        Swal.fire('Updated!', res.message, 'success')
-                            .then(() => location.reload());
+                        const row = toggleBtn.closest('tr.driver-row');
+                        if (row) {
+                            AdminUI.setRowStatus(row, nextStatus);
+                            AdminUI.moveRowToGroup(row, nextStatus, {
+                                label: nextStatus === 'active' ? 'Active Drivers' : 'Inactive Drivers',
+                                icon: 'fas fa-user-tie',
+                                hint: nextStatus === 'active' ? 'Available for assignment' : 'Not available',
+                                colspan: 7
+                            });
+                            AdminUI.refreshGroups(document.getElementById('drivers-tbody'), 'tr.driver-row', row => row.dataset.status || '');
+                            if (row.classList.contains('selected')) showDriverPreview(row);
+                        }
+
+                        toggleBtn.dataset.status = nextStatus;
+                        const icon = toggleBtn.querySelector('i');
+                        if (icon) icon.className = 'fas fa-' + (nextStatus === 'active' ? 'toggle-on' : 'toggle-off');
+
+                        AdminUI.notify('success', res.message || 'Driver status updated successfully.');
                     } else {
-                        Swal.fire('Error', res.message, 'error');
+                        AdminUI.notify('error', res.message || 'Unable to update driver status. Please try again.');
                     }
 
                 })
                 .catch(() => {
-                    Swal.fire('Error', 'Network error', 'error');
+                    AdminUI.notify('error', 'Unable to update driver status. Please try again.');
                 });
         });
 
@@ -325,19 +341,54 @@ document.addEventListener('DOMContentLoaded', () => {
     // Driver count badge
     const rows = document.querySelectorAll('.driver-row');
     const countEl = document.getElementById('driver-count');
+    const dateFrom = document.getElementById('driver-date-from');
+    const dateTo = document.getElementById('driver-date-to');
+    const dateClear = document.getElementById('driver-date-clear');
+    const searchInput = document.getElementById('driver-search');
     if (countEl) countEl.textContent = `${rows.length} driver${rows.length !== 1 ? 's' : ''}`;
 
+    function updateDriverGroups() {
+        document.querySelectorAll('#drivers-tbody .admin-status-group-row').forEach(groupRow => {
+            const key = groupRow.dataset.groupKey || '';
+            const hasVisible = Array.from(document.querySelectorAll(`#drivers-tbody .driver-row[data-status="${key}"]`))
+                .some(row => row.style.display !== 'none');
+            groupRow.style.display = hasVisible ? '' : 'none';
+        });
+    }
+    updateDriverGroups();
+
     // Search filter — name, license, contact
-    document.getElementById('driver-search')?.addEventListener('input', function () {
-        const q = this.value.toLowerCase();
+    function applyDriverFilters() {
+        if (!rows.length) return;
+        const q = (document.getElementById('driver-search')?.value || '').toLowerCase();
+        const from = dateFrom?.value || '';
+        const to = dateTo?.value || '';
         rows.forEach(row => {
             const match =
                 row.dataset.fullname.toLowerCase().includes(q) ||
                 row.dataset.license.toLowerCase().includes(q) ||
                 row.dataset.contact.toLowerCase().includes(q);
-            row.style.display = match ? '' : 'none';
+            row.style.display = match && withinDate(row.dataset.created || '', from, to) ? '' : 'none';
         });
+        updateDriverGroups();
+        if (countEl) {
+            const visible = Array.from(rows).filter(row => row.style.display !== 'none').length;
+            countEl.textContent = `${visible} driver${visible !== 1 ? 's' : ''}`;
+        }
+        AdminUI.setClearButtonState(dateClear, !!((searchInput?.value || '').trim() || dateFrom?.value || dateTo?.value));
+        renderDriverEmptyState(from || to);
+    }
+
+    searchInput?.addEventListener('input', AdminUI.debounce(applyDriverFilters, 350));
+    dateFrom?.addEventListener('change', applyDriverFilters);
+    dateTo?.addEventListener('change', applyDriverFilters);
+    dateClear?.addEventListener('click', function () {
+        if (searchInput) searchInput.value = '';
+        if (dateFrom) dateFrom.value = '';
+        if (dateTo) dateTo.value = '';
+        applyDriverFilters();
     });
+    applyDriverFilters();
 
     // Row click → driver preview
     rows.forEach(row => {
@@ -365,5 +416,24 @@ document.addEventListener('DOMContentLoaded', () => {
             this.setSelectionRange(pos, pos);
         });
     });
+
+    function renderDriverEmptyState(dateFiltered) {
+        const tbody = document.getElementById('drivers-tbody');
+        if (!tbody) return;
+        tbody.querySelectorAll('.js-empty-row').forEach(row => row.remove());
+        const hasVisible = Array.from(rows).some(row => row.style.display !== 'none');
+        if (hasVisible) return;
+        const message = dateFiltered ? 'No drivers found for the selected date range.' : 'No drivers match your current filters.';
+        tbody.insertAdjacentHTML('beforeend', '<tr class="js-empty-row"><td colspan="7"><div class="empty-state"><i class="fas fa-search"></i><p>' + message + '</p></div></td></tr>');
+    }
+
+    function withinDate(raw, from, to) {
+        if (!from && !to) return true;
+        if (!raw) return false;
+        const value = String(raw).slice(0, 10);
+        if (from && value < from) return false;
+        if (to && value > to) return false;
+        return true;
+    }
 });
 

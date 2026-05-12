@@ -13,28 +13,31 @@ if (session_status() === PHP_SESSION_NONE) {
 
 define('BASE_URL', '/GROAVAN');
 define('LOCATIONS', [
-    'Maasin City'   => [10.1333, 124.8333],
-    'Bontoc'        => [10.3167, 124.9833],
-    'Sogod'         => [10.3833, 124.9833],
-    'Malitbog'      => [10.1667, 124.8167],
-    'Padre Burgos'  => [10.0333, 125.0167],
-    'Limasawa'      => [9.9167, 125.0833],
-    'Liloan'        => [10.1333, 124.7167],
-    'Macrohon'      => [10.0833, 124.9333],
-    'San Juan'      => [10.2667, 125.1833],
-    'Silago'        => [10.5333, 125.1833],
-    'Hinunangan'    => [10.4000, 125.2000],
-    'Hinundayan'    => [10.3667, 125.1333],
-    'St. Bernard'   => [10.2833, 125.1333],
-    'San Ricardo'   => [10.0667, 125.2167],
-    'Tomas Oppus'   => [10.2500, 124.9833],
-    'San Francisco' => [10.0667, 125.0167],
-    'Libagon'       => [10.3000, 124.9667],
-    'Anahawan'      => [10.0833, 125.0333],
-    'Bato'          => [10.3333, 124.9667],
-    'Pintuyan'      => [10.1833, 125.1833],
+    // Southern Leyte city / municipalities
+    'Maasin City' => [10.1335, 124.8460],
+    'Bontoc' => [10.3559, 124.9693],
+    'Sogod' => [10.3856, 124.9806],
+    'Malitbog' => [10.1581, 125.0012],
+    'Padre Burgos' => [10.0296, 125.0170],
+    'Limasawa' => [9.9303, 125.0746],
+    'Liloan' => [10.1581, 125.1253],
+    'Macrohon' => [10.0766, 124.9401],
+    'San Juan' => [10.2641, 125.1735],
+    'Silago' => [10.5284, 125.1627],
+    'Hinunangan' => [10.3946, 125.1985],
+    'Hinundayan' => [10.3511, 125.2510],
+    'St. Bernard' => [10.2801, 125.1383],
+    'San Ricardo' => [9.9130, 125.2763],
+    'Tomas Oppus' => [10.2548, 124.9856],
+    'San Francisco' => [10.0575, 125.1576],
+    'Libagon' => [10.2968, 125.0505],
+    'Anahawan' => [10.2740, 125.2578],
+    'Pintuyan' => [9.9446, 125.2492],
+
+    // Not Southern Leyte, but keep this only if your route uses it as a stop/via point
+    'Bato' => [10.3279, 124.7919],
 ]);
-define('discounts',[
+define('discounts', [
     'student' => 10,
     'senior' => 15,
     'pwd' => 20
@@ -64,3 +67,64 @@ spl_autoload_register(function ($class) {
 
 $database = new Database();
 $conn = $database->GetConnection();
+
+function require_role(string $role): void
+{
+    if (!empty($_SESSION['is_login']) && !empty($_SESSION['id']) && ($_SESSION['role'] ?? '') === $role) {
+        return;
+    }
+
+    $script = str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '');
+    if (str_contains($script, '/controllers/')) {
+        header('Content-Type: application/json');
+        http_response_code(403);
+        echo json_encode([
+            'success' => false,
+            'message' => ucfirst($role) . ' access only.'
+        ]);
+        exit;
+    }
+
+    $_SESSION['error'] = ucfirst($role) . ' access only.';
+    header('Location: ' . BASE_URL . '/views/auth/login.php');
+    exit;
+}
+
+$scriptPath = str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '');
+
+if (str_contains($scriptPath, '/views/admin/')) {
+    require_role('admin');
+}
+
+if (str_contains($scriptPath, '/views/users/')) {
+    require_role('user');
+}
+
+$adminControllerPaths = [
+    '/controllers/Vans/',
+    '/controllers/Drivers/',
+    '/controllers/Schedules/',
+    '/controllers/routes/',
+    '/controllers/Bookings/',
+    '/controllers/Dashboard/',
+    '/controllers/PaymentsController.php',
+    '/controllers/UsersController.php',
+    '/controllers/SettingsController.php',
+];
+
+foreach ($adminControllerPaths as $path) {
+    if (str_contains($scriptPath, $path)) {
+        require_role('admin');
+    }
+}
+
+if (str_contains($scriptPath, '/controllers/users/')) {
+    $publicUserControllers = [
+        '/controllers/users/RegisterController.php',
+        '/controllers/users/LogoutController.php',
+    ];
+
+    if (!in_array($scriptPath, $publicUserControllers, true)) {
+        require_role('user');
+    }
+}

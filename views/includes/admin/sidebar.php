@@ -41,9 +41,9 @@
         </div>
 
         <div class="menu-section">
-            <label>Users</label>
+            <label>Verification</label>
             <a href="users.php" class="menu-btn <?= $current == 'users.php' ? 'active' : '' ?>">
-                <i class="fas fa-users"></i><span>Users</span>
+                <i class="fas fa-file-circle-check"></i><span>Verifications</span>
             </a>
         </div>
 

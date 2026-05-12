@@ -27,7 +27,7 @@ CREATE TABLE `payments` (
   `book_id_fk` int unsigned NOT NULL,
   `proof_file_path` varchar(255) NOT NULL,
   `uploaded_at` datetime NOT NULL,
-  `status` enum('pending','approved','rejected') NOT NULL,
+  `status` varchar(32) NOT NULL DEFAULT 'pending',
   `reviewed_at` datetime NOT NULL,
   `reviewed_by` int unsigned NOT NULL,
   `notes` text,

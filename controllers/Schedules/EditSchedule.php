@@ -3,7 +3,7 @@ require_once '../../autoload.php';
 
 header('Content-Type: application/json');
 
-/* ── CSRF CHECK ───────────────────────────────────────────────────────────── */
+/* -- CSRF CHECK ------------------------------------------------------------- */
 if (!csrf_check()) {
     echo json_encode([
         'success' => false,
@@ -12,7 +12,7 @@ if (!csrf_check()) {
     exit;
 }
 
-/* ── INPUTS ───────────────────────────────────────────────────────────────── */
+/* -- INPUTS ----------------------------------------------------------------- */
 $schedule_id    = (int)   ($_POST['schedule_id']    ?? 0);
 $route_id       = (int)   ($_POST['route_id']       ?? 0);
 $driver_id      = (int)   ($_POST['driver_id']      ?? 0);
@@ -23,7 +23,7 @@ $eta_date       = trim(    $_POST['eta_date']        ?? '');
 $eta_time       = trim(    $_POST['eta_time']        ?? '');
 $trip_status    = trim(    $_POST['trip_status']     ?? 'boarding');
 
-/* ── VALIDATION ───────────────────────────────────────────────────────────── */
+/* -- VALIDATION ------------------------------------------------------------- */
 if (!$schedule_id) {
     echo json_encode([
         'success' => false,
@@ -66,7 +66,7 @@ if (!in_array($trip_status, ['boarding', 'departed', 'arrived', 'cancelled'])) {
     exit;
 }
 
-/* ── LOAD SCHEDULE ────────────────────────────────────────────────────────── */
+/* -- LOAD SCHEDULE ---------------------------------------------------------- */
 $schedule = new Schedules($conn);
 $schedule->id = $schedule_id;
 
@@ -82,7 +82,7 @@ if (empty($current)) {
 
 $current = $current[0];
 
-/* ── NO CHANGES CHECK ─────────────────────────────────────────────────────── */
+/* -- NO CHANGES CHECK ------------------------------------------------------- */
 $noChanges =
     (int)    $current['route_id_fk']    === $route_id       &&
     (int)    $current['driver_id_fk']   === $driver_id      &&
@@ -100,7 +100,7 @@ if ($noChanges) {
     exit;
 }
 
-/* ── CONFLICT CHECK ───────────────────────────────────────────────────────── */
+/* -- CONFLICT CHECK --------------------------------------------------------- */
 $schedule->route_id       = $route_id;
 $schedule->driver_id      = $driver_id;
 $schedule->van_id         = $van_id;
@@ -117,10 +117,10 @@ if ($schedule->HasVanConflict() || $schedule->HasDriverConflict()) {
     exit;
 }
 
-/* ── UPDATE ───────────────────────────────────────────────────────────────── */
+/* -- UPDATE ----------------------------------------------------------------- */
 $result = $schedule->EditSchedule();
 
-/* ── RESPONSE ─────────────────────────────────────────────────────────────── */
+/* -- RESPONSE --------------------------------------------------------------- */
 if ($result['success']) {
     echo json_encode([
         'success' => true,
@@ -129,7 +129,7 @@ if ($result['success']) {
 } else {
     echo json_encode([
         'success' => false,
-        'message' => $result['error'] ?? 'Failed to update schedule.'
+        'message' => $result['message'] ?? $result['error'] ?? 'Failed to update schedule.'
     ]);
 }
 

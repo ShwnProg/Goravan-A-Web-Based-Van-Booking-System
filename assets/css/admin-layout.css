@@ -727,13 +727,37 @@ body {
 /* Dark mode shell */
 body.admin-dark-mode-active .sidebar,
 body.admin-dark-mode-active .topbar {
-    background: rgba(15, 23, 42, .96);
+    background: rgba(17, 24, 39, .97);
     border-color: rgba(255, 255, 255, .07);
     box-shadow: 0 12px 30px rgba(0, 0, 0, .18);
 }
 
 body.admin-dark-mode-active .main-content {
     background: #0f172a;
+}
+
+body.admin-dark-mode-active .page-content {
+    background: #0f172a;
+}
+
+html.dark-init,
+html.dark-init body,
+html.dark-init .main-content,
+html.dark-init .page-content,
+html.admin-dark-mode-active,
+html.admin-dark-mode-active body,
+html.admin-dark-mode-active .main-content,
+html.admin-dark-mode-active .page-content {
+    background: #0f172a !important;
+    background-color: #0f172a !important;
+}
+
+html.dark-init .sidebar,
+html.dark-init .topbar,
+html.admin-dark-mode-active .sidebar,
+html.admin-dark-mode-active .topbar {
+    background: rgba(17, 24, 39, .97) !important;
+    border-color: rgba(255, 255, 255, .07) !important;
 }
 
 body.admin-dark-mode-active .logo p,
@@ -760,6 +784,22 @@ body.admin-dark-mode-active .menu-btn:hover,
 body.admin-dark-mode-active .topbar-profile:hover,
 body.admin-dark-mode-active .topbar-icon-btn:hover {
     background: rgba(255, 255, 255, .06);
+}
+
+body.admin-dark-mode-active .menu-btn.active {
+    background: rgba(249, 115, 22, .13);
+    color: #fb923c;
+    border-left-color: #f97316;
+}
+
+body.admin-light-mode-active .sidebar,
+body.admin-light-mode-active .topbar {
+    background: rgba(255, 255, 255, .94);
+}
+
+body.admin-light-mode-active .main-content,
+body.admin-light-mode-active .page-content {
+    background: #f8fafc;
 }
 
 body.admin-dark-mode-active .burger-btn:hover,

@@ -13,17 +13,17 @@ if (!window._ssReady) {
             if (select._ssBuilt) return;
             select._ssBuilt = true;
 
-            const ph   = select.dataset.placeholder || '— Select —';
+            const ph = select.dataset.placeholder || '— Select —';
             const wrap = document.createElement('div');
             wrap.className = 'ss-wrap';
             select.parentNode.insertBefore(wrap, select);
             wrap.appendChild(select);
 
             const btn = document.createElement('button');
-            btn.type      = 'button';
+            btn.type = 'button';
             btn.className = 'ss-btn';
 
-            const txt     = document.createElement('span');
+            const txt = document.createElement('span');
             txt.className = 'ss-btn-txt';
             const current = select.options[select.selectedIndex];
             if (current?.value) {
@@ -70,7 +70,7 @@ if (!window._ssReady) {
                         + (opt.selected && opt.value ? ' is-sel' : ''),
                     textContent: opt.text
                 });
-                li.dataset.val  = opt.value;
+                li.dataset.val = opt.value;
                 li.dataset.text = opt.text;
                 ul.appendChild(li);
             });
@@ -137,8 +137,8 @@ if (!window._ssReady) {
             if (!wrap) return;
             const btn = wrap.querySelector('.ss-btn');
             const txt = wrap.querySelector('.ss-btn-txt');
-            const ul  = wrap.querySelector('.ss-list');
-            const ph  = selectEl.dataset.placeholder || '— Select —';
+            const ul = wrap.querySelector('.ss-list');
+            const ph = selectEl.dataset.placeholder || '— Select —';
             const opt = selectEl.options[selectEl.selectedIndex];
             if (opt?.value) {
                 txt.textContent = opt.text;
@@ -156,26 +156,26 @@ if (!window._ssReady) {
 }
 
 const ROUTE_COORDS = {
-    "Maasin City"  : [10.1322, 124.8426],
-    "Bontoc"       : [10.2167, 124.8833],
-    "Sogod"        : [10.3833, 124.9833],
-    "Malitbog"     : [10.1667, 124.8167],
-    "Padre Burgos" : [10.0167, 125.0167],
-    "Limasawa"     : [9.9000,  125.1000],
-    "Liloan"       : [10.1000, 124.7167],
-    "Macrohon"     : [10.0667, 124.9167],
-    "San Juan"     : [10.2333, 125.1667],
-    "Silago"       : [10.5167, 125.1833],
-    "Hinunangan"   : [10.4000, 125.2000],
-    "Hinundayan"   : [10.3667, 125.1333],
-    "St. Bernard"  : [10.4833, 125.1333],
-    "San Ricardo"  : [10.2667, 125.2167],
-    "Tomas Oppus"  : [10.2500, 124.9833],
-    "San Francisco": [10.2000, 125.0167],
-    "Libagon"      : [10.1500, 124.9667],
-    "Anahawan"     : [10.1000, 125.0333],
-    "Bato"         : [10.3333, 124.9667],
-    "Pintuyan"     : [10.0833, 125.1833],
+    "Maasin City": [10.1335, 124.8460],
+    "Bontoc": [10.3559, 124.9693],
+    "Sogod": [10.3856, 124.9806],
+    "Malitbog": [10.1581, 125.0012],
+    "Padre Burgos": [10.0296, 125.0170],
+    "Limasawa": [9.9303, 125.0746],
+    "Liloan": [10.1581, 125.1253],
+    "Macrohon": [10.0766, 124.9401],
+    "San Juan": [10.2641, 125.1735],
+    "Silago": [10.5284, 125.1627],
+    "Hinunangan": [10.3946, 125.1985],
+    "Hinundayan": [10.3511, 125.2510],
+    "St. Bernard": [10.2801, 125.1383],
+    "San Ricardo": [9.9130, 125.2763],
+    "Tomas Oppus": [10.2548, 124.9856],
+    "San Francisco": [10.0575, 125.1576],
+    "Libagon": [10.2968, 125.0505],
+    "Anahawan": [10.2740, 125.2578],
+    "Bato": [10.3279, 124.7919],
+    "Pintuyan": [9.9446, 125.2492],
 };
 
 const MAX_STOPS = 3;
@@ -200,12 +200,12 @@ function clearLayers() {
 }
 
 function showRoute(origin, destination, stops) {
-    const mapEl   = document.getElementById('route-map');
+    const mapEl = document.getElementById('route-map');
     const emptyEl = document.getElementById('map-empty');
     if (!mapEl || !emptyEl) return;
 
     emptyEl.style.display = 'none';
-    mapEl.style.display   = 'block';
+    mapEl.style.display = 'block';
     if (!_map) initMap();
 
     setTimeout(() => {
@@ -223,9 +223,9 @@ function showRoute(origin, destination, stops) {
         }
 
         const originLbl = document.getElementById('map-origin-label');
-        const destLbl   = document.getElementById('map-dest-label');
+        const destLbl = document.getElementById('map-dest-label');
         if (originLbl) originLbl.textContent = origin;
-        if (destLbl)   destLbl.textContent   = destination;
+        if (destLbl) destLbl.textContent = destination;
 
         const stopsList = document.getElementById('map-stops-list');
         if (stopsList) {
@@ -241,8 +241,8 @@ function showRoute(origin, destination, stops) {
         document.getElementById('map-route-info')?.classList.add('visible');
 
         const allPoints = [origin, ...stops, destination];
-        const latLngs   = [];
-        const missing   = [];
+        const latLngs = [];
+        const missing = [];
 
         allPoints.forEach(name => {
             if (ROUTE_COORDS[name]) latLngs.push(ROUTE_COORDS[name]);
@@ -256,9 +256,9 @@ function showRoute(origin, destination, stops) {
 
         allPoints.forEach((name, i) => {
             const isFirst = i === 0;
-            const isLast  = i === allPoints.length - 1;
-            const color   = isFirst ? '#16a34a' : isLast ? '#ef4444' : '#3b82f6';
-            const label   = isFirst ? `<b>From:</b> ${name}` : isLast ? `<b>To:</b> ${name}` : `<b>Via:</b> ${name}`;
+            const isLast = i === allPoints.length - 1;
+            const color = isFirst ? '#16a34a' : isLast ? '#ef4444' : '#3b82f6';
+            const label = isFirst ? `<b>From:</b> ${name}` : isLast ? `<b>To:</b> ${name}` : `<b>Via:</b> ${name}`;
 
             const icon = L.divIcon({
                 className: '',
@@ -469,16 +469,35 @@ function toggleRouteStatus(routeId, currentActive) {
                 console.log('[Routes Toggle] Response:', data);
 
                 if (data.success) {
-                    Swal.fire('Updated!', data.message, 'success').then(() => {
-                        location.reload();
+                    const row = document.querySelector('.route-row[data-id="' + routeId + '"]');
+                    if (row) {
+                        row.dataset.active = String(newActive);
+                        row.dataset.status = nextStatus;
+                        AdminUI.setRowStatus(row, nextStatus);
+                        AdminUI.moveRowToGroup(row, nextStatus, {
+                            groupKey: nextStatus,
+                            label: nextStatus === 'active' ? 'Active Routes' : 'Inactive Routes',
+                            icon: 'fas fa-road',
+                            hint: nextStatus === 'active' ? 'Available for scheduling' : 'Hidden from scheduling',
+                            colspan: 7
+                        });
+                        AdminUI.refreshGroups(document.querySelector('.routes-table tbody'), 'tr.route-row', row => row.dataset.active === '1' ? 'active' : 'inactive');
+                    }
+
+                    document.querySelectorAll('.icon-btn.toggle[data-id="' + routeId + '"]').forEach(btn => {
+                        btn.dataset.active = String(newActive);
+                        const icon = btn.querySelector('i');
+                        if (icon) icon.className = 'fas fa-' + (newActive == 1 ? 'toggle-on' : 'toggle-off');
                     });
+
+                    AdminUI.notify('success', data.message || 'Route status updated successfully.');
                 } else {
-                    Swal.fire('Error', data.message || 'Failed to update status.', 'error');
+                    AdminUI.notify('error', data.message || 'Unable to update route status. Please try again.');
                 }
             })
             .catch(err => {
                 console.error('[Routes Toggle] Fetch error:', err);
-                Swal.fire('Error', 'Network error. Please try again.', 'error');
+                AdminUI.notify('error', 'Unable to update route status. Please try again.');
             });
     });
 }
@@ -499,13 +518,13 @@ function handleActionClick(e) {
     if (editBtn) {
         e.stopPropagation();
         const editContainer = document.getElementById('edit-stops-container');
-        const editAddBtn    = document.getElementById('edit-add-stop-btn');
-        const editCounter   = document.getElementById('edit-stops-counter');
+        const editAddBtn = document.getElementById('edit-add-stop-btn');
+        const editCounter = document.getElementById('edit-stops-counter');
 
         document.getElementById('edit-id').value = editBtn.dataset.id;
-        window.syncSS(document.getElementById('edit-origin'),      editBtn.dataset.origin);
-        window.syncSS(document.getElementById('edit-destination'),  editBtn.dataset.destination);
-        window.syncSS(document.getElementById('edit-status'),       editBtn.dataset.active);
+        window.syncSS(document.getElementById('edit-origin'), editBtn.dataset.origin);
+        window.syncSS(document.getElementById('edit-destination'), editBtn.dataset.destination);
+        window.syncSS(document.getElementById('edit-status'), editBtn.dataset.active);
         document.getElementById('edit-fare').value = editBtn.dataset.fare;
 
         clearStops(editContainer, editAddBtn, editCounter);
@@ -541,20 +560,55 @@ document.addEventListener('DOMContentLoaded', () => {
     window.buildSearchableSelects(document);
 
     // Route count badge
-    const rows    = document.querySelectorAll('.route-row');
+    const rows = document.querySelectorAll('.route-row');
     const countEl = document.getElementById('route-count');
+    const dateFrom = document.getElementById('route-date-from');
+    const dateTo = document.getElementById('route-date-to');
+    const dateClear = document.getElementById('route-date-clear');
+    const searchInput = document.getElementById('route-search');
     if (countEl) countEl.textContent = `${rows.length} route${rows.length !== 1 ? 's' : ''}`;
 
+    function updateRouteGroups() {
+        document.querySelectorAll('.routes-table .admin-status-group-row').forEach(groupRow => {
+            const key = groupRow.dataset.groupKey || '';
+            const hasVisible = Array.from(document.querySelectorAll('.routes-table .route-row'))
+                .some(row => (row.dataset.active === '1' ? 'active' : 'inactive') === key && row.style.display !== 'none');
+            groupRow.style.display = hasVisible ? '' : 'none';
+        });
+    }
+    updateRouteGroups();
+
     // Search filter
-    document.getElementById('route-search')?.addEventListener('input', function () {
-        const q = this.value.toLowerCase();
+    function applyRouteFilters() {
+        if (!rows.length) return;
+        const q = (document.getElementById('route-search')?.value || '').toLowerCase();
+        const from = dateFrom?.value || '';
+        const to = dateTo?.value || '';
         rows.forEach(row => {
             const match =
                 row.dataset.origin.toLowerCase().includes(q) ||
                 row.dataset.destination.toLowerCase().includes(q);
-            row.style.display = match ? '' : 'none';
+            row.style.display = match && withinDate(row.dataset.created || '', from, to) ? '' : 'none';
         });
+        updateRouteGroups();
+        if (countEl) {
+            const visible = Array.from(rows).filter(row => row.style.display !== 'none').length;
+            countEl.textContent = `${visible} route${visible !== 1 ? 's' : ''}`;
+        }
+        AdminUI.setClearButtonState(dateClear, !!((searchInput?.value || '').trim() || dateFrom?.value || dateTo?.value));
+        renderRouteEmptyState(from || to);
+    }
+
+    searchInput?.addEventListener('input', AdminUI.debounce(applyRouteFilters, 350));
+    dateFrom?.addEventListener('change', applyRouteFilters);
+    dateTo?.addEventListener('change', applyRouteFilters);
+    dateClear?.addEventListener('click', function () {
+        if (searchInput) searchInput.value = '';
+        if (dateFrom) dateFrom.value = '';
+        if (dateTo) dateTo.value = '';
+        applyRouteFilters();
     });
+    applyRouteFilters();
 
     // Click row → show map
     rows.forEach(row => {
@@ -584,8 +638,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Add modal
     const addContainer = document.getElementById('stops-container');
-    const addBtn       = document.getElementById('add-stop-btn');
-    const addCounter   = document.getElementById('add-stops-counter');
+    const addBtn = document.getElementById('add-stop-btn');
+    const addCounter = document.getElementById('add-stops-counter');
 
     document.getElementById('open-add-modal')?.addEventListener('click', () => {
         clearStops(addContainer, addBtn, addCounter);
@@ -596,8 +650,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Edit modal stop add button
     const editContainer = document.getElementById('edit-stops-container');
-    const editAddBtn    = document.getElementById('edit-add-stop-btn');
-    const editCounter   = document.getElementById('edit-stops-counter');
+    const editAddBtn = document.getElementById('edit-add-stop-btn');
+    const editCounter = document.getElementById('edit-stops-counter');
 
     editAddBtn?.addEventListener('click', () => addStopRow(editContainer, editAddBtn, editCounter));
+
+    function renderRouteEmptyState(dateFiltered) {
+        const tbody = document.querySelector('.routes-table tbody');
+        if (!tbody) return;
+        tbody.querySelectorAll('.js-empty-row').forEach(row => row.remove());
+        const hasVisible = Array.from(rows).some(row => row.style.display !== 'none');
+        if (hasVisible) return;
+        const message = dateFiltered ? 'No routes found for the selected date range.' : 'No routes match your current filters.';
+        tbody.insertAdjacentHTML('beforeend', '<tr class="js-empty-row"><td colspan="7"><div class="empty-state"><i class="fas fa-search"></i><p>' + message + '</p></div></td></tr>');
+    }
+
+    function withinDate(raw, from, to) {
+        if (!from && !to) return true;
+        if (!raw) return false;
+        const value = String(raw).slice(0, 10);
+        if (from && value < from) return false;
+        if (to && value > to) return false;
+        return true;
+    }
 });

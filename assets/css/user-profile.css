@@ -115,6 +115,17 @@
     background: var(--u-border2);
 }
 
+.u-menu-item {
+    width: 100%;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+}
+
+.u-menu-item:not(.danger) > i:first-child {
+    color: var(--u-accent);
+}
+
 /* Menu item hover effects */
 .u-menu-item:active {
     transform: scale(0.98);
@@ -450,8 +461,164 @@
     opacity: 0.65;
 }
 
+.user-profile-modal {
+    background: var(--u-surface) !important;
+    border: 1px solid var(--u-border2) !important;
+    border-radius: 16px !important;
+    color: var(--u-text) !important;
+    overflow: hidden;
+}
+
+.user-profile-modal .modal-header,
+.user-profile-modal .modal-footer {
+    background: var(--u-surface2) !important;
+    border-color: var(--u-border) !important;
+    padding: 14px 18px !important;
+}
+
+.user-profile-modal .modal-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--u-text) !important;
+    font-size: 15px;
+    font-weight: 800;
+}
+
+.user-profile-modal .modal-title i {
+    color: var(--u-accent);
+}
+
+.user-profile-modal .modal-body {
+    padding: 16px 18px !important;
+}
+
+.user-profile-modal .btn-primary {
+    background: var(--u-accent) !important;
+    border-color: var(--u-accent) !important;
+    color: #fff !important;
+}
+
+.user-profile-modal .btn-secondary {
+    background: var(--u-surface) !important;
+    border: 1px solid var(--u-border) !important;
+    color: var(--u-text) !important;
+}
+
+.u-pref-list,
+.u-help-grid {
+    display: grid;
+    gap: 8px;
+}
+
+.u-pref-row,
+.u-help-card,
+.u-support-note {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    padding: 12px;
+    border: 1px solid var(--u-border);
+    border-radius: 10px;
+    background: var(--u-surface);
+}
+
+.u-pref-icon,
+.u-help-card > i,
+.u-support-note > i {
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 34px;
+    background: var(--u-accent-soft);
+    color: var(--u-accent);
+    font-size: 14px;
+}
+
+.u-pref-copy,
+.u-help-card span {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+    flex: 1;
+}
+
+.u-pref-copy strong,
+.u-help-card strong {
+    color: var(--u-text);
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.u-pref-copy small,
+.u-help-card small,
+.u-support-note span {
+    color: var(--u-muted);
+    font-size: 12px;
+    line-height: 1.35;
+}
+
+.u-pref-row input[type="checkbox"] {
+    width: 40px;
+    height: 22px;
+    min-width: 40px;
+    appearance: none;
+    border: 1px solid var(--u-border2);
+    border-radius: 999px;
+    background: var(--u-surface2);
+    position: relative;
+    cursor: pointer;
+    transition: background .15s, border-color .15s;
+}
+
+.u-pref-row input[type="checkbox"]::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--u-muted);
+    transition: transform .15s, background .15s;
+}
+
+.u-pref-row input[type="checkbox"]:checked {
+    border-color: var(--u-accent);
+    background: var(--u-accent-soft);
+}
+
+.u-pref-row input[type="checkbox"]:checked::after {
+    transform: translateX(18px);
+    background: var(--u-accent);
+}
+
+.u-help-card {
+    color: var(--u-text);
+    text-decoration: none;
+}
+
+.u-help-card:hover {
+    border-color: var(--u-border2);
+    color: var(--u-text);
+}
+
+.u-support-note {
+    margin-top: 12px;
+    background: var(--u-surface2);
+}
+
 /* Dark mode overrides */
 body.dark #verifModal .btn-close {
+    filter: invert(1) brightness(1.2);
+    opacity: 0.75;
+}
+
+body.dark .user-profile-modal .btn-close {
     filter: invert(1) brightness(1.2);
     opacity: 0.75;
 }

@@ -30,12 +30,26 @@ class Schedules
                 d.license_number as driver_license,
                 v.plate_number as van_plate,
                 v.model as van_model,
-                v.capacity as van_capacity
+                v.capacity as van_capacity,
+                (
+                    SELECT COUNT(*)
+                    FROM bookings b
+                    WHERE b.schedule_id_fk = s.schedule_id_pk
+                      AND b.status = 'pending'
+                ) as pending_bookings_count
             FROM {$this->table} s
             LEFT JOIN routes r ON s.route_id_fk = r.route_id_pk
             LEFT JOIN drivers d ON s.driver_id_fk = d.driver_id_pk
             LEFT JOIN vans v ON s.van_id_fk = v.van_id_pk
-            ORDER BY s.created_at DESC
+            ORDER BY
+                CASE s.trip_status
+                    WHEN 'boarding' THEN 0
+                    WHEN 'departed' THEN 1
+                    WHEN 'arrived' THEN 2
+                    WHEN 'cancelled' THEN 3
+                    ELSE 4
+                END,
+                s.created_at DESC
         ");
         $stmt->execute();
         $schedules = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -154,6 +168,18 @@ class Schedules
     public function EditSchedule(): array
     {
         try {
+            $currentStatus = $this->getCurrentStatus();
+            if (!$currentStatus) {
+                return ['success' => false, 'message' => 'Schedule not found.'];
+            }
+
+            if ($this->trip_status !== $currentStatus && $this->HasPendingBookings()) {
+                return [
+                    'success' => false,
+                    'message' => 'Resolve pending bookings before changing this schedule status.'
+                ];
+            }
+
             $this->conn->beginTransaction();
 
             $stmt = $this->conn->prepare("
@@ -165,6 +191,11 @@ class Schedules
                     departure_time = :time,
                     estimated_arrival_at = :eta,
                     trip_status  = :status,
+                    arrived_at = CASE
+                        WHEN :status2 = 'arrived' AND :current_status <> 'arrived' THEN NOW()
+                        WHEN :status3 = 'arrived' THEN arrived_at
+                        ELSE NULL
+                    END,
                     updated_at   = NOW()
                 WHERE schedule_id_pk = :id
             ");
@@ -176,7 +207,10 @@ class Schedules
                 ':date' => $this->departure_date,
                 ':time' => $this->departure_time,
                 ':eta' => $this->estimated_arrival_at,
-                ':status' => $this->trip_status
+                ':status' => $this->trip_status,
+                ':status2' => $this->trip_status,
+                ':status3' => $this->trip_status,
+                ':current_status' => $currentStatus
             ]);
 
             if ($this->trip_status === 'cancelled') {
@@ -195,9 +229,33 @@ class Schedules
 
     public function DeleteSchedule(): array
     {
-        $stmt = $this->conn->prepare("DELETE FROM {$this->table} WHERE schedule_id_pk = :id");
-        $stmt->execute([':id' => $this->id]);
-        return ['success' => true];
+        try {
+            if (!$this->id) {
+                return ['success' => false, 'message' => 'Invalid schedule ID.'];
+            }
+
+            $bookingCount = $this->CountBookingsForSchedule((int) $this->id);
+            if ($bookingCount > 0) {
+                return [
+                    'success' => false,
+                    'message' => 'This schedule has booking history, so it cannot be deleted. Keep it cancelled to preserve records.'
+                ];
+            }
+
+            $stmt = $this->conn->prepare("DELETE FROM {$this->table} WHERE schedule_id_pk = :id");
+            $stmt->execute([':id' => $this->id]);
+
+            return [
+                'success' => $stmt->rowCount() > 0,
+                'message' => $stmt->rowCount() > 0 ? 'Schedule deleted successfully.' : 'Schedule not found.'
+            ];
+        } catch (PDOException $e) {
+            return [
+                'success' => false,
+                'message' => 'Unable to delete this schedule because it is still linked to other records.',
+                'error' => $e->getMessage()
+            ];
+        }
     }
 
     public function canUpdateStatus(string $newStatus): bool
@@ -209,9 +267,13 @@ class Schedules
         if (!$current)
             return false;
 
+        if ($newStatus !== $current && $this->HasPendingBookings()) {
+            return false;
+        }
+
         $transitions = [
-            'boarding' => ['departed', 'cancelled'],
-            'departed' => ['cancelled'],
+            'boarding' => ['departed', 'arrived', 'cancelled'],
+            'departed' => ['arrived', 'cancelled'],
             'arrived' => [],
             'cancelled' => []
         ];
@@ -228,23 +290,71 @@ class Schedules
         return $stmt->fetchColumn() ?: null;
     }
 
+    public function HasPendingBookings(): bool
+    {
+        if (!$this->id) {
+            return false;
+        }
+
+        $stmt = $this->conn->prepare("
+            SELECT COUNT(*)
+            FROM bookings
+            WHERE schedule_id_fk = :schedule_id
+              AND status = 'pending'
+        ");
+        $stmt->execute([':schedule_id' => $this->id]);
+        return (int) $stmt->fetchColumn() > 0;
+    }
+
+    private function CountBookingsForSchedule(int $scheduleId): int
+    {
+        if (!$scheduleId) {
+            return 0;
+        }
+
+        $stmt = $this->conn->prepare("
+            SELECT COUNT(*)
+            FROM bookings
+            WHERE schedule_id_fk = :schedule_id
+        ");
+        $stmt->execute([':schedule_id' => $scheduleId]);
+        return (int) $stmt->fetchColumn();
+    }
+
     /**
-     * Updates trip_status and sets arrived_at = NOW() when status is 'arrived',
-     * otherwise sets arrived_at = NULL (in case of a correction via edit).
+     * Updates trip_status and clears arrived_at unless the trip is arrived.
      */
     public function UpdateStatus(): array
     {
         try {
+            $currentStatus = $this->getCurrentStatus();
+            if (!$currentStatus) {
+                return ['success' => false, 'message' => 'Schedule not found.'];
+            }
+
+            if ($this->trip_status !== $currentStatus && $this->HasPendingBookings()) {
+                return [
+                    'success' => false,
+                    'message' => 'Resolve pending bookings before changing this schedule status.'
+                ];
+            }
+
             $stmt = $this->conn->prepare("
                 UPDATE {$this->table}
                 SET trip_status = :status,
-                    arrived_at  = CASE WHEN :status2 = 'arrived' THEN NOW() ELSE arrived_at END,
+                    arrived_at  = CASE
+                        WHEN :status2 = 'arrived' AND :current_status <> 'arrived' THEN NOW()
+                        WHEN :status3 = 'arrived' THEN arrived_at
+                        ELSE NULL
+                    END,
                     updated_at  = NOW()
                 WHERE schedule_id_pk = :id
             ");
             $stmt->execute([
                 ':status' => $this->trip_status,
                 ':status2' => $this->trip_status,   // PDO doesn't allow reusing named params
+                ':status3' => $this->trip_status,
+                ':current_status' => $currentStatus,
                 ':id' => $this->id
             ]);
             if ($this->trip_status === 'arrived') {
@@ -271,38 +381,6 @@ class Schedules
                 WHERE s.trip_status = 'cancelled'
                   AND b.status NOT IN ('rejected', 'cancelled', 'completed')
             ");
-
-            $select = $this->conn->prepare("
-                SELECT schedule_id_pk
-                FROM {$this->table}
-                WHERE trip_status IN ('boarding', 'departed')
-                  AND estimated_arrival_at IS NOT NULL
-                  AND estimated_arrival_at <= NOW()
-                FOR UPDATE
-            ");
-            $select->execute();
-            $scheduleIds = array_map('intval', $select->fetchAll(PDO::FETCH_COLUMN));
-
-            if (!empty($scheduleIds)) {
-                $placeholders = implode(',', array_fill(0, count($scheduleIds), '?'));
-                $updateSchedules = $this->conn->prepare("
-                    UPDATE {$this->table}
-                    SET trip_status = 'arrived',
-                        arrived_at = COALESCE(arrived_at, estimated_arrival_at, NOW()),
-                        updated_at = NOW()
-                    WHERE schedule_id_pk IN ($placeholders)
-                ");
-                $updateSchedules->execute($scheduleIds);
-
-                $updateBookings = $this->conn->prepare("
-                    UPDATE bookings
-                    SET status = 'completed',
-                        updated_at = NOW()
-                    WHERE schedule_id_fk IN ($placeholders)
-                      AND status = 'approved'
-                ");
-                $updateBookings->execute($scheduleIds);
-            }
 
             $this->conn->commit();
         } catch (PDOException $e) {

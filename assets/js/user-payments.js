@@ -7,10 +7,14 @@
     var filtered = [];
     var modalEl = document.getElementById('paymentDetailModal');
     var detailModal = modalEl ? bootstrap.Modal.getOrCreateInstance(modalEl) : null;
+    var refundModalEl = document.getElementById('refundRequestModal');
+    var refundModal = refundModalEl ? bootstrap.Modal.getOrCreateInstance(refundModalEl) : null;
+    var activePayment = null;
 
     document.addEventListener('DOMContentLoaded', function () {
         bindFilters();
         bindPrint();
+        bindRefund();
         loadPayments();
     });
 
@@ -18,8 +22,23 @@
         ['paymentSearch', 'paymentStatusFilter', 'paymentDateFrom', 'paymentDateTo'].forEach(function (id) {
             var el = document.getElementById(id);
             if (!el) return;
-            el.addEventListener(id === 'paymentSearch' ? 'input' : 'change', applyFilters);
+            el.addEventListener(id === 'paymentSearch' ? 'input' : 'change', function () {
+                syncDateRange(id);
+                applyFilters();
+            });
         });
+
+        var clearBtn = document.getElementById('paymentClearFilters');
+        if (clearBtn) {
+            clearBtn.addEventListener('click', function () {
+                ['paymentSearch', 'paymentStatusFilter', 'paymentDateFrom', 'paymentDateTo'].forEach(function (id) {
+                    var el = document.getElementById(id);
+                    if (el) el.value = '';
+                });
+                syncDateRange();
+                applyFilters();
+            });
+        }
 
         var list = document.getElementById('paymentList');
         if (list) {
@@ -32,6 +51,8 @@
                 if (payment) openDetail(payment);
             });
         }
+
+        syncDateRange();
     }
 
     function bindPrint() {
@@ -43,12 +64,36 @@
         }
     }
 
+    function bindRefund() {
+        var requestBtn = document.getElementById('requestRefundBtn');
+        if (requestBtn) {
+            requestBtn.addEventListener('click', function () {
+                if (!activePayment || !refundModal) return;
+                setValue('refundPaymentId', activePayment.payment_id || '');
+                setValue('refundReason', 'change_of_plans');
+                setValue('refundCustomNote', '');
+                if (detailModal) detailModal.hide();
+                refundModal.show();
+            });
+        }
+
+        var submitBtn = document.getElementById('submitRefundRequestBtn');
+        if (submitBtn) {
+            submitBtn.addEventListener('click', submitRefundRequest);
+        }
+
+        var cancelBtn = document.getElementById('cancelRefundRequestBtn');
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', cancelRefundRequest);
+        }
+    }
+
     function loadPayments() {
         var userId = (document.getElementById('paymentsUserId') || {}).value || '';
-        fetch('../../controllers/users/PaymentController.php?action=list&user_id=' + encodeURIComponent(userId), {
+        return fetch('../../controllers/users/PaymentController.php?action=list&user_id=' + encodeURIComponent(userId), {
             headers: { 'Accept': 'application/json' }
         })
-            .then(function (res) { return res.json(); })
+            .then(parseJsonResponse)
             .then(function (data) {
                 if (!data.success) throw new Error(data.message || 'Unable to load payments.');
                 payments = data.data || [];
@@ -84,7 +129,43 @@
         });
 
         renderStats();
+        renderFilterFeedback();
         renderList();
+    }
+
+    function syncDateRange(changedId) {
+        var fromEl = document.getElementById('paymentDateFrom');
+        var toEl = document.getElementById('paymentDateTo');
+        if (!fromEl || !toEl) return;
+
+        if (fromEl.value && toEl.value && fromEl.value > toEl.value) {
+            if (changedId === 'paymentDateTo') {
+                fromEl.value = toEl.value;
+            } else {
+                toEl.value = fromEl.value;
+            }
+        }
+
+        toEl.min = fromEl.value || '';
+        fromEl.max = toEl.value || '';
+    }
+
+    function renderFilterFeedback() {
+        var el = document.getElementById('paymentFilterFeedback');
+        if (!el) return;
+
+        var hasFilters = ['paymentSearch', 'paymentStatusFilter', 'paymentDateFrom', 'paymentDateTo'].some(function (id) {
+            return ((document.getElementById(id) || {}).value || '').trim() !== '';
+        });
+
+        if (!payments.length) {
+            el.textContent = 'No payment records yet.';
+            return;
+        }
+
+        el.textContent = hasFilters
+            ? 'Showing ' + filtered.length + ' of ' + payments.length + ' payment' + (payments.length === 1 ? '' : 's') + '.'
+            : 'Showing all ' + payments.length + ' payment' + (payments.length === 1 ? '' : 's') + '.';
     }
 
     function renderStats() {
@@ -124,11 +205,11 @@
                     '<div class="payment-method">' +
                         '<i class="' + method.icon + '"></i><span>' + esc(method.label) + '</span>' +
                     '</div>' +
-                    '<div style="margin-top:8px"><span class="pay-badge passenger">' + esc(passengerTypeSummary(p)) + '</span></div>' +
+                    '<div class="passenger-type-row">' + passengerTypeBadges(p) + '</div>' +
                 '</div>' +
                 '<div class="payment-side">' +
                     '<div class="payment-amount">' + esc(peso(p.amount)) + '</div>' +
-                    '<span class="pay-badge ' + esc(p.status) + '">' + esc(p.status) + '</span>' +
+                    '<span class="pay-badge ' + esc(p.status) + '">' + esc(statusLabel(p.status)) + '</span>' +
                 '</div>' +
                 '<div class="payment-chevron"><i class="fa-solid fa-chevron-right"></i></div>' +
             '</article>';
@@ -145,19 +226,191 @@
     }
 
     function openDetail(payment) {
+        activePayment = payment;
         var method = methodMeta(payment.payment_method);
         setText('detailReference', payment.reference_code || '-');
         setText('detailRoute', payment.route_display || '-');
         setText('detailDate', formatDateTime(payment.departure_date, payment.departure_time));
         setHTML('detailSeats', seatSummary(payment.seat_numbers));
         setHTML('detailPassenger', passengerDetails(payment));
-        setText('detailPassengerType', passengerTypeSummary(payment));
+        setHTML('detailPassengerType', passengerTypeBadges(payment));
         setText('detailMethod', method.label);
         setText('detailPaymentRef', payment.payment_reference || '-');
-        setText('detailStatus', capitalize(payment.status || '-'));
+        setText('detailStatus', statusLabel(payment.status || '-'));
         setText('detailAmount', peso(payment.amount));
+        renderRefundNotes(payment);
+
+        var refundBtn = document.getElementById('requestRefundBtn');
+        if (refundBtn) {
+            refundBtn.hidden = !canRequestRefund(payment);
+        }
+        var cancelRefundBtn = document.getElementById('cancelRefundRequestBtn');
+        if (cancelRefundBtn) {
+            cancelRefundBtn.hidden = !canCancelRefund(payment);
+        }
 
         if (detailModal) detailModal.show();
+    }
+
+    function canRequestRefund(payment) {
+        return String(payment.status || '').toLowerCase() === 'paid' &&
+            String(payment.booking_status || '').toLowerCase() === 'approved';
+    }
+
+    function canCancelRefund(payment) {
+        return String(payment.status || '').toLowerCase() === 'refund_requested';
+    }
+
+    function renderRefundNotes(payment) {
+        var el = document.getElementById('detailRefundNotes');
+        if (!el) return;
+
+        var timeline = refundTimeline(payment.notes || {});
+        if (!timeline.length) {
+            el.hidden = true;
+            el.innerHTML = '';
+            return;
+        }
+
+        el.hidden = false;
+        el.innerHTML = '<span class="refund-note-title">Refund updates</span>' +
+            timeline.map(function (item) {
+                return '<div class="refund-note-item">' +
+                    '<strong>' + esc(item.label) + '</strong>' +
+                    '<span>' + esc(item.message) + '</span>' +
+                    (item.when ? '<small>' + esc(item.when) + '</small>' : '') +
+                '</div>';
+            }).join('');
+    }
+
+    function refundTimeline(notes) {
+        if (typeof notes === 'string') {
+            try {
+                notes = JSON.parse(notes);
+            } catch (e) {
+                notes = {};
+            }
+        }
+
+        var history = Array.isArray(notes.refund_history) ? notes.refund_history : [];
+        if (!history.length && notes.refund) history = [notes.refund];
+
+        return history.map(function (event) {
+            var label = event.actor === 'admin' ? 'Admin response' : 'Your note';
+            var reason = statusLabel(event.reason || event.type || 'refund');
+            var note = event.admin_note || event.user_note || event.custom_note || '';
+            var decision = event.decision ? statusLabel(event.decision) + ' - ' : '';
+
+            return {
+                label: label,
+                message: decision + reason + (note ? ' - ' + note : ''),
+                when: event.created_at ? formatDate(event.created_at) : ''
+            };
+        });
+    }
+
+    function submitRefundRequest() {
+        var submitBtn = document.getElementById('submitRefundRequestBtn');
+        var paymentId = (document.getElementById('refundPaymentId') || {}).value || '';
+        var reason = (document.getElementById('refundReason') || {}).value || '';
+        var customNote = (document.getElementById('refundCustomNote') || {}).value || '';
+        var csrf = (document.getElementById('paymentsCsrfToken') || {}).value || '';
+
+        if (!paymentId || !reason) return;
+
+        var fd = new FormData();
+        fd.append('csrf_token', csrf);
+        fd.append('payment_id', paymentId);
+        fd.append('reason', reason);
+        fd.append('custom_note', customNote);
+
+        if (submitBtn) submitBtn.disabled = true;
+
+        fetch('../../controllers/users/PaymentController.php?action=request_refund', {
+            method: 'POST',
+            body: fd,
+            headers: { 'Accept': 'application/json' }
+        })
+            .then(parseJsonResponse)
+            .then(function (data) {
+                if (!data.success) throw new Error(data.message || 'Unable to request refund.');
+                if (refundModal) refundModal.hide();
+                return loadPayments();
+            })
+            .catch(function (err) {
+                if (window.Swal) {
+                    Swal.fire({ icon: 'error', title: 'Refund Request Failed', text: err.message });
+                } else {
+                    alert(err.message);
+                }
+            })
+            .finally(function () {
+                if (submitBtn) submitBtn.disabled = false;
+            });
+    }
+
+    function cancelRefundRequest() {
+        if (!activePayment || !canCancelRefund(activePayment)) return;
+
+        var runCancel = function () {
+            var cancelBtn = document.getElementById('cancelRefundRequestBtn');
+            var csrf = (document.getElementById('paymentsCsrfToken') || {}).value || '';
+            var fd = new FormData();
+            fd.append('csrf_token', csrf);
+            fd.append('payment_id', activePayment.payment_id || '');
+
+            if (cancelBtn) cancelBtn.disabled = true;
+
+            fetch('../../controllers/users/PaymentController.php?action=cancel_refund', {
+                method: 'POST',
+                body: fd,
+                headers: { 'Accept': 'application/json' }
+            })
+                .then(parseJsonResponse)
+                .then(function (data) {
+                    if (!data.success) throw new Error(data.message || 'Unable to cancel refund request.');
+                    if (detailModal) detailModal.hide();
+                    return loadPayments();
+                })
+                .catch(function (err) {
+                    if (window.Swal) {
+                        Swal.fire({ icon: 'error', title: 'Cancel Refund Failed', text: err.message });
+                    } else {
+                        alert(err.message);
+                    }
+                })
+                .finally(function () {
+                    if (cancelBtn) cancelBtn.disabled = false;
+                });
+        };
+
+        if (window.Swal) {
+            Swal.fire({
+                icon: 'question',
+                title: 'Cancel refund request?',
+                text: 'This will restore your booking and payment as active.',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, cancel request'
+            }).then(function (result) {
+                if (result.isConfirmed) runCancel();
+            });
+        } else if (confirm('Cancel refund request?')) {
+            runCancel();
+        }
+    }
+
+    function parseJsonResponse(res) {
+        return res.text().then(function (text) {
+            if (!text.trim()) {
+                throw new Error('Server returned an empty response. Please refresh and try again.');
+            }
+
+            try {
+                return JSON.parse(text);
+            } catch (err) {
+                throw new Error('Server returned an invalid response. Please refresh and try again.');
+            }
+        });
     }
 
     function methodMeta(method) {
@@ -179,16 +432,51 @@
     }
 
     function passengerTypeSummary(payment) {
-        var passengers = Array.isArray(payment.passengers) ? payment.passengers : [];
-        if (!passengers.length) return labelPassengerType(payment.passenger_type);
-        var counts = {};
-        passengers.forEach(function (p) {
-            var type = p.type || 'regular';
-            counts[type] = (counts[type] || 0) + 1;
-        });
+        var counts = passengerTypeCounts(payment);
         return Object.keys(counts).map(function (type) {
             return counts[type] + ' ' + labelPassengerType(type);
         }).join(', ');
+    }
+
+    function passengerTypeBadges(payment) {
+        var counts = passengerTypeCounts(payment);
+        return Object.keys(counts).map(function (type) {
+            var label = counts[type] + ' ' + labelPassengerType(type);
+            return '<span class="pay-badge passenger type-' + passengerTypeClass(type) + '">' +
+                '<i class="' + passengerTypeIcon(type) + '"></i>' +
+                '<span>' + esc(label) + '</span>' +
+            '</span>';
+        }).join('');
+    }
+
+    function passengerTypeCounts(payment) {
+        var passengers = Array.isArray(payment.passengers) ? payment.passengers : [];
+        if (!passengers.length) {
+            var fallbackType = String(payment.passenger_type || 'regular').toLowerCase();
+            var fallback = {};
+            fallback[fallbackType] = 1;
+            return fallback;
+        }
+
+        var counts = {};
+        passengers.forEach(function (p) {
+            var type = String(p.type || 'regular').toLowerCase();
+            counts[type] = (counts[type] || 0) + 1;
+        });
+        return counts;
+    }
+
+    function passengerTypeIcon(type) {
+        return {
+            regular: 'fa-regular fa-user',
+            student: 'fa-solid fa-graduation-cap',
+            senior: 'fa-solid fa-person-cane',
+            pwd: 'fa-solid fa-wheelchair'
+        }[type] || 'fa-regular fa-user';
+    }
+
+    function passengerTypeClass(type) {
+        return String(type || 'regular').toLowerCase().replace(/[^a-z0-9_-]/g, '');
     }
 
     function passengerNameSummary(payment) {
@@ -252,9 +540,20 @@
         return value.charAt(0).toUpperCase() + value.slice(1);
     }
 
+    function statusLabel(value) {
+        return String(value || '')
+            .replace(/_/g, ' ')
+            .replace(/\b\w/g, function (char) { return char.toUpperCase(); });
+    }
+
     function setText(id, value) {
         var el = document.getElementById(id);
         if (el) el.textContent = value;
+    }
+
+    function setValue(id, value) {
+        var el = document.getElementById(id);
+        if (el) el.value = value;
     }
 
     function setHTML(id, value) {

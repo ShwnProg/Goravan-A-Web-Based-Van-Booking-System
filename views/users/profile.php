@@ -215,21 +215,21 @@ $type          = $verif_type;
 
     <div class="u-sec">
         <div class="u-menu-list">
-            <a href="#" class="u-menu-item">
+            <button type="button" class="u-menu-item" data-bs-toggle="modal" data-bs-target="#notificationPreferencesModal">
                 <i class="fa-solid fa-bell"></i>
                 <span>Notification Preferences</span>
                 <i class="fa-solid fa-chevron-right caret"></i>
-            </a>
+            </button>
             <!-- <a href="#" class="u-menu-item">
                 <i class="fa-solid fa-shield-halved"></i>
                 <span>Privacy &amp; Security</span>
                 <i class="fa-solid fa-chevron-right caret"></i>
             </a> -->
-            <a href="#" class="u-menu-item">
+            <button type="button" class="u-menu-item" data-bs-toggle="modal" data-bs-target="#helpSupportModal">
                 <i class="fa-solid fa-circle-question"></i>
                 <span>Help &amp; Support</span>
                 <i class="fa-solid fa-chevron-right caret"></i>
-            </a>
+            </button>
             <div class="u-menu-divider"></div>
             <a href="../../controllers/users/LogoutController.php" class="u-menu-item danger">
                 <i class="fa-solid fa-right-from-bracket"></i>
@@ -239,6 +239,118 @@ $type          = $verif_type;
     </div>
 
 </div><!-- /u-body -->
+
+<div class="modal fade" id="notificationPreferencesModal" tabindex="-1"
+     aria-labelledby="notificationPreferencesTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content user-profile-modal">
+            <div class="modal-header">
+                <h5 class="modal-title" id="notificationPreferencesTitle">
+                    <i class="fa-solid fa-bell"></i>
+                    Notification Preferences
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="u-pref-list">
+                    <label class="u-pref-row">
+                        <span class="u-pref-icon"><i class="fa-solid fa-ticket"></i></span>
+                        <span class="u-pref-copy">
+                            <strong>Booking updates</strong>
+                            <small>Approvals, cancellations, and completed trips.</small>
+                        </span>
+                        <input type="checkbox" data-notif-pref="booking">
+                    </label>
+                    <label class="u-pref-row">
+                        <span class="u-pref-icon"><i class="fa-solid fa-clock"></i></span>
+                        <span class="u-pref-copy">
+                            <strong>Trip reminders</strong>
+                            <small>Upcoming boarding reminders for approved bookings.</small>
+                        </span>
+                        <input type="checkbox" data-notif-pref="reminder">
+                    </label>
+                    <label class="u-pref-row">
+                        <span class="u-pref-icon"><i class="fa-solid fa-receipt"></i></span>
+                        <span class="u-pref-copy">
+                            <strong>Payment receipts</strong>
+                            <small>Successful payment and receipt notifications.</small>
+                        </span>
+                        <input type="checkbox" data-notif-pref="payment">
+                    </label>
+                    <label class="u-pref-row">
+                        <span class="u-pref-icon"><i class="fa-solid fa-id-card-clip"></i></span>
+                        <span class="u-pref-copy">
+                            <strong>Verification</strong>
+                            <small>Student, Senior Citizen, and PWD verification results.</small>
+                        </span>
+                        <input type="checkbox" data-notif-pref="verification">
+                    </label>
+                    <label class="u-pref-row">
+                        <span class="u-pref-icon"><i class="fa-solid fa-calendar-plus"></i></span>
+                        <span class="u-pref-copy">
+                            <strong>New schedules</strong>
+                            <small>Fresh available route schedules.</small>
+                        </span>
+                        <input type="checkbox" data-notif-pref="schedule">
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="resetNotificationPrefs">Reset</button>
+                <button type="button" class="btn btn-primary" id="saveNotificationPrefs">Save Preferences</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="helpSupportModal" tabindex="-1"
+     aria-labelledby="helpSupportTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content user-profile-modal">
+            <div class="modal-header">
+                <h5 class="modal-title" id="helpSupportTitle">
+                    <i class="fa-solid fa-circle-question"></i>
+                    Help &amp; Support
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="u-help-grid">
+                    <a href="schedule.php" class="u-help-card">
+                        <i class="fa-solid fa-magnifying-glass-location"></i>
+                        <span>
+                            <strong>Find a trip</strong>
+                            <small>Search available routes and seats.</small>
+                        </span>
+                    </a>
+                    <a href="my-bookings.php" class="u-help-card">
+                        <i class="fa-solid fa-list-check"></i>
+                        <span>
+                            <strong>Manage bookings</strong>
+                            <small>Review status, seats, driver, and van details.</small>
+                        </span>
+                    </a>
+                    <a href="my-payments.php" class="u-help-card">
+                        <i class="fa-solid fa-wallet"></i>
+                        <span>
+                            <strong>Payment receipts</strong>
+                            <small>Open your receipt history and download copies.</small>
+                        </span>
+                    </a>
+                </div>
+                <div class="u-support-note">
+                    <i class="fa-solid fa-headset"></i>
+                    <span>For urgent trip concerns, show your booking reference at the terminal support desk.</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Got it</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <div class="modal fade" id="verifModal" tabindex="-1"
      aria-labelledby="verifModalLabel" aria-hidden="true">
