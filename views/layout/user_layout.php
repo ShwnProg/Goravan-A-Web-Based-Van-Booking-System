@@ -27,6 +27,15 @@ $depth = str_repeat('../', substr_count($_SERVER['PHP_SELF'], '/') - 1);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($title ?? 'GoraVan') ?> — GoraVan</title>
+    <script>
+        (function () {
+            try {
+                if (localStorage.getItem('gv-theme') === 'dark') {
+                    document.documentElement.classList.add('user-dark-preload');
+                }
+            } catch (e) {}
+        })();
+    </script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="<?= $depth ?>assets/css/base.css">
     <link rel="stylesheet" href="<?= $depth ?>assets/css/user-common.css">

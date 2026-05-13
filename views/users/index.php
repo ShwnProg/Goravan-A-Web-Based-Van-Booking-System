@@ -16,7 +16,6 @@ $user   = $um->GetUserById();
 $bk             = new Bookings($conn);
 $bk->id = decrypt($_SESSION['id']);
 $upcomingTrip   = $bk->GetUpcomingTripByUser();   // nearest approved future booking
-$recentBookings = $bk->GetRecentBookingsByUser(); // last 3
 $stats          = $bk->GetUserStats();             // total, upcoming, completed
 $routes         = (new Routes($conn))->GetActiveRoutes();  // for search dropdowns
 $locations      = LOCATIONS; // Use LOCATIONS constant from autoload.php
@@ -163,16 +162,16 @@ $locations      = LOCATIONS; // Use LOCATIONS constant from autoload.php
         <div class="u-sec-head">
             <h2 class="u-sec-title">Quick Actions</h2>
         </div>
-        <div class="u-qa-grid">
+        <div class="u-qa-grid u-qa-grid-refined">
             <a href="schedule.php" class="u-qa-card">
                 <div class="u-qa-icon">
-                    <i class="fa-solid fa-van-shuttle"></i>
+                    <i class="fa-solid fa-magnifying-glass-location"></i>
                 </div>
-                <span class="u-qa-label">Book Van</span>
+                <span class="u-qa-label">Find Schedule</span>
             </a>
             <a href="my-bookings.php" class="u-qa-card">
                 <div class="u-qa-icon">
-                    <i class="fa-solid fa-list-ul"></i>
+                    <i class="fa-solid fa-ticket"></i>
                 </div>
                 <span class="u-qa-label">My Bookings</span>
             </a>
@@ -180,67 +179,14 @@ $locations      = LOCATIONS; // Use LOCATIONS constant from autoload.php
                 <div class="u-qa-icon">
                     <i class="fa-solid fa-receipt"></i>
                 </div>
-                <span class="u-qa-label">Receipts</span>
+                <span class="u-qa-label">Payments</span>
             </a>
             <a href="profile.php" class="u-qa-card">
                 <div class="u-qa-icon">
-                    <i class="fa-regular fa-user"></i>
+                    <i class="fa-solid fa-id-card"></i>
                 </div>
                 <span class="u-qa-label">Profile</span>
             </a>
-        </div>
-    </div>
-
-    <!-- Recent Bookings -->
-    <div class="u-sec">
-        <div class="u-sec-head">
-            <h2 class="u-sec-title">Recent Bookings</h2>
-            <a href="my-bookings.php" class="u-sec-link">View all <i class="fa-solid fa-arrow-right"></i></a>
-        </div>
-        <div class="u-bookings-table">
-            <?php if ($recentBookings && count($recentBookings) > 0): ?>
-                <div class="u-table-header">
-                    <div class="u-col-ref">Ref Code</div>
-                    <div class="u-col-route">Route</div>
-                    <div class="u-col-date">Date</div>
-                    <div class="u-col-status">Status</div>
-                    <div class="u-col-action"></div>
-                </div>
-                <?php foreach ($recentBookings as $booking): ?>
-                <div class="u-table-row">
-                    <div class="u-col-ref">
-                        <span class="u-ref-code"><?= htmlspecialchars($booking['reference_code']) ?></span>
-                    </div>
-                    <div class="u-col-route">
-                        <span class="u-route-text"><?= htmlspecialchars($booking['route_display']) ?></span>
-                    </div>
-                    <div class="u-col-date">
-                        <div class="u-date-main"><?= date('M j, Y', strtotime($booking['departure_date'])) ?></div>
-                        <div class="u-date-time"><?= date('g:i A', strtotime($booking['departure_time'])) ?></div>
-                    </div>
-                    <div class="u-col-status">
-                        <span class="u-badge <?= $booking['status'] ?>">
-                            <?= ucfirst($booking['status']) ?>
-                        </span>
-                    </div>
-                    <div class="u-col-action">
-                        <a href="booking-detail.php?id=<?= urlencode(encrypt((string) $booking['book_id_pk'])) ?>" class="u-action-link">
-                            <i class="fa-solid fa-chevron-right"></i>
-                        </a>
-                    </div>
-                </div>
-                <?php endforeach; ?>
-            <?php else: ?>
-                <div class="u-table-empty">
-                    <div class="u-empty-icon">
-                        <i class="fa-solid fa-calendar-xmark"></i>
-                    </div>
-                    <div class="u-empty-text">
-                        <p>No recent bookings</p>
-                        <a href="schedule.php" class="u-empty-link">Book your first trip</a>
-                    </div>
-                </div>
-            <?php endif; ?>
         </div>
     </div>
 </div>

@@ -1253,6 +1253,304 @@ select.ss {
     box-shadow: none;
 }
 
+/* Cleaner booking modal and seat selection */
+#bookingModal .modal-dialog {
+    max-width: min(920px, calc(100vw - 24px));
+}
+
+#bookingModal .modal-body {
+    max-height: calc(100vh - 138px);
+    overflow: auto;
+    padding: 18px;
+}
+
+#bookingModal .modal-header {
+    padding: 16px 18px;
+}
+
+.booking-progress {
+    gap: 8px;
+    padding: 12px 0 16px;
+}
+
+.progress-step {
+    min-width: 0;
+}
+
+.progress-step .step-circle {
+    width: 30px;
+    height: 30px;
+    font-size: 12px;
+}
+
+.progress-step .step-label {
+    font-size: 12px;
+    letter-spacing: 0;
+}
+
+.booking-grid {
+    gap: 14px;
+}
+
+.booking-card,
+.booking-side {
+    border-radius: 12px;
+    border: 1px solid var(--u-border);
+    background: var(--u-surface);
+    box-shadow: none;
+}
+
+.booking-map {
+    height: 220px;
+    border-radius: 12px;
+}
+
+.vsv-grid {
+    max-width: 360px;
+    margin-inline: auto;
+    gap: 8px;
+    padding: 12px;
+}
+
+.vsv-seat {
+    width: 48px;
+    min-width: 48px;
+    height: 42px;
+    min-height: 42px;
+    border-radius: 8px;
+    border: 1px solid var(--u-border);
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.vsv-seat.available {
+    background: var(--u-surface);
+    color: var(--u-text);
+}
+
+.vsv-seat.selected,
+.vsv-seat.selectable.selected:hover {
+    background: var(--u-accent);
+    border-color: var(--u-accent);
+    color: #fff;
+    outline: 3px solid var(--u-accent-ring);
+}
+
+.vsv-seat.occupied,
+.vsv-seat.driver {
+    background: var(--u-surface2);
+    color: var(--u-muted);
+    opacity: .82;
+}
+
+.vsv-selected-dot::before {
+    background: var(--u-accent);
+    border-color: var(--u-accent);
+}
+
+.vsv-legend {
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.payment-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.payment-card {
+    min-height: 94px;
+    border-radius: 12px;
+    gap: 5px;
+    background: var(--u-surface);
+}
+
+.payment-card small {
+    display: block;
+    color: var(--u-muted);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.25;
+}
+
+.payment-card.selected {
+    background: var(--u-accent-soft);
+    outline: 3px solid var(--u-accent-ring);
+}
+
+.receipt-check {
+    width: 60px;
+    height: 60px;
+    font-size: 26px;
+    animation: none;
+}
+
+@media (max-width: 768px) {
+    #bookingModal .modal-dialog {
+        max-width: calc(100vw - 12px);
+        margin: 6px;
+    }
+
+    #bookingModal .modal-body {
+        max-height: calc(100vh - 112px);
+        padding: 14px;
+    }
+
+    .booking-map {
+        height: 190px;
+    }
+
+    .payment-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .vsv-seat {
+        width: 44px;
+        min-width: 44px;
+        height: 40px;
+        min-height: 40px;
+    }
+}
+
+/* Final booking modal seat-step polish */
+#bookingModal .modal-dialog {
+    max-width: min(860px, calc(100vw - 20px)) !important;
+}
+
+#bookingModal .modal-content {
+    border-radius: 14px !important;
+}
+
+#bookingModal .modal-body {
+    padding: 16px 18px 18px !important;
+}
+
+#bookingModal .booking-step[data-step="2"].active {
+    display: grid;
+    gap: 12px;
+}
+
+#bookingModal .seat-toolbar {
+    align-items: flex-start;
+    margin-bottom: 0;
+}
+
+#bookingModal .seat-selected-list {
+    max-width: 46%;
+    min-height: 0;
+}
+
+#bookingModal .van-seat-viewer {
+    max-width: 460px;
+    width: 100%;
+    margin: 0 auto;
+    border-radius: 12px;
+    background: var(--u-surface);
+}
+
+#bookingModal .vsv-windshield {
+    min-height: 34px;
+    padding: 7px 14px;
+    background: var(--u-surface2);
+    color: var(--u-text);
+    border-bottom: 1px solid var(--u-border);
+}
+
+#bookingModal .vsv-grid {
+    grid-template-columns: repeat(3, 58px);
+    justify-content: center;
+    align-items: center;
+    gap: 8px 22px;
+    padding: 12px 14px 10px;
+}
+
+#bookingModal .vsv-seat {
+    width: 58px;
+    min-width: 58px;
+    height: 40px;
+    min-height: 40px;
+    gap: 2px;
+    border-radius: 8px;
+    font-size: 11px;
+    letter-spacing: 0;
+}
+
+#bookingModal .vsv-seat i {
+    font-size: 13px;
+}
+
+#bookingModal .vsv-seat.driver {
+    opacity: .62;
+}
+
+#bookingModal .vsv-seat.available {
+    border-color: var(--u-border2);
+    color: var(--u-text);
+}
+
+#bookingModal .vsv-seat.selected,
+#bookingModal .vsv-seat.selectable.selected:hover {
+    background: var(--u-accent);
+    border-color: var(--u-accent);
+    color: #fff;
+    outline: 2px solid var(--u-accent-ring);
+}
+
+#bookingModal .vsv-seat.occupied {
+    opacity: .54;
+}
+
+#bookingModal .vsv-legend {
+    padding: 8px 12px 12px;
+    gap: 12px;
+    border-top: 1px solid var(--u-border);
+}
+
+#bookingModal .seat-fare-live {
+    max-width: 460px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 11px 14px;
+    border-radius: 10px;
+}
+
+#bookingModal .booking-actions {
+    margin-top: 0;
+    padding-top: 4px;
+}
+
+@media (max-width: 640px) {
+    #bookingModal .modal-dialog {
+        max-width: calc(100vw - 10px) !important;
+        margin: 5px;
+    }
+
+    #bookingModal .modal-body {
+        padding: 14px !important;
+    }
+
+    #bookingModal .seat-toolbar {
+        display: grid;
+        gap: 8px;
+    }
+
+    #bookingModal .seat-selected-list {
+        max-width: none;
+        justify-content: flex-start;
+        text-align: left;
+    }
+
+    #bookingModal .vsv-grid {
+        grid-template-columns: repeat(3, 52px);
+        gap: 8px 14px;
+    }
+
+    #bookingModal .vsv-seat {
+        width: 52px;
+        min-width: 52px;
+    }
+}
+
 /* Professional schedule page refresh */
 @media screen {
     .user-page .u-body.mobile-view {

@@ -167,9 +167,11 @@ if (!window._ssWidgetReady) {
     var themeBtn = document.getElementById('themeToggle');
     var themeIcon = document.getElementById('themeIcon');
 
-    // Persist preference
+    // Persist preference and honor the early preload class to prevent a light flash.
     var saved = localStorage.getItem('gv-theme');
-    if (saved === 'dark') applyDark(true);
+    var preloadedDark = document.documentElement.classList.contains('user-dark-preload');
+    applyDark(saved === 'dark' || preloadedDark);
+    document.documentElement.classList.remove('user-dark-preload');
 
     themeBtn && themeBtn.addEventListener('click', function () {
         var isDark = body.classList.contains('dark');

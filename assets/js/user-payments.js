@@ -335,6 +335,7 @@
             .then(function (data) {
                 if (!data.success) throw new Error(data.message || 'Unable to request refund.');
                 if (refundModal) refundModal.hide();
+                toast(data.message || 'Refund request submitted. Your booking remains active while admin reviews it.', 'success');
                 return loadPayments();
             })
             .catch(function (err) {
@@ -370,6 +371,7 @@
                 .then(function (data) {
                     if (!data.success) throw new Error(data.message || 'Unable to cancel refund request.');
                     if (detailModal) detailModal.hide();
+                    toast(data.message || 'Refund request cancelled.', 'success');
                     return loadPayments();
                 })
                 .catch(function (err) {
@@ -388,7 +390,7 @@
             Swal.fire({
                 icon: 'question',
                 title: 'Cancel refund request?',
-                text: 'This will restore your booking and payment as active.',
+                text: 'This withdraws your refund request and keeps your booking active.',
                 showCancelButton: true,
                 confirmButtonText: 'Yes, cancel request'
             }).then(function (result) {
@@ -411,6 +413,20 @@
                 throw new Error('Server returned an invalid response. Please refresh and try again.');
             }
         });
+    }
+
+    function toast(message, icon) {
+        if (window.Swal) {
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: icon || 'success',
+                title: message,
+                showConfirmButton: false,
+                timer: 2600,
+                timerProgressBar: true
+            });
+        }
     }
 
     function methodMeta(method) {

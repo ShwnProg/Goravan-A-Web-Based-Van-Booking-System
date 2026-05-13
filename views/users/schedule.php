@@ -101,11 +101,12 @@ $verifiedPassengerType = $verifiedType === 'senior' ? 'senior' : ($verifiedType 
                 <?php foreach ($results as $schedule):
                     $stops = $schedule['stops'] ?? [];
                     $availableSeats = (int) $schedule['available_seats'];
+                    $encryptedScheduleId = encrypt((string) $schedule['schedule_id_pk']);
                     $arrival = $schedule['estimated_arrival_at']
                         ? date('g:i A', strtotime($schedule['estimated_arrival_at']))
                         : date('g:i A', strtotime($schedule['departure_date'] . ' ' . $schedule['departure_time'] . ' +2 hours'));
                     ?>
-                    <div class="u-schedule-card">
+                    <div class="u-schedule-card" data-schedule-id="<?= htmlspecialchars($encryptedScheduleId) ?>" data-available-seats="<?= $availableSeats ?>">
                         <div class="u-schedule-header">
                             <div class="u-schedule-time">
                                 <div class="u-schedule-dep">
@@ -136,7 +137,7 @@ $verifiedPassengerType = $verifiedType === 'senior' ? 'senior' : ($verifiedType 
                             </div>
                             <div class="u-schedule-info">
                                 <i class="fa-solid fa-chair"></i>
-                                <span><?= $availableSeats ?> seat<?= $availableSeats === 1 ? '' : 's' ?> available</span>
+                                <span class="u-available-count"><?= $availableSeats ?> seat<?= $availableSeats === 1 ? '' : 's' ?> available</span>
                             </div>
                             <div class="u-schedule-info">
                                 <i class="fa-regular fa-calendar"></i>
@@ -150,7 +151,7 @@ $verifiedPassengerType = $verifiedType === 'senior' ? 'senior' : ($verifiedType 
                             </div>
                             <button class="u-book-btn"
                                 type="button"
-                                data-schedule-id="<?= htmlspecialchars(encrypt((string) $schedule['schedule_id_pk'])) ?>"
+                                data-schedule-id="<?= htmlspecialchars($encryptedScheduleId) ?>"
                                 <?= $availableSeats < 1 ? 'disabled' : '' ?>>
                                 <i class="fa-solid fa-ticket"></i> Book Now
                             </button>
@@ -161,8 +162,8 @@ $verifiedPassengerType = $verifiedType === 'senior' ? 'senior' : ($verifiedType 
         <?php else: ?>
             <div class="u-empty-state">
                 <i class="fa-solid fa-calendar-xmark"></i>
-                <p>No schedules available</p>
-                <p>Try adjusting your search criteria or date.</p>
+                <p>No available schedules found for your selected route and date.</p>
+                <p>Try another date or nearby route.</p>
             </div>
         <?php endif; ?>
     </div>
@@ -242,6 +243,7 @@ $verifiedPassengerType = $verifiedType === 'senior' ? 'senior' : ($verifiedType 
                         <div class="vsv-legend">
                             <span class="vsv-legend-item vsv-driver-dot">Driver</span>
                             <span class="vsv-legend-item vsv-available-dot">Available</span>
+                            <span class="vsv-legend-item vsv-selected-dot">Selected</span>
                             <span class="vsv-legend-item vsv-occupied-dot">Booked</span>
                         </div>
                     </div>
@@ -304,13 +306,13 @@ $verifiedPassengerType = $verifiedType === 'senior' ? 'senior' : ($verifiedType 
                             <h6>Payment Method</h6>
                             <div class="payment-grid">
                                 <button type="button" class="payment-card" data-method="gcash" style="--method-color: var(--u-accent);">
-                                    <i class="fa-solid fa-mobile-alt"></i><span>GCash</span>
+                                    <i class="fa-solid fa-mobile-screen-button"></i><span>GCash</span><small>Pay using mobile wallet</small>
                                 </button>
                                 <button type="button" class="payment-card" data-method="paymaya" style="--method-color: var(--u-info);">
-                                    <i class="fa-solid fa-wallet"></i><span>PayMaya</span>
+                                    <i class="fa-regular fa-credit-card"></i><span>PayMaya</span><small>Pay using Maya wallet</small>
                                 </button>
                                 <button type="button" class="payment-card" data-method="card" style="--method-color: var(--u-success);">
-                                    <i class="fa-solid fa-credit-card"></i><span>Card</span>
+                                    <i class="fa-solid fa-credit-card"></i><span>Card</span><small>Debit or credit card</small>
                                 </button>
                             </div>
 
@@ -373,7 +375,7 @@ $verifiedPassengerType = $verifiedType === 'senior' ? 'senior' : ($verifiedType 
                             <i class="fa-solid fa-arrow-left"></i> Back
                         </button>
                         <button type="button" class="u-btn u-btn-primary" id="confirmPayBtn">
-                            Confirm & Pay <i class="fa-solid fa-lock"></i>
+                            Submit Booking Request <i class="fa-solid fa-lock"></i>
                         </button>
                     </div>
                 </section>
@@ -381,7 +383,7 @@ $verifiedPassengerType = $verifiedType === 'senior' ? 'senior' : ($verifiedType 
                 <section class="booking-step" data-step="5">
                     <div class="receipt-wrap">
                         <div class="receipt-check"><i class="fa-solid fa-check"></i></div>
-                        <div class="receipt-title">Booking Submitted</div>
+                        <div class="receipt-title">Booking Request Submitted</div>
                         <div class="receipt-ref">
                             <span id="receiptReference">GV-0000-00000</span>
                             <button type="button" class="copy-ref" id="copyRefBtn" title="Copy reference">
@@ -394,7 +396,7 @@ $verifiedPassengerType = $verifiedType === 'senior' ? 'senior' : ($verifiedType 
                             <div class="receipt-row"><span>Seats</span><strong id="receiptSeats">-</strong></div>
                             <div class="receipt-row"><span>Passenger</span><strong id="receiptPassenger">-</strong></div>
                             <div class="receipt-row"><span>Payment</span><strong id="receiptPaymentMethod">-</strong></div>
-                            <div class="receipt-row"><span>Amount paid</span><strong id="receiptAmount">&#8369;0.00</strong></div>
+                            <div class="receipt-row"><span>Amount for review</span><strong id="receiptAmount">&#8369;0.00</strong></div>
                         </div>
                         <div class="booking-actions">
                             <a href="my-bookings.php" class="u-btn u-btn-primary">View My Bookings</a>

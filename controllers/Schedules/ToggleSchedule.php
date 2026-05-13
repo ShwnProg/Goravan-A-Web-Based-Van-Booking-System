@@ -45,7 +45,7 @@ echo json_encode([
     'success' => $result['success'],
     'message' => $result['success']
         ? 'Schedule status updated successfully.'
-        : ($result['message'] ?? $result['error'] ?? 'Failed to update schedule status.')
+        : ($result['message'] ?? 'Unable to update schedule status. Please try again.')
 ]);
 
 exit;

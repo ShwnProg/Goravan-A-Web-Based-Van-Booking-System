@@ -24,6 +24,7 @@
         const data = [];
         const colors = [];
         const today = new Date();
+        const isDark = document.body.classList.contains('admin-dark-mode-active');
 
         for (let i = 6; i >= 0; i--) {
             const d = new Date(today);
@@ -31,7 +32,7 @@
             const key = d.toISOString().slice(0, 10);
             labels.push(d.toLocaleDateString('en-PH', { weekday: 'short' }));
             data.push(lookup[key] ?? 0);
-            colors.push(i === 0 ? '#F97316' : '#e5e7eb');
+            colors.push(i === 0 ? '#F97316' : (isDark ? '#334155' : '#e5e7eb'));
         }
 
         canvas._dashboardChart = new Chart(canvas, {
@@ -70,7 +71,7 @@
                         grid: { display: false },
                         border: { display: false },
                         ticks: {
-                            color: '#c0c0c0',
+                            color: isDark ? '#94a3b8' : '#c0c0c0',
                             font: { size: 10 },
                             maxRotation: 0,
                         },
@@ -150,6 +151,16 @@
     function initDashboardPage() {
         initDailyChart();
         initActivityFeed();
+
+        if (!window._dashboardThemeObserver && document.body) {
+            window._dashboardThemeObserver = new MutationObserver(() => {
+                initDailyChart();
+            });
+            window._dashboardThemeObserver.observe(document.body, {
+                attributes: true,
+                attributeFilter: ['class'],
+            });
+        }
     }
 
     window.initDashboardPage = initDashboardPage;

@@ -110,7 +110,7 @@ if ($result['success']) {
 } else {
     echo json_encode([
         'success' => false,
-        'message' => $result['error'] ?? 'Failed to update route.'
+        'message' => $result['message'] ?? 'Unable to update record. Please check the details and try again.'
     ]);
 }
 

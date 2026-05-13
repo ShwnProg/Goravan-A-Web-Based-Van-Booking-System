@@ -77,8 +77,8 @@ $result = $driver->EditDriver();
 echo json_encode([
     'success' => $result['success'],
     'message' => $result['success']
-        ? 'Driver updated successfully'
-        : 'Update failed'
+        ? 'Driver updated successfully.'
+        : ($result['message'] ?? 'Unable to update record. Please check the details and try again.')
 ]);
 
 exit;

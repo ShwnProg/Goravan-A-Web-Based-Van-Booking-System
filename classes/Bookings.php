@@ -374,7 +374,7 @@ class Bookings
 
             return [
                 'success' => true,
-                'message' => 'Booking submitted successfully and is waiting for admin approval.',
+                'message' => 'Booking request submitted. Your booking and payment are pending admin review.',
                 'reference_code' => $referenceCode,
                 'booking_id' => $bookingIds[0],
                 'total_amount' => number_format($totalAmount, 2, '.', ''),
@@ -601,7 +601,7 @@ class Bookings
                 CASE
                     WHEN SUM(CASE WHEN b.status = 'pending' THEN 1 ELSE 0 END) > 0 THEN 'pending'
                     WHEN SUM(CASE WHEN b.status = 'approved' THEN 1 ELSE 0 END) > 0 THEN 'approved'
-                    WHEN SUM(CASE WHEN b.status = 'completed' THEN 1 ELSE 0 END) > 0 THEN 'completed'
+                    WHEN SUM(CASE WHEN b.status = 'approved' AND s.trip_status = 'arrived' THEN 1 ELSE 0 END) > 0 THEN 'completed'
                     WHEN SUM(CASE WHEN b.status = 'rejected' THEN 1 ELSE 0 END) > 0 THEN 'rejected'
                     ELSE 'cancelled'
                 END as status,
@@ -674,7 +674,7 @@ class Bookings
             SELECT 
                 COALESCE(COUNT(*), 0) as total,
                 COALESCE(SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END), 0) as pending,
-                COALESCE(SUM(CASE WHEN status = 'approved' AND schedule_status <> 'arrived' THEN 1 ELSE 0 END), 0) as upcoming,
+                COALESCE(SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END), 0) as upcoming,
                 COALESCE(SUM(CASE WHEN status = 'completed' OR schedule_status = 'arrived' THEN 1 ELSE 0 END), 0) as completed,
                 COALESCE(SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END), 0) as cancelled
             FROM (

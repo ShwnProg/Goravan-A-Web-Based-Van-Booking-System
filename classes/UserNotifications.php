@@ -15,7 +15,7 @@ class UserNotifications
             $this->tripReminderNotifications($userId),
             $this->verificationNotifications($userId),
             $this->paymentNotifications($userId),
-            $this->newScheduleNotifications()
+            $this->newScheduleNotifications($userId)
         );
 
         usort($items, function ($a, $b) {
@@ -228,35 +228,50 @@ class UserNotifications
         }
     }
 
-    private function newScheduleNotifications(): array
+    private function newScheduleNotifications(int $userId): array
     {
         try {
             $stmt = $this->conn->prepare("
                 SELECT
-                    s.schedule_id_pk,
-                    s.created_at AS event_time,
+                    s.route_id_fk,
+                    MAX(s.created_at) AS event_time,
+                    COUNT(*) AS schedule_count,
                     CONCAT(COALESCE(r.origin, 'Route'), ' -> ', COALESCE(r.destination, 'Destination')) AS route_display,
-                    s.departure_date,
-                    s.departure_time
+                    r.origin,
+                    r.destination
                 FROM schedules s
                 INNER JOIN routes r ON s.route_id_fk = r.route_id_pk
                 WHERE s.trip_status = 'boarding'
                   AND CONCAT(s.departure_date, ' ', s.departure_time) >= NOW()
                   AND s.created_at >= DATE_SUB(NOW(), INTERVAL 14 DAY)
-                ORDER BY s.created_at DESC
-                LIMIT 5
+                  AND s.route_id_fk IN (
+                      SELECT DISTINCT bs.route_id_fk
+                      FROM bookings b
+                      INNER JOIN schedules bs ON b.schedule_id_fk = bs.schedule_id_pk
+                      WHERE b.user_id_fk = :user_id
+                  )
+                GROUP BY s.route_id_fk, r.origin, r.destination
+                ORDER BY event_time DESC
+                LIMIT 3
             ");
-            $stmt->execute();
+            $stmt->execute([':user_id' => $userId]);
 
             return array_map(function ($row) {
+                $count = max(1, (int) ($row['schedule_count'] ?? 1));
+                $route = $row['route_display'] ?? 'your route';
+                $message = $count === 1
+                    ? 'A new schedule is available for ' . $route . '.'
+                    : $count . ' new schedules are available for ' . $route . '.';
+                $url = 'schedule.php?from=' . urlencode((string) ($row['origin'] ?? '')) . '&to=' . urlencode((string) ($row['destination'] ?? ''));
+
                 return $this->item(
-                    'schedule-' . $row['schedule_id_pk'],
+                    'schedule-route-' . $row['route_id_fk'],
                     'schedule',
-                    'New schedule available',
-                    ($row['route_display'] ?? 'Route') . ' - ' . $this->formatTripTime($row['departure_date'] . ' ' . $row['departure_time']),
+                    'New schedules available',
+                    $message,
                     $row['event_time'],
                     'fa-solid fa-calendar-plus',
-                    'schedule.php',
+                    $url,
                     'new schedule'
                 );
             }, $stmt->fetchAll(PDO::FETCH_ASSOC));

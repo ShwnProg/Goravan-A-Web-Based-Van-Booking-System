@@ -66,9 +66,12 @@ if ($result['success']) {
         'message' => 'Van added successfully.'
     ]);
 } else {
+    if (!empty($result['error'])) {
+        error_log('[AddVan] ' . $result['error']);
+    }
     echo json_encode([
         'success' => false,
-        'message' => $result['error'] ?? 'Unknown error.'
+        'message' => $result['message'] ?? 'Unable to add van. Please check the details and try again.'
     ]);
 }
 

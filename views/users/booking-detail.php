@@ -29,6 +29,25 @@ $displayArrivalAt = $validArrivedAt ? $booking['arrived_at'] : '';
 
 $hasArrived = $scheduleStatus === 'arrived' && !empty($displayArrivalAt);
 $hasEstimatedArrival = !$hasArrived && $estimatedArrivalAt && !in_array($scheduleStatus, ['cancelled'], true);
+
+$paymentNotes = [];
+if (!empty($booking['payment_notes'])) {
+    $decodedNotes = json_decode((string) $booking['payment_notes'], true);
+    $paymentNotes = is_array($decodedNotes) ? $decodedNotes : [];
+}
+$refundHistory = is_array($paymentNotes['refund_history'] ?? null) ? $paymentNotes['refund_history'] : [];
+if (!$refundHistory && !empty($paymentNotes['refund'])) {
+    $refundHistory = [$paymentNotes['refund']];
+}
+$passengerSummary = $booking['passenger_name'] ?? '-';
+if (!empty($paymentNotes['passengers']) && is_array($paymentNotes['passengers'])) {
+    $passengerSummary = implode(', ', array_map(function ($passenger) {
+        $name = trim((string) ($passenger['name'] ?? 'Passenger'));
+        $seat = trim((string) ($passenger['seat_number'] ?? ''));
+        $type = ucfirst((string) ($passenger['type'] ?? 'regular'));
+        return ($seat ? $seat . ': ' : '') . $name . ' (' . $type . ')';
+    }, $paymentNotes['passengers']));
+}
 ?>
 
 <div class="u-body booking-detail-page">
@@ -38,92 +57,96 @@ $hasEstimatedArrival = !$hasArrived && $estimatedArrivalAt && !in_array($schedul
         </a>
     </div>
 
-    <div class="u-bk-detail">
+    <div class="u-bk-detail u-detail-modern">
         <div class="u-bk-header">
             <div>
                 <div class="u-bk-ref"><?= htmlspecialchars($booking['reference_code']) ?></div>
                 <div class="u-bk-route"><?= htmlspecialchars($booking['route_display']) ?></div>
+                <div class="u-bk-subtle">Booked <?= date('M j, Y g:i A', strtotime($booking['created_at'])) ?></div>
             </div>
             <span class="u-badge <?= htmlspecialchars($booking['status']) ?>">
                 <?= ucfirst($booking['status']) ?>
             </span>
         </div>
 
-        <div class="u-bk-info">
-            <div class="u-info-row">
-                <span class="u-info-label"><i class="fa-solid fa-calendar-days"></i> Departure Date & Time:</span>
-                <span class="u-info-value">
-                    <?= date('M j, Y', strtotime($booking['departure_date'])) ?> &middot; <?= date('g:i A', strtotime($booking['departure_time'])) ?>
-                </span>
-            </div>
+        <div class="u-detail-sections">
+            <section class="u-detail-section">
+                <h2>Booking Summary</h2>
+                <div class="u-detail-grid">
+                    <div><span>Reference</span><strong><?= htmlspecialchars($booking['reference_code']) ?></strong></div>
+                    <div><span>Booking status</span><strong><?= ucfirst($booking['status']) ?></strong></div>
+                    <div><span>Created</span><strong><?= date('M j, Y g:i A', strtotime($booking['created_at'])) ?></strong></div>
+                </div>
+            </section>
 
-            <div class="u-info-row">
-                <span class="u-info-label"><i class="fa-solid fa-chair"></i> Seats:</span>
-                <span class="u-info-value">
-                    <?= (int) $booking['seats_count'] ?> seat<?= (int) $booking['seats_count'] === 1 ? '' : 's' ?>
-                    <?php if (!empty($booking['seat_numbers'])): ?>
-                        <span class="u-detail-seat-row">
-                            <?php foreach (explode(',', $booking['seat_numbers']) as $seatNumber): ?>
-                                <span class="u-seat-chip"><?= htmlspecialchars(trim($seatNumber)) ?></span>
-                            <?php endforeach; ?>
-                        </span>
+            <section class="u-detail-section">
+                <h2>Trip Information</h2>
+                <div class="u-detail-grid">
+                    <div><span>Route</span><strong><?= htmlspecialchars($booking['route_display']) ?></strong></div>
+                    <div><span>Departure</span><strong><?= date('M j, Y', strtotime($booking['departure_date'])) ?> &middot; <?= date('g:i A', strtotime($booking['departure_time'])) ?></strong></div>
+                    <div><span>Trip status</span><strong><?= ucfirst($booking['schedule_status']) ?></strong></div>
+                    <div><span>Van</span><strong><?= htmlspecialchars($booking['van_model']) ?> (<?= htmlspecialchars($booking['van_plate']) ?>)</strong></div>
+                    <div><span>Driver</span><strong><?= htmlspecialchars($booking['driver_name'] ?? 'Unassigned') ?></strong></div>
+                    <div><span>Fare</span><strong>&#8369;<?= number_format((float) $booking['route_fare'], 2) ?> per seat</strong></div>
+                    <?php if ($hasArrived): ?>
+                        <div><span>Arrived at</span><strong><?= date('M j, Y g:i A', strtotime($displayArrivalAt)) ?></strong></div>
+                    <?php elseif ($hasEstimatedArrival): ?>
+                        <div><span>Estimated arrival</span><strong><?= date('M j, Y g:i A', strtotime($booking['estimated_arrival_at'])) ?></strong></div>
                     <?php endif; ?>
-                </span>
-            </div>
+                </div>
+                <div class="u-detail-seats">
+                    <span><?= (int) $booking['seats_count'] ?> seat<?= (int) $booking['seats_count'] === 1 ? '' : 's' ?></span>
+                    <?php foreach (explode(',', (string) ($booking['seat_numbers'] ?? '')) as $seatNumber): ?>
+                        <?php if (trim($seatNumber) !== ''): ?>
+                            <span class="u-seat-chip"><?= htmlspecialchars(trim($seatNumber)) ?></span>
+                        <?php endif; ?>
+                    <?php endforeach; ?>
+                </div>
+            </section>
 
-            <div class="u-info-row">
-                <span class="u-info-label"><i class="fa-solid fa-peso-sign"></i> Fare:</span>
-                <span class="u-info-value">&#8369;<?= number_format((float) $booking['route_fare'], 2) ?> per seat</span>
-            </div>
+            <section class="u-detail-section">
+                <h2>Passenger Information</h2>
+                <div class="u-detail-grid">
+                    <div><span>Passenger</span><strong><?= htmlspecialchars($passengerSummary) ?></strong></div>
+                    <div><span>Contact number</span><strong><?= htmlspecialchars($booking['contact_number'] ?? '-') ?></strong></div>
+                    <div><span>Passenger type</span><strong><?= ucfirst($booking['passenger_type'] ?? 'regular') ?></strong></div>
+                </div>
+            </section>
 
-            <?php if (!empty($booking['payment_amount'])): ?>
-            <div class="u-info-row">
-                <span class="u-info-label"><i class="fa-solid fa-wallet"></i> Payment:</span>
-                <span class="u-info-value">
-                    <?= ucfirst($booking['payment_method']) ?> &middot; &#8369;<?= number_format((float) $booking['payment_amount'], 2) ?>
-                    (<?= ucfirst($booking['payment_status']) ?>)
-                </span>
-            </div>
+            <section class="u-detail-section">
+                <h2>Payment Information</h2>
+                <div class="u-detail-grid">
+                    <div><span>Status</span><strong><?= ucfirst($booking['payment_status'] ?? 'pending') ?></strong></div>
+                    <div><span>Method</span><strong><?= ucfirst($booking['payment_method'] ?? '-') ?></strong></div>
+                    <div><span>Amount</span><strong>&#8369;<?= number_format((float) ($booking['payment_amount'] ?? 0), 2) ?></strong></div>
+                    <div><span>Reference</span><strong><?= htmlspecialchars($booking['payment_reference'] ?? '-') ?></strong></div>
+                </div>
+            </section>
+
+            <?php if ($refundHistory): ?>
+            <section class="u-detail-section">
+                <h2>Refund Information</h2>
+                <div class="u-refund-timeline">
+                    <?php foreach ($refundHistory as $event): ?>
+                        <div class="u-refund-event">
+                            <strong><?= htmlspecialchars(($event['actor'] ?? '') === 'admin' ? 'Admin response' : 'Your request') ?></strong>
+                            <span>
+                                <?= htmlspecialchars(ucwords(str_replace('_', ' ', (string) ($event['decision'] ?? $event['type'] ?? 'refund update')))) ?>
+                                <?php if (!empty($event['reason'])): ?>
+                                    &middot; <?= htmlspecialchars(ucwords(str_replace('_', ' ', (string) $event['reason']))) ?>
+                                <?php endif; ?>
+                            </span>
+                            <?php if (!empty($event['admin_note']) || !empty($event['user_note']) || !empty($event['custom_note'])): ?>
+                                <p><?= htmlspecialchars($event['admin_note'] ?? $event['user_note'] ?? $event['custom_note']) ?></p>
+                            <?php endif; ?>
+                            <?php if (!empty($event['created_at'])): ?>
+                                <small><?= date('M j, Y g:i A', strtotime($event['created_at'])) ?></small>
+                            <?php endif; ?>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            </section>
             <?php endif; ?>
-
-            <?php if (!empty($booking['passenger_name'])): ?>
-            <div class="u-info-row">
-                <span class="u-info-label"><i class="fa-solid fa-user"></i> Passenger:</span>
-                <span class="u-info-value"><?= htmlspecialchars($booking['passenger_name']) ?></span>
-            </div>
-            <?php endif; ?>
-
-            <div class="u-info-row">
-                <span class="u-info-label"><i class="fa-solid fa-user-tie"></i> Driver:</span>
-                <span class="u-info-value"><?= htmlspecialchars($booking['driver_name'] ?? 'Unassigned') ?></span>
-            </div>
-
-            <div class="u-info-row">
-                <span class="u-info-label"><i class="fa-solid fa-bus"></i> Van:</span>
-                <span class="u-info-value"><?= htmlspecialchars($booking['van_model']) ?> (<?= htmlspecialchars($booking['van_plate']) ?>)</span>
-            </div>
-
-            <div class="u-info-row">
-                <span class="u-info-label"><i class="fa-solid fa-route"></i> Trip Status:</span>
-                <span class="u-info-value"><?= ucfirst($booking['schedule_status']) ?></span>
-            </div>
-
-            <?php if ($hasArrived): ?>
-            <div class="u-info-row">
-                <span class="u-info-label"><i class="fa-solid fa-flag-checkered"></i> Arrived At:</span>
-                <span class="u-info-value"><?= date('M j, Y', strtotime($displayArrivalAt)) ?> &middot; <?= date('g:i A', strtotime($displayArrivalAt)) ?></span>
-            </div>
-            <?php elseif ($hasEstimatedArrival): ?>
-            <div class="u-info-row">
-                <span class="u-info-label"><i class="fa-regular fa-clock"></i> Estimated Arrival:</span>
-                <span class="u-info-value"><?= date('M j, Y', strtotime($booking['estimated_arrival_at'])) ?> &middot; <?= date('g:i A', strtotime($booking['estimated_arrival_at'])) ?></span>
-            </div>
-            <?php endif; ?>
-
-            <div class="u-info-row">
-                <span class="u-info-label"><i class="fa-solid fa-clock"></i> Booked At:</span>
-                <span class="u-info-value"><?= date('M j, Y', strtotime($booking['created_at'])) ?> &middot; <?= date('g:i A', strtotime($booking['created_at'])) ?></span>
-            </div>
         </div>
     </div>
 </div>

@@ -8,10 +8,13 @@ $page_js  = '../../assets/js/dashboard-js.js';
 
 // FETCH  
 $dash = new Dashboard($conn);
-$verificationSummary = $dash->GetTotalPending();
-$bookingSummary = $dash->GetBookingSummary();   // total, pending, approved, rejected, cancelled
+$verificationStats = $dash->GetVerificationSummary();
+$verificationSummary = (int) ($verificationStats['pending'] ?? 0);
+$bookingSummary = $dash->GetBookingSummary();   // total, pending, approved, completed, rejected, cancelled
+$paymentSummary = $dash->GetPaymentSummary();
 $totalUsers     = $dash->GetTotalUsers();
-$schedSummary   = $dash->GetScheduleSummary();  // active_schedules
+$schedSummary   = $dash->GetScheduleSummary();  // active_schedules + statuses
+$fleetSummary   = $dash->GetFleetSummary();
 $recentBookings = $dash->GetRecentBookings();   // last 5
 $dailyBookings  = $dash->GetDailyBookings();    // last 7 days
 
@@ -24,40 +27,128 @@ $chartDailyLabels = array_column($dailyBookings, 'date');
 $chartDailyData   = array_map('intval', array_column($dailyBookings, 'total'));
 
 // Breakdown percentages
-$totalBookings = max(1, (int)$bookingSummary['total_bookings']);
+$rawTotalBookings = (int) ($bookingSummary['total_bookings'] ?? 0);
+$totalBookings = max(1, $rawTotalBookings);
 $breakdown = [
-    ['label' => 'Approved',  'count' => (int)$bookingSummary['approved'],  'color' => '#16a34a'],
-    ['label' => 'Cancelled', 'count' => (int)$bookingSummary['cancelled'], 'color' => '#9ca3af'],
-    ['label' => 'Rejected',  'count' => (int)$bookingSummary['rejected'],  'color' => '#ef4444'],
-    ['label' => 'Pending',   'count' => (int)$bookingSummary['pending'],   'color' => '#F97316'],
+    ['label' => 'Pending',   'count' => (int) ($bookingSummary['pending'] ?? 0),   'color' => '#F97316'],
+    ['label' => 'Approved',  'count' => (int) ($bookingSummary['approved'] ?? 0),  'color' => '#16a34a'],
+    ['label' => 'Completed', 'count' => (int) ($bookingSummary['completed'] ?? 0), 'color' => '#2563eb'],
+    ['label' => 'Cancelled', 'count' => (int) ($bookingSummary['cancelled'] ?? 0), 'color' => '#9ca3af'],
+    ['label' => 'Rejected',  'count' => (int) ($bookingSummary['rejected'] ?? 0),  'color' => '#ef4444'],
 ];
+
+$formatMoney = function ($amount): string {
+    return 'PHP ' . number_format((float) $amount, 2);
+};
 ?>
 
 <!-- ── KPI CARDS ─────────────────────────────────────────────────────────────── -->
 <div class="db-top-row">
 
-    <div class="db-stat db-stat--accent">
-        <span class="db-stat__label">Total bookings</span>
-        <span class="db-stat__val"><?= number_format($bookingSummary['total_bookings']) ?></span>
-        <span class="db-stat__sub">All time</span>
-    </div>
+    <a class="db-stat db-stat--accent" href="<?= BASE_URL ?>/views/admin/bookings.php">
+        <span class="db-stat__label">Total Bookings</span>
+        <span class="db-stat__val"><?= number_format($rawTotalBookings) ?></span>
+        <span class="db-stat__sub">All-time booking records</span>
+    </a>
 
-    <div class="db-stat">
-        <span class="db-stat__label">Pending (Verification Documents)</span>
+    <a class="db-stat db-stat--attention" href="<?= BASE_URL ?>/views/admin/bookings.php">
+        <span class="db-stat__label">Pending Bookings</span>
+        <span class="db-stat__val"><?= number_format((int) ($bookingSummary['pending'] ?? 0)) ?></span>
+        <span class="db-stat__sub">Awaiting admin action</span>
+    </a>
+
+    <a class="db-stat db-stat--success" href="<?= BASE_URL ?>/views/admin/payments.php">
+        <span class="db-stat__label">Total Revenue</span>
+        <span class="db-stat__val db-stat__val--money"><?= $formatMoney($paymentSummary['total_revenue'] ?? 0) ?></span>
+        <span class="db-stat__sub">Paid payments only</span>
+    </a>
+
+    <a class="db-stat db-stat--attention" href="<?= BASE_URL ?>/views/admin/users.php">
+        <span class="db-stat__label">Pending Verifications</span>
         <span class="db-stat__val"><?= number_format($verificationSummary) ?></span>
-        <span class="db-stat__sub"><strong>Needs</strong> your action</span>
-    </div>
+        <span class="db-stat__sub">Requires admin review</span>
+    </a>
 
-    <div class="db-stat">
-        <span class="db-stat__label">Total users</span>
+    <a class="db-stat" href="<?= BASE_URL ?>/views/admin/schedules.php">
+        <span class="db-stat__label">Active Schedules</span>
+        <span class="db-stat__val"><?= number_format((int) ($schedSummary['active_schedules'] ?? 0)) ?></span>
+        <span class="db-stat__sub">Boarding, departed, or arrived</span>
+    </a>
+
+    <a class="db-stat" href="<?= BASE_URL ?>/views/admin/users.php">
+        <span class="db-stat__label">Total Users</span>
         <span class="db-stat__val"><?= number_format($totalUsers) ?></span>
-        <span class="db-stat__sub">Registered passengers</span>
+        <span class="db-stat__sub">Registered passenger accounts</span>
+    </a>
+
+</div>
+
+<div class="db-summary-row">
+
+    <div class="db-mini-card">
+        <div class="db-card__head">
+            <span class="db-card__title">Payment health</span>
+            <span class="db-pill">All time</span>
+        </div>
+        <div class="db-metrics">
+            <div class="db-metric">
+                <span>Paid</span>
+                <strong><?= number_format((int) ($paymentSummary['paid'] ?? 0)) ?></strong>
+            </div>
+            <div class="db-metric">
+                <span>Pending</span>
+                <strong><?= number_format((int) ($paymentSummary['pending'] ?? 0)) ?></strong>
+            </div>
+            <div class="db-metric">
+                <span>Refunds</span>
+                <strong><?= number_format((int) ($paymentSummary['refund_requested'] ?? 0)) ?></strong>
+            </div>
+        </div>
+        <div class="db-mini-note">This week: <?= $formatMoney($paymentSummary['revenue_week'] ?? 0) ?></div>
     </div>
 
-    <div class="db-stat">
-        <span class="db-stat__label">Active schedules</span>
-        <span class="db-stat__val"><?= number_format($schedSummary['active_schedules']) ?></span>
-        <span class="db-stat__sub">Not cancelled</span>
+    <div class="db-mini-card">
+        <div class="db-card__head">
+            <span class="db-card__title">Schedule activity</span>
+            <span class="db-pill">Trips</span>
+        </div>
+        <div class="db-metrics">
+            <div class="db-metric">
+                <span>Boarding</span>
+                <strong><?= number_format((int) ($schedSummary['boarding'] ?? 0)) ?></strong>
+            </div>
+            <div class="db-metric">
+                <span>Departed</span>
+                <strong><?= number_format((int) ($schedSummary['departed'] ?? 0)) ?></strong>
+            </div>
+            <div class="db-metric">
+                <span>Arrived</span>
+                <strong><?= number_format((int) ($schedSummary['arrived'] ?? 0)) ?></strong>
+            </div>
+        </div>
+        <div class="db-mini-note">Cancelled: <?= number_format((int) ($schedSummary['cancelled'] ?? 0)) ?></div>
+    </div>
+
+    <div class="db-mini-card">
+        <div class="db-card__head">
+            <span class="db-card__title">Fleet readiness</span>
+            <span class="db-pill">Active</span>
+        </div>
+        <div class="db-metrics">
+            <div class="db-metric">
+                <span>Vans</span>
+                <strong><?= number_format((int) ($fleetSummary['active_vans'] ?? 0)) ?>/<?= number_format((int) ($fleetSummary['total_vans'] ?? 0)) ?></strong>
+            </div>
+            <div class="db-metric">
+                <span>Drivers</span>
+                <strong><?= number_format((int) ($fleetSummary['active_drivers'] ?? 0)) ?>/<?= number_format((int) ($fleetSummary['total_drivers'] ?? 0)) ?></strong>
+            </div>
+            <div class="db-metric">
+                <span>Routes</span>
+                <strong><?= number_format((int) ($fleetSummary['active_routes'] ?? 0)) ?>/<?= number_format((int) ($fleetSummary['total_routes'] ?? 0)) ?></strong>
+            </div>
+        </div>
+        <div class="db-mini-note">Inactive records stay available for history.</div>
     </div>
 
 </div>
@@ -73,6 +164,9 @@ $breakdown = [
             <span class="db-pill">All time</span>
         </div>
         <div class="db-seg-bars">
+            <?php if ($rawTotalBookings === 0): ?>
+                <div class="db-empty-inline">No booking records yet.</div>
+            <?php else: ?>
             <?php foreach ($breakdown as $seg):
                 $pct = round($seg['count'] / $totalBookings * 100);
             ?>
@@ -92,6 +186,7 @@ $breakdown = [
                     </div>
                 </div>
             <?php endforeach; ?>
+            <?php endif; ?>
         </div>
     </div>
 

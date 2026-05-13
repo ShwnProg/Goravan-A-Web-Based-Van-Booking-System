@@ -127,9 +127,12 @@ if ($result['success']) {
         'message' => 'Schedule updated successfully.'
     ]);
 } else {
+    if (!empty($result['error'])) {
+        error_log('[EditSchedule] ' . $result['error']);
+    }
     echo json_encode([
         'success' => false,
-        'message' => $result['message'] ?? $result['error'] ?? 'Failed to update schedule.'
+        'message' => $result['message'] ?? 'Unable to update schedule. Please check the details and try again.'
     ]);
 }
 

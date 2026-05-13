@@ -26,11 +26,35 @@ class Schedules
             SELECT 
                 s.*,
                 CONCAT(r.origin, ' → ', r.destination) as route_display,
+                r.origin,
+                r.destination,
                 d.full_name as driver_name,
                 d.license_number as driver_license,
                 v.plate_number as van_plate,
                 v.model as van_model,
                 v.capacity as van_capacity,
+                (
+                    SELECT COUNT(*)
+                    FROM seats seat_count
+                    WHERE seat_count.van_id_fk = v.van_id_pk
+                ) AS total_seats,
+                (
+                    SELECT COUNT(DISTINCT booked.seat_id_fk)
+                    FROM bookings booked
+                    WHERE booked.schedule_id_fk = s.schedule_id_pk
+                      AND booked.status NOT IN ('rejected', 'cancelled')
+                ) AS booked_seats,
+                (
+                    SELECT COUNT(*)
+                    FROM seats free_seats
+                    WHERE free_seats.van_id_fk = v.van_id_pk
+                      AND free_seats.seat_id_pk NOT IN (
+                          SELECT booked_free.seat_id_fk
+                          FROM bookings booked_free
+                          WHERE booked_free.schedule_id_fk = s.schedule_id_pk
+                            AND booked_free.status NOT IN ('rejected', 'cancelled')
+                      )
+                ) AS available_seats,
                 (
                     SELECT COUNT(*)
                     FROM bookings b
@@ -139,6 +163,13 @@ class Schedules
     public function AddSchedule(): array
     {
         try {
+            if (!$this->ResourcesAreActive()) {
+                return [
+                    'success' => false,
+                    'message' => 'Only active routes, vans, and drivers can be assigned to new schedules.'
+                ];
+            }
+
             $this->conn->beginTransaction();
 
             $stmt = $this->conn->prepare("
@@ -161,7 +192,8 @@ class Schedules
             return ['success' => true, 'id' => $this->conn->lastInsertId()];
         } catch (PDOException $e) {
             $this->conn->rollBack();
-            return ['success' => false, 'error' => $e->getMessage()];
+            error_log('[Schedules::AddSchedule] ' . $e->getMessage());
+            return ['success' => false, 'message' => 'Unable to add schedule. Please check the details and try again.'];
         }
     }
 
@@ -171,6 +203,13 @@ class Schedules
             $currentStatus = $this->getCurrentStatus();
             if (!$currentStatus) {
                 return ['success' => false, 'message' => 'Schedule not found.'];
+            }
+
+            if (!$this->ResourcesCanBeAssignedToExistingSchedule()) {
+                return [
+                    'success' => false,
+                    'message' => 'Only active routes, vans, and drivers can be newly assigned to a schedule.'
+                ];
             }
 
             if ($this->trip_status !== $currentStatus && $this->HasPendingBookings()) {
@@ -223,7 +262,8 @@ class Schedules
             return ['success' => true];
         } catch (PDOException $e) {
             $this->conn->rollBack();
-            return ['success' => false, 'error' => $e->getMessage()];
+            error_log('[Schedules::EditSchedule] ' . $e->getMessage());
+            return ['success' => false, 'message' => 'Unable to update schedule. Please check the details and try again.'];
         }
     }
 
@@ -321,6 +361,62 @@ class Schedules
         return (int) $stmt->fetchColumn();
     }
 
+    private function ResourcesAreActive(): bool
+    {
+        $stmt = $this->conn->prepare("
+            SELECT COUNT(*)
+            FROM routes r
+            INNER JOIN drivers d ON d.driver_id_pk = :driver_id AND d.status = 'active'
+            INNER JOIN vans v ON v.van_id_pk = :van_id AND v.status = 'active'
+            WHERE r.route_id_pk = :route_id
+              AND r.is_active = 1
+        ");
+        $stmt->execute([
+            ':route_id' => $this->route_id,
+            ':driver_id' => $this->driver_id,
+            ':van_id' => $this->van_id,
+        ]);
+        return (int) $stmt->fetchColumn() === 1;
+    }
+
+    private function ResourcesCanBeAssignedToExistingSchedule(): bool
+    {
+        $stmt = $this->conn->prepare("
+            SELECT route_id_fk, driver_id_fk, van_id_fk
+            FROM {$this->table}
+            WHERE schedule_id_pk = :id
+        ");
+        $stmt->execute([':id' => $this->id]);
+        $current = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$current) {
+            return false;
+        }
+
+        return $this->ResourceIsActiveOrUnchanged('routes', 'route_id_pk', 'is_active', 1, (int) $this->route_id, (int) $current['route_id_fk'])
+            && $this->ResourceIsActiveOrUnchanged('drivers', 'driver_id_pk', 'status', 'active', (int) $this->driver_id, (int) $current['driver_id_fk'])
+            && $this->ResourceIsActiveOrUnchanged('vans', 'van_id_pk', 'status', 'active', (int) $this->van_id, (int) $current['van_id_fk']);
+    }
+
+    private function ResourceIsActiveOrUnchanged(string $table, string $idColumn, string $statusColumn, $activeValue, int $newId, int $currentId): bool
+    {
+        if ($newId === $currentId) {
+            return true;
+        }
+
+        $stmt = $this->conn->prepare("
+            SELECT COUNT(*)
+            FROM {$table}
+            WHERE {$idColumn} = :id
+              AND {$statusColumn} = :active_value
+        ");
+        $stmt->execute([
+            ':id' => $newId,
+            ':active_value' => $activeValue,
+        ]);
+        return (int) $stmt->fetchColumn() > 0;
+    }
+
     /**
      * Updates trip_status and clears arrived_at unless the trip is arrived.
      */
@@ -364,7 +460,8 @@ class Schedules
             }
             return ['success' => true];
         } catch (PDOException $e) {
-            return ['success' => false, 'error' => $e->getMessage()];
+            error_log('[Schedules::UpdateStatus] ' . $e->getMessage());
+            return ['success' => false, 'message' => 'Unable to update schedule status. Please try again.'];
         }
     }
 
@@ -460,22 +557,32 @@ class Schedules
                 r.origin, r.destination, r.fare as route_fare,
                 d.full_name, d.license_number, d.contact_number,
                 v.plate_number, v.model, v.capacity,
-                COUNT(DISTINCT seats.seat_id_pk) AS total_seats,
-                COUNT(DISTINCT CASE
-                    WHEN b.book_id_pk IS NULL THEN seats.seat_id_pk
-                    ELSE NULL
-                END) AS available_seats
+                (
+                    SELECT COUNT(*)
+                    FROM seats seat_count
+                    WHERE seat_count.van_id_fk = v.van_id_pk
+                ) AS total_seats,
+                (
+                    SELECT COUNT(DISTINCT booked.seat_id_fk)
+                    FROM bookings booked
+                    WHERE booked.schedule_id_fk = s.schedule_id_pk
+                      AND booked.status NOT IN ('rejected', 'cancelled')
+                ) AS booked_seats,
+                (
+                    SELECT COUNT(*)
+                    FROM seats seat_count
+                    WHERE seat_count.van_id_fk = v.van_id_pk
+                ) - (
+                    SELECT COUNT(DISTINCT booked.seat_id_fk)
+                    FROM bookings booked
+                    WHERE booked.schedule_id_fk = s.schedule_id_pk
+                      AND booked.status NOT IN ('rejected', 'cancelled')
+                ) AS available_seats
             FROM {$this->table} s
             INNER JOIN routes r ON s.route_id_fk = r.route_id_pk
             INNER JOIN drivers d ON s.driver_id_fk = d.driver_id_pk
             INNER JOIN vans v ON s.van_id_fk = v.van_id_pk
-            LEFT JOIN seats ON seats.van_id_fk = v.van_id_pk
-            LEFT JOIN bookings b
-                ON b.schedule_id_fk = s.schedule_id_pk
-               AND b.seat_id_fk = seats.seat_id_pk
-               AND b.status NOT IN ('rejected', 'cancelled')
             WHERE " . implode(' AND ', $where) . "
-            GROUP BY s.schedule_id_pk
             ORDER BY s.departure_date ASC, s.departure_time ASC
         ");
         $stmt->execute($params);

@@ -206,6 +206,7 @@ window.initSchedulesPage = function () {
     var dateFrom    = document.getElementById('schedule-date-from');
     var dateTo      = document.getElementById('schedule-date-to');
     var dateClear   = document.getElementById('schedule-date-clear');
+    var statusTabs  = document.getElementById('schedule-status-tabs');
     var openAddBtn  = document.getElementById('open-add-modal');
     var editForm    = document.getElementById('editForm');
     var addModalEl  = document.getElementById('addModal');
@@ -273,22 +274,18 @@ window.initSchedulesPage = function () {
 
         rows.forEach(function (row) {
             var index = matchedRows.indexOf(row);
-            row.style.display = index >= start && index < end ? '' : 'none';
+            var isVisible = index >= start && index < end;
+            row.style.display = isVisible ? '' : 'none';
+            if (isVisible) {
+                var indexCell = row.querySelector('td:first-child');
+                if (indexCell) indexCell.textContent = String(index + 1);
+            }
         });
 
-        updateGroupRows();
+        clearHiddenSelection();
         updateCount();
         renderSchedulePagination(matchedRows.length, totalPages);
         renderEmptyState(matchedRows.length, status, from || to);
-    }
-
-    function updateGroupRows() {
-        tbody.querySelectorAll('tr.admin-status-group-row').forEach(function (groupRow) {
-            var key = groupRow.dataset.groupKey || '';
-            var hasVisible = Array.from(tbody.querySelectorAll('tr.schedule-row[data-status="' + key + '"]'))
-                .some(function (row) { return row.style.display !== 'none'; });
-            groupRow.style.display = hasVisible ? '' : 'none';
-        });
     }
 
     /* ── Count badge ─────────────────────────────────────────────────── */
@@ -314,27 +311,48 @@ window.initSchedulesPage = function () {
 
     function scheduleFiltersActive() {
         return !!((searchInput && searchInput.value.trim()) ||
-            (statusFilter && statusFilter.value) ||
+            (statusFilter && statusFilter.value && statusFilter.value !== 'boarding') ||
             (dateFrom && dateFrom.value) ||
             (dateTo && dateTo.value));
+    }
+
+    function syncStatusTabs() {
+        if (!statusTabs || !statusFilter) return;
+        statusTabs.querySelectorAll('button[data-status]').forEach(function (tab) {
+            tab.classList.toggle('active', (tab.dataset.status || '') === (statusFilter.value || ''));
+        });
     }
 
     /* ── Wire events — both call the same applyFilters() ─────────────── */
     var debouncedApply = AdminUI.debounce(function () { scheduleCurrentPage = 1; applyFilters(); }, 350);
     if (searchInput)  searchInput.addEventListener('input', debouncedApply);
-    if (statusFilter) statusFilter.addEventListener('change', function () { scheduleCurrentPage = 1; applyFilters(); });
+    if (statusFilter) statusFilter.addEventListener('change', function () { scheduleCurrentPage = 1; syncStatusTabs(); applyFilters(); });
     if (dateFrom) dateFrom.addEventListener('change', function () { scheduleCurrentPage = 1; applyFilters(); });
     if (dateTo) dateTo.addEventListener('change', function () { scheduleCurrentPage = 1; applyFilters(); });
     if (dateClear) dateClear.addEventListener('click', function () {
         if (searchInput) searchInput.value = '';
-        if (statusFilter) statusFilter.value = '';
+        if (statusFilter) statusFilter.value = 'boarding';
         if (dateFrom) dateFrom.value = '';
         if (dateTo) dateTo.value = '';
         scheduleCurrentPage = 1;
+        syncStatusTabs();
+        clearPreview();
         applyFilters();
     });
+    if (statusTabs) {
+        statusTabs.addEventListener('click', function (e) {
+            var btn = e.target.closest('button[data-status]');
+            if (!btn) return;
+            if (statusFilter) statusFilter.value = btn.dataset.status || '';
+            scheduleCurrentPage = 1;
+            syncStatusTabs();
+            clearPreview();
+            applyFilters();
+        });
+    }
 
     /* Run once on init so count is correct immediately */
+    syncStatusTabs();
     applyFilters();
 
     /* ── Row click → highlight + preview ────────────────────────────── */
@@ -409,6 +427,7 @@ window.initSchedulesPage = function () {
         var via      = row.dataset.routeVia || '';
         var driver   = row.dataset.driverName   || 'N/A';
         var plate    = row.dataset.vanPlate     || 'N/A';
+        var model    = row.dataset.vanModel     || '';
         var capacity = row.dataset.vanCapacity  || '—';
         var date     = row.dataset.date         || '';
         var time     = row.dataset.time         || '';
@@ -427,12 +446,22 @@ window.initSchedulesPage = function () {
 
         if (labelEl) labelEl.textContent = via ? route + ' · ' + via : route;
 
-        setText('preview-route',    via ? route + ' · ' + via : route);
+        setText('preview-route',    route);
+        setText('preview-origin', row.dataset.origin || 'N/A');
+        setText('preview-destination', row.dataset.destination || 'N/A');
+        setText('preview-via', via || 'N/A');
+        setText('preview-full-route', row.dataset.fullRoute || (via ? route + ' · ' + via : route));
         setText('preview-driver',   driver);
-        setText('preview-van',      plate);
+        setText('preview-van',      model ? plate + ' - ' + model : plate);
         setText('preview-capacity', capacity + ' seats');
+        setText('preview-total-seats', row.dataset.totalSeats || capacity);
+        setText('preview-available-seats', row.dataset.availableSeats || '0');
+        setText('preview-booked-seats', row.dataset.bookedSeats || '0');
         setText('preview-departure', departure);
         setText('preview-eta', row.dataset.etaDisplay || 'Auto-managed');
+        setText('preview-status-desc', statusDescription(status));
+        setText('preview-created-at', row.dataset.createdAt || 'N/A');
+        setText('preview-updated-at', row.dataset.updatedAt || 'N/A');
 
         var statusEl = document.getElementById('preview-status');
         if (statusEl) {
@@ -460,6 +489,35 @@ window.initSchedulesPage = function () {
     function setText(id, text) {
         var el = document.getElementById(id);
         if (el) el.textContent = text;
+    }
+
+    function clearPreview() {
+        tbody.querySelectorAll('tr.schedule-row.selected').forEach(function (row) {
+            row.classList.remove('selected');
+        });
+        var emptyEl = document.getElementById('schedule-empty');
+        var previewEl = document.getElementById('schedule-preview');
+        var labelEl = document.getElementById('schedule-label');
+        if (labelEl) labelEl.textContent = 'Select a schedule';
+        if (previewEl) previewEl.style.display = 'none';
+        if (emptyEl) emptyEl.style.display = 'flex';
+    }
+
+    function clearHiddenSelection() {
+        var selected = tbody.querySelector('tr.schedule-row.selected');
+        if (selected && selected.style.display === 'none') {
+            clearPreview();
+        }
+    }
+
+    function statusDescription(status) {
+        var descriptions = {
+            boarding: 'Accepting passengers and ready for active trip management.',
+            departed: 'The van has left the terminal and is on the road.',
+            arrived: 'The trip has reached its destination.',
+            cancelled: 'This schedule is not running.'
+        };
+        return descriptions[status] || 'Schedule status is being tracked.';
     }
 
     /* ══════════════════════════════════════════════════════════════════
@@ -705,9 +763,7 @@ window.initSchedulesPage = function () {
                     showPreview(row);
                 }
 
-                AdminUI.moveRowToGroup(row, newStatus, scheduleGroupMeta(newStatus));
                 applyFilters();
-                AdminUI.refreshGroups(tbody, 'tr.schedule-row', function (row) { return row.dataset.status || ''; });
 
                 AdminUI.notify('success', data.message || 'Schedule status updated successfully.');
             } else {
@@ -721,10 +777,11 @@ window.initSchedulesPage = function () {
     function renderEmptyState(total, status, dateFiltered) {
         tbody.querySelectorAll('.js-empty-row').forEach(function (row) { row.remove(); });
         if (total > 0) return;
+        var hasFilters = !!((searchInput && searchInput.value.trim()) || dateFiltered);
         var label = status ? formatStatus(status).toLowerCase() + ' schedules' : 'schedules';
-        var message = dateFiltered
-            ? 'No ' + label + ' found for the selected date range.'
-            : 'No ' + label + ' match your current filters.';
+        var message = hasFilters
+            ? 'No schedules match your current filters.'
+            : 'No ' + label + ' found.';
         tbody.insertAdjacentHTML('beforeend', '<tr class="js-empty-row"><td colspan="7"><div class="empty-state"><i class="fas fa-search"></i><p>' + message + '</p></div></td></tr>');
     }
 
@@ -780,16 +837,6 @@ window.initSchedulesPage = function () {
         var meta = STATUS_META[status];
         if (meta) return meta.label;
         return status.charAt(0).toUpperCase() + status.slice(1).replace(/_/g, ' ');
-    }
-
-    function scheduleGroupMeta(status) {
-        var groups = {
-            boarding: { label: 'Boarding Schedules', icon: 'fas fa-door-open', hint: 'Accepting passengers', colspan: 7 },
-            departed: { label: 'Departed Schedules', icon: 'fas fa-route', hint: 'On the road', colspan: 7 },
-            arrived: { label: 'Arrived Schedules', icon: 'fas fa-flag-checkered', hint: 'Reached destination', colspan: 7 },
-            cancelled: { label: 'Cancelled Schedules', icon: 'fas fa-ban', hint: 'Not running', colspan: 7 }
-        };
-        return groups[status] || { label: formatStatus(status) + ' Schedules', icon: 'fas fa-calendar-check', hint: 'Other schedules', colspan: 7 };
     }
 
     function formatDateTime(date) {

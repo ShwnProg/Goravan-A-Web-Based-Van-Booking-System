@@ -65,7 +65,7 @@ $result = $schedule->AddSchedule();
 
 $_SESSION[$result['success'] ? 'success' : 'error'] = $result['success']
     ? 'Schedule added successfully.'
-    : 'Failed to add schedule: ' . ($result['error'] ?? 'Unknown error.');
+    : ($result['message'] ?? 'Unable to add schedule. Please check the details and try again.');
 
 header('Location: ../../views/admin/schedules.php');
 exit;

@@ -575,6 +575,72 @@
     }
 }
 
+/* Cleaner payment cards and receipt detail modal */
+.user-page .payment-card-item {
+    border-radius: 12px;
+    border: 1px solid var(--u-border);
+    background: var(--u-surface);
+    box-shadow: none !important;
+}
+
+.user-page .payment-card-item:hover {
+    transform: none;
+    border-color: var(--u-border2);
+    background: var(--u-surface2);
+}
+
+.user-page .pay-modal {
+    border-radius: 14px;
+    background: var(--u-surface);
+    color: var(--u-text);
+}
+
+.user-page .receipt-print {
+    border: 1px solid var(--u-border);
+    border-radius: 12px;
+    background: var(--u-surface);
+    box-shadow: none;
+}
+
+.user-page .receipt-head,
+.user-page .receipt-ref-line,
+.user-page .receipt-total,
+.user-page .receipt-refund-notes {
+    border-radius: 10px;
+    border: 1px solid var(--u-border);
+    background: var(--u-surface2);
+}
+
+.user-page .receipt-lines {
+    display: grid;
+    gap: 8px;
+}
+
+.user-page .receipt-lines > div {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--u-border);
+}
+
+.user-page .receipt-lines > div:last-child {
+    border-bottom: 0;
+}
+
+.user-page .receipt-lines span {
+    color: var(--u-muted);
+    font-weight: 700;
+}
+
+.user-page .receipt-lines strong {
+    color: var(--u-text);
+    overflow-wrap: anywhere;
+}
+
+.user-page .refund-note-item {
+    background: var(--u-surface);
+    border-color: var(--u-border);
+    border-radius: 10px;
+}
+
 /* Receipt modal organization and professional payment icons */
 @media screen {
     .user-page #paymentDetailModal .modal-dialog {

@@ -12,7 +12,7 @@
 
 .schedules-wrapper {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 280px;
+    grid-template-columns: minmax(0, 1fr) 320px;
     gap: 20px;
     align-items: start;
 }
@@ -513,6 +513,8 @@
 /* ── Preview content ── */
 #schedule-preview {
     padding: 18px 16px;
+    max-height: calc(100vh - 170px);
+    overflow-y: auto;
 }
 
 /* Avatar circle */
@@ -535,10 +537,11 @@
     font-size: 14px;
     font-weight: 700;
     color: var(--color-primary);
-    text-align: center;
-    margin: 0 0 16px;
+    text-align: left;
+    margin: 0 0 14px;
     line-height: 1.3;
     letter-spacing: -.01em;
+    word-break: break-word;
 }
 
 /* Divider between title and details */
@@ -549,18 +552,37 @@
     height: 2px;
     background: var(--color-accent);
     border-radius: 2px;
-    margin: 8px auto 0;
+    margin: 8px 0 0;
     opacity: .5;
+}
+
+.detail-section {
+    padding: 12px 0;
+    border-top: 1px solid rgba(0,0,0,.06);
+}
+
+.detail-section:first-of-type {
+    border-top: none;
+    padding-top: 0;
+}
+
+.detail-section h4 {
+    margin: 0 0 8px;
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--color-primary);
+    text-transform: uppercase;
+    letter-spacing: .45px;
 }
 
 /* ── Detail rows ── */
 .detail-row {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
     gap: 12px;
-    padding: 8px 0;
-    border-bottom: 1px solid rgba(0,0,0,.04);
+    padding: 7px 0;
+    border-bottom: none;
 }
 
 .detail-row:last-child {
@@ -582,7 +604,9 @@
     color: var(--color-primary);
     text-align: right;
     word-break: break-word;
+    overflow-wrap: anywhere;
     line-height: 1.3;
+    min-width: 0;
 }
 
 /* Status badge inside preview — same pill style, no extra scoping needed
@@ -853,6 +877,14 @@ body.admin-dark-mode-active .detail-label,
 body.admin-dark-mode-active .schedules-card .schedules-table td.text-muted-sm,
 body.admin-dark-mode-active #schedule-label {
     color: #94a3b8;
+}
+
+body.admin-dark-mode-active .detail-section {
+    border-top-color: rgba(255, 255, 255, .07);
+}
+
+body.admin-dark-mode-active .detail-section h4 {
+    color: #e2e8f0;
 }
 
 body.admin-dark-mode-active .plate-number {

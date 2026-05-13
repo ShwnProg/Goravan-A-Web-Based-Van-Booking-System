@@ -651,8 +651,20 @@
                 if (!data.success) {
                     throw new Error(data.message || 'Booking failed.');
                 }
+                updateScheduleCardAvailability(data.seats_count || state.selectedSeats.length);
                 renderReceipt(data);
                 showStep(5);
+                if (window.Swal) {
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'success',
+                        title: data.message || 'Booking request submitted for admin review.',
+                        showConfirmButton: false,
+                        timer: 2800,
+                        timerProgressBar: true
+                    });
+                }
             })
             .catch(function (err) {
                 Swal.fire('Booking failed', err.message || 'Please try again.', 'error');
@@ -671,6 +683,27 @@
         setText('receiptPassenger', state.passengerName + ' · ' + summarizePassengerTypes());
         setText('receiptPaymentMethod', labelPaymentMethod(state.paymentMethod));
         setText('receiptAmount', peso(parseFloat(data.total_amount || state.grandTotal)));
+    }
+
+    function updateScheduleCardAvailability(bookedCount) {
+        var card = Array.prototype.find.call(document.querySelectorAll('.u-schedule-card[data-schedule-id]'), function (item) {
+            return item.dataset.scheduleId === state.scheduleId;
+        });
+        if (!card) return;
+
+        var current = parseInt(card.dataset.availableSeats || '0', 10);
+        var next = Math.max(0, current - (parseInt(bookedCount, 10) || 0));
+        card.dataset.availableSeats = String(next);
+
+        var label = card.querySelector('.u-available-count');
+        if (label) {
+            label.textContent = next + ' seat' + (next === 1 ? '' : 's') + ' available';
+        }
+
+        var button = card.querySelector('.u-book-btn');
+        if (button && next < 1) {
+            button.disabled = true;
+        }
     }
 
     function resetFlow() {

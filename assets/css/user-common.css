@@ -2436,3 +2436,132 @@ select.ss {
 .user-page .form-select:focus {
     box-shadow: none !important;
 }
+
+/* User-side stability and cleaner UI refresh */
+html.user-dark-preload {
+    background: #0f172a;
+    color-scheme: dark;
+}
+
+html.user-dark-preload body.user-page {
+    --u-bg: #0f172a;
+    --u-surface: #1e293b;
+    --u-surface2: #263347;
+    --u-border: rgba(255, 255, 255, 0.07);
+    --u-border2: rgba(255, 255, 255, 0.12);
+    --u-text: #e2e8f0;
+    --u-muted: #94a3b8;
+    --u-dim: #64748b;
+    --u-nav-bg: rgba(15, 23, 42, 0.97);
+    --u-nav-border: rgba(255, 255, 255, 0.07);
+    --u-success-bg: rgba(34, 197, 94, 0.1);
+    --u-success: #4ade80;
+    --u-warn-bg: rgba(249, 115, 22, 0.1);
+    --u-warn: #fb923c;
+    --u-danger-bg: rgba(239, 68, 68, 0.1);
+    --u-danger: #f87171;
+    --u-grey-bg: rgba(156, 163, 175, 0.1);
+    --u-grey: #9ca3af;
+    --u-info-bg: rgba(59, 130, 246, 0.1);
+    --u-info: #60a5fa;
+    background: var(--u-bg);
+    color: var(--u-text);
+}
+
+body.user-page,
+.user-page .u-body,
+.user-page .u-main {
+    background: var(--u-bg);
+    transition: none;
+}
+
+.user-page .modal.fade .modal-dialog,
+.user-page .u-dropdown,
+.user-page .u-notif-panel {
+    animation: none;
+    transition: opacity .12s ease, transform .12s ease;
+}
+
+.user-page .modal-content {
+    background: var(--u-surface);
+    color: var(--u-text);
+    border: 1px solid var(--u-border);
+    border-radius: 14px;
+    box-shadow: none;
+}
+
+.user-page .modal-header,
+.user-page .modal-footer {
+    background: var(--u-surface);
+    border-color: var(--u-border);
+}
+
+.user-page .modal-backdrop.show {
+    opacity: .62;
+    background: #0f172a;
+}
+
+body.user-page.dark .btn-close,
+html.user-dark-preload body.user-page .btn-close {
+    filter: invert(1) grayscale(100%);
+}
+
+.user-page .form-control,
+.user-page .form-select,
+.user-page input,
+.user-page select,
+.user-page textarea,
+.user-page .ss-btn,
+.user-page .ss-panel {
+    background-color: var(--u-surface2);
+    border-color: var(--u-border);
+    color: var(--u-text);
+}
+
+.user-page .form-control::placeholder,
+.user-page input::placeholder,
+.user-page textarea::placeholder {
+    color: var(--u-dim);
+}
+
+.u-notif-panel {
+    width: min(360px, calc(100vw - 24px));
+    max-height: min(480px, calc(100vh - 88px));
+    border-radius: 12px;
+}
+
+.u-notif-list {
+    max-height: 380px;
+}
+
+.u-notif-item {
+    min-height: 0;
+    padding: 11px 14px;
+}
+
+.u-notif-title,
+.u-notif-msg {
+    line-height: 1.35;
+}
+
+.u-notif-msg {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+.u-notif-more {
+    min-height: 40px;
+}
+
+body.user-page.dark .swal2-popup {
+    background: var(--u-surface);
+    color: var(--u-text);
+    border: 1px solid var(--u-border);
+}
+
+body.user-page.dark .swal2-title,
+body.user-page.dark .swal2-html-container {
+    color: var(--u-text);
+}

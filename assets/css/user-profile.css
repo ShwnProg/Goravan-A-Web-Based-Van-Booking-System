@@ -664,3 +664,46 @@ body.dark #verifModal .spinner-border {
     filter: none;
     box-shadow: none;
 }
+
+/* Cleaner profile sections */
+.user-page .u-form-card,
+.user-page .profile-card,
+.user-page .verification-card {
+    border: 1px solid var(--u-border);
+    border-radius: 14px;
+    background: var(--u-surface);
+    box-shadow: none !important;
+}
+
+.user-page .u-form-card h2,
+.user-page .u-form-card h3,
+.user-page .u-form-card .card-title {
+    color: var(--u-text);
+    letter-spacing: 0;
+}
+
+.user-page .u-form-card p,
+.user-page .u-form-card small,
+.user-page .verification-help {
+    color: var(--u-muted);
+}
+
+.user-page .u-form-group label {
+    color: var(--u-muted);
+    font-size: 12px;
+    font-weight: 750;
+}
+
+.user-page .u-form-group input,
+.user-page .u-form-group select,
+.user-page .u-form-group textarea {
+    min-height: 44px;
+    border-radius: 10px;
+}
+
+.user-profile-modal {
+    background: var(--u-surface);
+    color: var(--u-text);
+    border: 1px solid var(--u-border);
+    box-shadow: none;
+}

@@ -104,7 +104,7 @@ if ($result['success']) {
 } else {
     echo json_encode([
         'success' => false,
-        'message' => $result['error'] ?? 'Update failed.'
+        'message' => $result['message'] ?? 'Unable to update record. Please check the details and try again.'
     ]);
 }
 

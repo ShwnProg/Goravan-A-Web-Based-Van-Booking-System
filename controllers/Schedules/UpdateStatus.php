@@ -49,7 +49,7 @@ $result = $schedule->UpdateStatus();
 
 $_SESSION[$result['success'] ? 'success' : 'error'] = $result['success']
     ? 'Status updated successfully.'
-    : 'Failed to update status: ' . ($result['message'] ?? $result['error'] ?? 'Unknown error.');
+    : ($result['message'] ?? 'Unable to update schedule status. Please try again.');
 
 header('Location: ../../views/admin/schedules.php');
 exit;

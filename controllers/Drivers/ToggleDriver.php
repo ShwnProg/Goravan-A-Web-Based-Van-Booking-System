@@ -25,8 +25,8 @@ $result = $driver->ToggleDriver();
 echo json_encode([
     'success' => $result['success'],
     'message' => $result['success']
-        ? 'Status updated'
-        : 'Failed to update status'
+        ? 'Driver status updated successfully.'
+        : ($result['message'] ?? 'Unable to update driver status. Please try again.')
 ]);
 
 exit;

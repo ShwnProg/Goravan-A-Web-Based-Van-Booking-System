@@ -50,7 +50,7 @@ $result = $driver->AddDriver();
 
 $_SESSION[$result['success'] ? 'success' : 'error'] = $result['success']
     ? 'Driver added successfully.'
-    : 'Failed to add driver: ' . ($result['error'] ?? 'Unknown error.');
+    : ($result['message'] ?? 'Unable to add driver. Please check the details and try again.');
 
 header('Location: ../../views/admin/drivers.php');
 exit;

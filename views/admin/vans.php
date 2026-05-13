@@ -270,7 +270,7 @@ $vans = $vanObj->GetAllVans();
                         <label class="rfield-label"><i class="fas fa-chair"></i> Capacity</label>
                         <input type="number" name="capacity" id="edit-capacity" class="rinput" placeholder="e.g. 14"
                             min="1" max="14" step="1" required>
-                        <span class="rfield-hint">Changing capacity will regenerate all seats.</span>
+                        <span class="rfield-hint">Capacity changes keep booked seats intact.</span>
                     </div>
 
                     <div class="rfield">

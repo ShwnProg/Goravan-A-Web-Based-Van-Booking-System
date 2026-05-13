@@ -34,6 +34,8 @@ $result = $van->ToggleVan();
 
 echo json_encode([
     'success' => $result['success'],
-    'message' => $result['success'] ? 'Updated successfully' : 'Update failed'
+    'message' => $result['success']
+        ? 'Van status updated successfully.'
+        : ($result['message'] ?? 'Unable to update van status. Please try again.')
 ]);
 exit;

@@ -13,11 +13,12 @@ class Dashboard
     {
         $stmt = $this->conn->query("
             SELECT
-                COUNT(*)                                                AS total_bookings,
-                SUM(CASE WHEN status = 'pending'   THEN 1 ELSE 0 END)  AS pending,
-                SUM(CASE WHEN status = 'approved'  THEN 1 ELSE 0 END)  AS approved,
-                SUM(CASE WHEN status = 'rejected'  THEN 1 ELSE 0 END)  AS rejected,
-                SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END)  AS cancelled
+                COUNT(*)                                                   AS total_bookings,
+                COALESCE(SUM(CASE WHEN status = 'pending'   THEN 1 ELSE 0 END), 0) AS pending,
+                COALESCE(SUM(CASE WHEN status = 'approved'  THEN 1 ELSE 0 END), 0) AS approved,
+                COALESCE(SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END), 0) AS completed,
+                COALESCE(SUM(CASE WHEN status = 'rejected'  THEN 1 ELSE 0 END), 0) AS rejected,
+                COALESCE(SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END), 0) AS cancelled
             FROM bookings
         ");
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: [];
@@ -28,9 +29,13 @@ class Dashboard
     {
         $stmt = $this->conn->query("
             SELECT
-                COUNT(*)                                                     AS total_schedules,
-                SUM(CASE WHEN trip_status != 'cancelled' THEN 1 ELSE 0 END)  AS active_schedules,
-                SUM(CASE WHEN trip_status = 'arrived'    THEN 1 ELSE 0 END)  AS completed_trips
+                COUNT(*)                                                               AS total_schedules,
+                COALESCE(SUM(CASE WHEN trip_status != 'cancelled' THEN 1 ELSE 0 END), 0) AS active_schedules,
+                COALESCE(SUM(CASE WHEN trip_status = 'boarding'  THEN 1 ELSE 0 END), 0) AS boarding,
+                COALESCE(SUM(CASE WHEN trip_status = 'departed'  THEN 1 ELSE 0 END), 0) AS departed,
+                COALESCE(SUM(CASE WHEN trip_status = 'arrived'   THEN 1 ELSE 0 END), 0) AS arrived,
+                COALESCE(SUM(CASE WHEN trip_status = 'cancelled' THEN 1 ELSE 0 END), 0) AS cancelled,
+                COALESCE(SUM(CASE WHEN trip_status = 'arrived'   THEN 1 ELSE 0 END), 0) AS completed_trips
             FROM schedules
         ");
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: [];
@@ -39,7 +44,84 @@ class Dashboard
     // ── TOTAL USERS ───────────────────────────────────────────────────────────
     public function GetTotalUsers(): int
     {
-        return (int) $this->conn->query("SELECT COUNT(*) FROM users")->fetchColumn();
+        return (int) $this->conn->query("SELECT COUNT(*) FROM users WHERE role = 'user'")->fetchColumn();
+    }
+
+    public function GetPaymentSummary(): array
+    {
+        if (!$this->ColumnExists('payments', 'amount')) {
+            return $this->EmptyPaymentSummary();
+        }
+
+        try {
+            $paidDate = $this->ColumnExists('payments', 'paid_at') ? 'paid_at' : 'NULL';
+            $createdDate = $this->ColumnExists('payments', 'created_at') ? 'created_at' : 'NULL';
+            $dateBasis = "COALESCE($paidDate, $createdDate)";
+
+            $stmt = $this->conn->query("
+                SELECT
+                    COUNT(*) AS total_payments,
+                    COALESCE(SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END), 0) AS pending,
+                    COALESCE(SUM(CASE WHEN status = 'paid' THEN 1 ELSE 0 END), 0) AS paid,
+                    COALESCE(SUM(CASE WHEN status = 'refund_requested' THEN 1 ELSE 0 END), 0) AS refund_requested,
+                    COALESCE(SUM(CASE WHEN status = 'refunded' THEN 1 ELSE 0 END), 0) AS refunded,
+                    COALESCE(SUM(CASE WHEN status = 'paid' THEN amount ELSE 0 END), 0) AS total_revenue,
+                    COALESCE(SUM(CASE WHEN status = 'paid' AND DATE($dateBasis) = CURDATE() THEN amount ELSE 0 END), 0) AS revenue_today,
+                    COALESCE(SUM(CASE WHEN status = 'paid' AND $dateBasis >= CURDATE() - INTERVAL 6 DAY THEN amount ELSE 0 END), 0) AS revenue_week
+                FROM payments
+            ");
+            return array_merge($this->EmptyPaymentSummary(), $stmt->fetch(PDO::FETCH_ASSOC) ?: []);
+        } catch (PDOException $e) {
+            error_log('[Dashboard::GetPaymentSummary] ' . $e->getMessage());
+            return $this->EmptyPaymentSummary();
+        }
+    }
+
+    public function GetVerificationSummary(): array
+    {
+        try {
+            $stmt = $this->conn->query("
+                SELECT
+                    COUNT(*) AS total_documents,
+                    COALESCE(SUM(CASE WHEN status = 'pending' OR status IS NULL THEN 1 ELSE 0 END), 0) AS pending,
+                    COALESCE(SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END), 0) AS approved,
+                    COALESCE(SUM(CASE WHEN status = 'rejected' THEN 1 ELSE 0 END), 0) AS rejected
+                FROM verification_documents
+            ");
+            return $stmt->fetch(PDO::FETCH_ASSOC) ?: [
+                'total_documents' => 0,
+                'pending' => 0,
+                'approved' => 0,
+                'rejected' => 0,
+            ];
+        } catch (PDOException $e) {
+            error_log('[Dashboard::GetVerificationSummary] ' . $e->getMessage());
+            return [
+                'total_documents' => 0,
+                'pending' => 0,
+                'approved' => 0,
+                'rejected' => 0,
+            ];
+        }
+    }
+
+    public function GetFleetSummary(): array
+    {
+        try {
+            $stmt = $this->conn->query("
+                SELECT
+                    (SELECT COUNT(*) FROM vans) AS total_vans,
+                    (SELECT COUNT(*) FROM vans WHERE status = 'active') AS active_vans,
+                    (SELECT COUNT(*) FROM drivers) AS total_drivers,
+                    (SELECT COUNT(*) FROM drivers WHERE status = 'active') AS active_drivers,
+                    (SELECT COUNT(*) FROM routes) AS total_routes,
+                    (SELECT COUNT(*) FROM routes WHERE is_active = 1) AS active_routes
+            ");
+            return $stmt->fetch(PDO::FETCH_ASSOC) ?: [];
+        } catch (PDOException $e) {
+            error_log('[Dashboard::GetFleetSummary] ' . $e->getMessage());
+            return [];
+        }
     }
 
     // ── SEATS BOOKED (approved bookings only) ────────────────────────────────
@@ -213,16 +295,43 @@ class Dashboard
 
     public function GetTotalPending()
     {
+        $summary = $this->GetVerificationSummary();
+        return (int) ($summary['pending'] ?? 0);
+    }
+
+    private function ColumnExists(string $table, string $column): bool
+    {
         try {
-            $stmt = $this->conn->prepare(
-                "SELECT COUNT(*) FROM verification_documents
-                 WHERE status = 'pending'"
-            );
-            $stmt->execute();
-            return (int) $stmt->fetchColumn();
+            $stmt = $this->conn->prepare("
+                SELECT COUNT(*)
+                FROM INFORMATION_SCHEMA.COLUMNS
+                WHERE TABLE_SCHEMA = DATABASE()
+                  AND TABLE_NAME = :table_name
+                  AND COLUMN_NAME = :column_name
+            ");
+            $stmt->execute([
+                ':table_name' => $table,
+                ':column_name' => $column,
+            ]);
+            return (int) $stmt->fetchColumn() > 0;
         } catch (PDOException $e) {
-            return 0;
+            error_log('[Dashboard::ColumnExists] ' . $e->getMessage());
+            return false;
         }
+    }
+
+    private function EmptyPaymentSummary(): array
+    {
+        return [
+            'total_payments' => 0,
+            'pending' => 0,
+            'paid' => 0,
+            'refund_requested' => 0,
+            'refunded' => 0,
+            'total_revenue' => 0,
+            'revenue_today' => 0,
+            'revenue_week' => 0,
+        ];
     }
 }
 ?>

@@ -52,7 +52,7 @@ $result = $route->AddRoute();
 
 $_SESSION[$result['success'] ? 'success' : 'error'] = $result['success']
     ? 'Route added successfully.'
-    : 'Failed to add route.';
+    : ($result['message'] ?? 'Unable to add route. Please check the details and try again.');
 
 header('Location: ../../views/admin/routes.php');
 exit;

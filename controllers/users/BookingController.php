@@ -124,4 +124,5 @@ booking_response(true, $result['message'], [
     'reference_code' => $result['reference_code'],
     'booking_id' => encrypt((string) $result['booking_id']),
     'total_amount' => $result['total_amount'],
+    'seats_count' => (int) ($result['seats_count'] ?? count($seatIds)),
 ]);

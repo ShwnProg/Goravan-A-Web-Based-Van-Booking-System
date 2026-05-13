@@ -1157,3 +1157,304 @@
     }
 }
 
+/* Cleaner booking details */
+.booking-detail-page .u-detail-modern {
+    border: 1px solid var(--u-border);
+    border-radius: 14px;
+    background: var(--u-surface);
+    box-shadow: none;
+    overflow: hidden;
+}
+
+.booking-detail-page .u-bk-header {
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--u-border);
+    background: var(--u-surface);
+}
+
+.booking-detail-page .u-bk-subtle {
+    margin-top: 4px;
+    color: var(--u-muted);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.booking-detail-page .u-detail-sections {
+    display: grid;
+    gap: 14px;
+    padding: 16px;
+}
+
+.booking-detail-page .u-detail-section {
+    border: 1px solid var(--u-border);
+    border-radius: 12px;
+    background: var(--u-surface);
+    padding: 16px;
+}
+
+.booking-detail-page .u-detail-section h2 {
+    margin: 0 0 12px;
+    color: var(--u-text);
+    font-size: 15px;
+    font-weight: 850;
+    letter-spacing: 0;
+}
+
+.booking-detail-page .u-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px 14px;
+}
+
+.booking-detail-page .u-detail-grid > div {
+    min-width: 0;
+}
+
+.booking-detail-page .u-detail-grid span {
+    display: block;
+    margin-bottom: 3px;
+    color: var(--u-muted);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.booking-detail-page .u-detail-grid strong {
+    display: block;
+    color: var(--u-text);
+    font-size: 13.5px;
+    font-weight: 750;
+    overflow-wrap: anywhere;
+}
+
+.booking-detail-page .u-detail-seats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 12px;
+    color: var(--u-muted);
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.booking-detail-page .u-refund-timeline {
+    display: grid;
+    gap: 10px;
+}
+
+.booking-detail-page .u-refund-event {
+    border-left: 3px solid var(--u-accent);
+    background: var(--u-surface2);
+    border-radius: 10px;
+    padding: 10px 12px;
+}
+
+.booking-detail-page .u-refund-event strong,
+.booking-detail-page .u-refund-event span,
+.booking-detail-page .u-refund-event small {
+    display: block;
+}
+
+.booking-detail-page .u-refund-event strong {
+    color: var(--u-text);
+    font-size: 13px;
+}
+
+.booking-detail-page .u-refund-event span,
+.booking-detail-page .u-refund-event p,
+.booking-detail-page .u-refund-event small {
+    color: var(--u-muted);
+    font-size: 12.5px;
+}
+
+.booking-detail-page .u-refund-event p {
+    margin: 4px 0;
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 700px) {
+    .booking-detail-page .u-detail-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .booking-detail-page .u-bk-header {
+        align-items: flex-start;
+        gap: 10px;
+    }
+}
+
+/* =========================================================
+   BOOKING DETAILS - ALIGNED TEXT LAYOUT FIX
+   Paste at the VERY BOTTOM of user-bookings.css
+========================================================= */
+
+.booking-detail-page .u-detail-section {
+    padding: 18px 20px;
+}
+
+/* Section title */
+.booking-detail-page .u-detail-section h2 {
+    margin: 0 0 16px;
+    font-size: 16px;
+    font-weight: 850;
+}
+
+/* Make details aligned like clean rows */
+.booking-detail-page .u-detail-grid {
+    display: grid;
+    grid-template-columns: 150px minmax(0, 1fr);
+    gap: 0;
+}
+
+/* Each item becomes contents so label/value align properly */
+.booking-detail-page .u-detail-grid > div {
+    display: contents;
+}
+
+/* Label column */
+.booking-detail-page .u-detail-grid span {
+    margin: 0;
+    padding: 9px 18px 9px 0;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.35;
+    color: #64748b;
+}
+
+/* Value column */
+.booking-detail-page .u-detail-grid strong {
+    margin: 0;
+    padding: 9px 0;
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1.35;
+    color: #0f172a;
+    overflow-wrap: anywhere;
+}
+
+/* Optional subtle row separator */
+.booking-detail-page .u-detail-grid span,
+.booking-detail-page .u-detail-grid strong {
+    border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+}
+
+/* Remove last row border if possible */
+.booking-detail-page .u-detail-grid > div:last-child span,
+.booking-detail-page .u-detail-grid > div:last-child strong {
+    border-bottom: 0;
+}
+
+/* Seats spacing */
+.booking-detail-page .u-detail-seats {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(148, 163, 184, 0.16);
+}
+
+/* Mobile: still clean */
+@media (max-width: 600px) {
+    .booking-detail-page .u-detail-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .booking-detail-page .u-detail-grid > div {
+        display: block;
+        padding: 10px 0;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+    }
+
+    .booking-detail-page .u-detail-grid > div:last-child {
+        border-bottom: 0;
+    }
+
+    .booking-detail-page .u-detail-grid span,
+    .booking-detail-page .u-detail-grid strong {
+        padding: 0;
+        border-bottom: 0;
+    }
+
+    .booking-detail-page .u-detail-grid span {
+        margin-bottom: 4px;
+    }
+}
+/* Center the booking details content */
+.booking-detail-page .u-detail-section {
+    max-width: 620px;
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+}
+
+/* Keep section title aligned with centered content */
+.booking-detail-page .u-detail-section h2 {
+    text-align: left;
+}
+
+/* Center the whole details area */
+.booking-detail-page .u-detail-sections {
+    justify-items: center;
+}
+
+/* Make every section same width */
+.booking-detail-page .u-detail-sections .u-detail-section {
+    width: 100%;
+}
+
+/* Optional: center the main booking card too */
+.booking-detail-page .u-bk-detail,
+.booking-detail-page .u-detail-modern {
+    margin-left: auto;
+    margin-right: auto;
+}
+/* =========================================================
+   DARK MODE READABILITY FIX FOR BOOKING DETAILS
+   Paste at the VERY BOTTOM of user-bookings.css
+========================================================= */
+
+.booking-detail-page .u-detail-grid span {
+    color: var(--u-muted) !important;
+}
+
+.booking-detail-page .u-detail-grid strong {
+    color: var(--u-text) !important;
+}
+
+.booking-detail-page .u-detail-section h2 {
+    color: var(--u-text) !important;
+}
+
+.booking-detail-page .u-detail-section {
+    background: var(--u-surface) !important;
+    border-color: var(--u-border) !important;
+}
+
+.booking-detail-page .u-detail-grid span,
+.booking-detail-page .u-detail-grid strong {
+    border-bottom-color: var(--u-border) !important;
+}
+
+.booking-detail-page .u-detail-seats {
+    color: var(--u-muted) !important;
+    border-top-color: var(--u-border) !important;
+}
+
+.booking-detail-page .u-seat-chip {
+    background: var(--u-surface2) !important;
+    border-color: var(--u-border) !important;
+    color: var(--u-text) !important;
+}
+
+.booking-detail-page .u-refund-event {
+    background: var(--u-surface2) !important;
+    border-color: var(--u-border) !important;
+    border-left-color: var(--u-accent) !important;
+}
+
+.booking-detail-page .u-refund-event strong {
+    color: var(--u-text) !important;
+}
+
+.booking-detail-page .u-refund-event span,
+.booking-detail-page .u-refund-event p,
+.booking-detail-page .u-refund-event small {
+    color: var(--u-muted) !important;
+}

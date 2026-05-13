@@ -379,7 +379,7 @@ class Payments
                 $restore->execute([':reference_code' => $payment['reference_code']]);
             }
 
-            if (in_array($status, ['cancelled', 'refund_requested', 'refunded'], true) && !empty($payment['reference_code'])) {
+            if (in_array($status, ['cancelled', 'refunded'], true) && !empty($payment['reference_code'])) {
                 $cancel = $this->conn->prepare("
                     UPDATE bookings
                     SET status = 'cancelled',
@@ -457,21 +457,8 @@ class Payments
                 ':payment_id' => $paymentId,
             ]);
 
-            $cancelBooking = $this->conn->prepare("
-                UPDATE bookings
-                SET status = 'cancelled',
-                    updated_at = NOW()
-                WHERE reference_code = :reference_code
-                  AND user_id_fk = :user_id
-                  AND status IN ('approved', 'pending')
-            ");
-            $cancelBooking->execute([
-                ':reference_code' => $payment['reference_code'],
-                ':user_id' => $userId,
-            ]);
-
             $this->conn->commit();
-            return ['success' => true, 'message' => 'Refund request submitted for admin review.'];
+            return ['success' => true, 'message' => 'Refund request submitted. Your booking remains active while admin reviews it.'];
         } catch (Throwable $e) {
             if ($this->conn->inTransaction()) {
                 $this->conn->rollBack();

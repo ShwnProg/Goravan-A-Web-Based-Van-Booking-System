@@ -17,7 +17,7 @@ if ($action !== 'list') {
 try {
     $userId = (int) decrypt($_SESSION['id']);
     $notifications = new UserNotifications($conn);
-    $items = $notifications->GetUserNotifications($userId, 20);
+    $items = $notifications->GetUserNotifications($userId, 12);
 
     echo json_encode([
         'success' => true,

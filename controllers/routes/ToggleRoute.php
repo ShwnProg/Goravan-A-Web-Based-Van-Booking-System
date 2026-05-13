@@ -44,7 +44,7 @@ echo json_encode([
     'success' => $result['success'],
     'message' => $result['success']
         ? 'Route status updated successfully.'
-        : 'Failed to update route status.'
+        : ($result['message'] ?? 'Unable to update route status. Please try again.')
 ]);
 
 exit;

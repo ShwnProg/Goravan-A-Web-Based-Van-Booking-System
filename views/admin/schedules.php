@@ -26,16 +26,6 @@ $vans   = $vanObj->GetAllVans();
         <i class="fas fa-search"></i>
         <input type="text" id="schedule-search" placeholder="Search schedules...">
     </div>
-    <!-- FIX 2: Added filter-group for status filter (consistent with other pages) -->
-    <div class="filter-group">
-        <select class="filter-select" id="schedule-status-filter">
-            <option value="">All Status</option>
-            <option value="boarding">Boarding</option>
-            <option value="departed">Departed</option>
-            <option value="arrived">Arrived</option>
-            <option value="cancelled">Cancelled</option>
-        </select>
-    </div>
     <div class="admin-date-filters" data-filter-scope="schedules">
         <label><span>From</span><input type="date" id="schedule-date-from"></label>
         <label><span>To</span><input type="date" id="schedule-date-to"></label>
@@ -45,6 +35,14 @@ $vans   = $vanObj->GetAllVans();
         <i class="fas fa-plus"></i> Add Schedule
     </button>
 </div>
+<div class="admin-status-tabs" id="schedule-status-tabs" aria-label="Schedule status filters">
+    <button type="button" class="active" data-status="boarding">Boarding Schedules</button>
+    <button type="button" data-status="departed">Departed Schedules</button>
+    <button type="button" data-status="arrived">Arrived Schedules</button>
+    <button type="button" data-status="cancelled">Cancelled Schedules</button>
+    <button type="button" data-status="">All Schedules</button>
+</div>
+<input type="hidden" id="schedule-status-filter" value="boarding">
 
 <!-- FIX 3: ONE csrf_field() here, outside all modals.
      JS reads the LAST input[name="csrf_token"] on page,
@@ -61,7 +59,7 @@ $vans   = $vanObj->GetAllVans();
         <div class="schedules-card-header">
             <h2>
                 <i class="fas fa-calendar-check" style="margin-right:7px;color:var(--color-accent)"></i>
-                <span id="schedule-view-title">All Schedules</span>
+                <span id="schedule-view-title">Boarding Schedules</span>
             </h2>
             <!-- FIX 4: Removed data-label attribute — JS now handles pluralisation itself -->
             <span id="schedule-count"></span>
@@ -91,30 +89,8 @@ $vans   = $vanObj->GetAllVans();
                         </tr>
                     <?php else: ?>
                         <?php
-                        $scheduleStatusGroups = [
-                            'boarding' => ['label' => 'Boarding Schedules', 'icon' => 'fas fa-door-open', 'hint' => 'Accepting passengers'],
-                            'departed' => ['label' => 'Departed Schedules', 'icon' => 'fas fa-route', 'hint' => 'On the road'],
-                            'arrived' => ['label' => 'Arrived Schedules', 'icon' => 'fas fa-flag-checkered', 'hint' => 'Reached destination'],
-                            'cancelled' => ['label' => 'Cancelled Schedules', 'icon' => 'fas fa-ban', 'hint' => 'Not running'],
-                        ];
-                        $currentGroup = '';
                         foreach ($schedules as $i => $s):
                             $rawStatus = (string) ($s['trip_status'] ?? '');
-                            $group = $scheduleStatusGroups[$rawStatus] ?? ['label' => ucwords($rawStatus) . ' Schedules', 'icon' => 'fas fa-calendar-check', 'hint' => 'Other schedules'];
-                            if ($currentGroup !== $rawStatus):
-                                $currentGroup = $rawStatus;
-                        ?>
-                            <tr class="admin-status-group-row" data-group-key="<?= htmlspecialchars($currentGroup, ENT_QUOTES) ?>">
-                                <td colspan="7">
-                                    <div class="admin-status-group-label">
-                                        <i class="<?= htmlspecialchars($group['icon'], ENT_QUOTES) ?>"></i>
-                                        <span><?= htmlspecialchars($group['label']) ?></span>
-                                        <small><?= htmlspecialchars($group['hint']) ?></small>
-                                    </div>
-                                </td>
-                            </tr>
-                        <?php
-                            endif;
                             $departure    = date('M d', strtotime($s['departure_date']))
                                           . ' at '
                                           . date('g:i A', strtotime($s['departure_time']));
@@ -122,10 +98,23 @@ $vans   = $vanObj->GetAllVans();
                             $stops        = array_values(array_filter($s['stops'] ?? []));
                             $viaText      = !empty($stops) ? 'via ' . implode(', ', $stops) : '';
                             $routeDisplay = htmlspecialchars($s['route_display'] ?? 'N/A', ENT_QUOTES);
+                            $origin       = htmlspecialchars($s['origin'] ?? '', ENT_QUOTES);
+                            $destination  = htmlspecialchars($s['destination'] ?? '', ENT_QUOTES);
+                            $fullRoute    = htmlspecialchars(($s['route_display'] ?? 'N/A') . ($viaText ? ' · ' . $viaText : ''), ENT_QUOTES);
                             $routeVia     = htmlspecialchars($viaText, ENT_QUOTES);
                             $driverName   = htmlspecialchars($s['driver_name']   ?? 'N/A', ENT_QUOTES);
                             $vanPlate     = htmlspecialchars($s['van_plate']     ?? 'N/A', ENT_QUOTES);
+                            $vanModel     = htmlspecialchars($s['van_model']     ?? '', ENT_QUOTES);
                             $vanCapacity  = (int) ($s['van_capacity'] ?? 0);
+                            $totalSeats   = (int) ($s['total_seats'] ?? $vanCapacity);
+                            $bookedSeats  = (int) ($s['booked_seats'] ?? 0);
+                            $availableSeats = (int) ($s['available_seats'] ?? max(0, $totalSeats - $bookedSeats));
+                            $createdAt    = !empty($s['created_at'])
+                                            ? htmlspecialchars(date('M d, Y g:i A', strtotime($s['created_at'])), ENT_QUOTES)
+                                            : '';
+                            $updatedAt    = !empty($s['updated_at'])
+                                            ? htmlspecialchars(date('M d, Y g:i A', strtotime($s['updated_at'])), ENT_QUOTES)
+                                            : '';
                             $arrivedAt    = !empty($s['arrived_at'])
                                             ? htmlspecialchars(date('M d, Y g:i A', strtotime($s['arrived_at'])), ENT_QUOTES)
                                             : '';
@@ -143,17 +132,26 @@ $vans   = $vanObj->GetAllVans();
                                 data-driver="<?= (int) $s['driver_id_fk'] ?>"
                                 data-van="<?= (int) $s['van_id_fk'] ?>"
                                 data-route-display="<?= $routeDisplay ?>"
+                                data-origin="<?= $origin ?>"
+                                data-destination="<?= $destination ?>"
+                                data-full-route="<?= $fullRoute ?>"
                                 data-route-via="<?= $routeVia ?>"
                                 data-driver-name="<?= $driverName ?>"
                                 data-van-plate="<?= $vanPlate ?>"
+                                data-van-model="<?= $vanModel ?>"
                                 data-van-capacity="<?= $vanCapacity ?>"
+                                data-total-seats="<?= $totalSeats ?>"
+                                data-available-seats="<?= $availableSeats ?>"
+                                data-booked-seats="<?= $bookedSeats ?>"
                                 data-date="<?= htmlspecialchars($s['departure_date'], ENT_QUOTES) ?>"
                                 data-time="<?= htmlspecialchars($s['departure_time'], ENT_QUOTES) ?>"
                                 data-eta="<?= $etaValue ?>"
                                 data-eta-display="<?= $etaDisplay ?>"
                                 data-status="<?= $status ?>"
                                 data-pending-bookings="<?= $pendingBookings ?>"
-                                data-arrived-at="<?= $arrivedAt ?>">
+                                data-arrived-at="<?= $arrivedAt ?>"
+                                data-created-at="<?= $createdAt ?>"
+                                data-updated-at="<?= $updatedAt ?>">
 
                                 <td class="text-muted-sm"><?= $i + 1 ?></td>
                                 <td>
@@ -218,42 +216,46 @@ $vans   = $vanObj->GetAllVans();
 
         <div id="schedule-empty" class="schedule-empty">
             <i class="fas fa-calendar-check"></i>
-            <p>Click a schedule to view details</p>
+            <p>Select a schedule to view details.</p>
         </div>
 
         <div id="schedule-preview" style="display:none;">
-            <div class="schedule-avatar">
-                <i class="fas fa-calendar-check"></i>
-            </div>
             <div class="schedule-details">
                 <h3 id="preview-route">—</h3>
-                <div class="detail-row">
-                    <span class="detail-label">Driver</span>
-                    <span id="preview-driver" class="detail-value">—</span>
+                <div class="detail-section">
+                    <h4>Route Information</h4>
+                    <div class="detail-row"><span class="detail-label">Origin</span><span id="preview-origin" class="detail-value">—</span></div>
+                    <div class="detail-row"><span class="detail-label">Destination</span><span id="preview-destination" class="detail-value">—</span></div>
+                    <div class="detail-row"><span class="detail-label">Via Route</span><span id="preview-via" class="detail-value">—</span></div>
+                    <div class="detail-row"><span class="detail-label">Full Route</span><span id="preview-full-route" class="detail-value">—</span></div>
                 </div>
-                <div class="detail-row">
-                    <span class="detail-label">Van</span>
-                    <span id="preview-van" class="detail-value">—</span>
+                <div class="detail-section">
+                    <h4>Schedule Time</h4>
+                    <div class="detail-row"><span class="detail-label">Departure</span><span id="preview-departure" class="detail-value">—</span></div>
+                    <div class="detail-row"><span class="detail-label">ETA</span><span id="preview-eta" class="detail-value">—</span></div>
+                    <div class="detail-row" id="preview-arrived-row" style="display:none;"><span class="detail-label">Actual Arrival</span><span id="preview-arrived-at" class="detail-value">—</span></div>
                 </div>
-                <div class="detail-row">
-                    <span class="detail-label">Capacity</span>
-                    <span id="preview-capacity" class="detail-value">—</span>
+                <div class="detail-section">
+                    <h4>Driver and Van</h4>
+                    <div class="detail-row"><span class="detail-label">Driver</span><span id="preview-driver" class="detail-value">—</span></div>
+                    <div class="detail-row"><span class="detail-label">Van</span><span id="preview-van" class="detail-value">—</span></div>
+                    <div class="detail-row"><span class="detail-label">Capacity</span><span id="preview-capacity" class="detail-value">—</span></div>
                 </div>
-                <div class="detail-row">
-                    <span class="detail-label">Departure</span>
-                    <span id="preview-departure" class="detail-value">—</span>
+                <div class="detail-section">
+                    <h4>Seat Information</h4>
+                    <div class="detail-row"><span class="detail-label">Total Seats</span><span id="preview-total-seats" class="detail-value">—</span></div>
+                    <div class="detail-row"><span class="detail-label">Available</span><span id="preview-available-seats" class="detail-value">—</span></div>
+                    <div class="detail-row"><span class="detail-label">Booked</span><span id="preview-booked-seats" class="detail-value">—</span></div>
                 </div>
-                <div class="detail-row">
-                    <span class="detail-label">ETA</span>
-                    <span id="preview-eta" class="detail-value">—</span>
+                <div class="detail-section">
+                    <h4>Status Information</h4>
+                    <div class="detail-row"><span class="detail-label">Current Status</span><span id="preview-status" class="detail-badge badge" style="justify-content: center;">—</span></div>
+                    <div class="detail-row"><span class="detail-label">Description</span><span id="preview-status-desc" class="detail-value">—</span></div>
                 </div>
-                <div class="detail-row">
-                    <span class="detail-label">Status</span>
-                    <span id="preview-status" class="detail-badge badge" style="justify-content: center;">—</span>
-                </div>
-                <div class="detail-row" id="preview-arrived-row" style="display:none;">
-                    <span class="detail-label">Arrived At</span>
-                    <span id="preview-arrived-at" class="detail-value">—</span>
+                <div class="detail-section">
+                    <h4>System Information</h4>
+                    <div class="detail-row"><span class="detail-label">Created</span><span id="preview-created-at" class="detail-value">—</span></div>
+                    <div class="detail-row"><span class="detail-label">Updated</span><span id="preview-updated-at" class="detail-value">—</span></div>
                 </div>
             </div>
         </div>

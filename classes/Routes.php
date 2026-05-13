@@ -142,7 +142,8 @@ class Routes
 
         } catch (PDOException $e) {
             $this->conn->rollBack();
-            return ['success' => false, 'error' => $e->getMessage()];
+            error_log('[Routes::EditRoute] ' . $e->getMessage());
+            return ['success' => false, 'message' => 'Unable to update record. Please check the details and try again.'];
         }
     }
 
@@ -176,7 +177,8 @@ class Routes
 
         } catch (PDOException $e) {
             $this->conn->rollBack();
-            return ['success' => false, 'error' => $e->getMessage()];
+            error_log('[Routes::AddRoute] ' . $e->getMessage());
+            return ['success' => false, 'message' => 'Unable to add route. Please check the details and try again.'];
         }
     }
 
@@ -191,7 +193,7 @@ class Routes
             if ($this->CountAssignedSchedules((int) $this->id) > 0) {
                 return [
                     'success' => false,
-                    'message' => 'This route is assigned to one or more schedules, so it cannot be deleted. Set it inactive instead to keep schedule history intact.'
+                    'message' => 'This record cannot be deleted because it is already linked to existing schedules or bookings. You may deactivate it instead.'
                 ];
             }
 
@@ -209,10 +211,10 @@ class Routes
 
         } catch (PDOException $e) {
             $this->conn->rollBack();
+            error_log('[Routes::DeleteRoute] ' . $e->getMessage());
             return [
                 'success' => false,
-                'message' => 'Unable to delete this route because it is still linked to other records.',
-                'error' => $e->getMessage()
+                'message' => 'This record cannot be deleted because it is already linked to existing schedules or bookings. You may deactivate it instead.'
             ];
         }
     }
@@ -221,6 +223,10 @@ class Routes
     public function ToggleRoute(): array
     {
         try {
+            if (!$this->RouteExists((int) $this->id)) {
+                return ['success' => false, 'message' => 'Route not found.'];
+            }
+
             $stmt = $this->conn->prepare("
                 UPDATE $this->table SET is_active = :status WHERE route_id_pk = :id
             ");
@@ -231,7 +237,8 @@ class Routes
             return ['success' => true];
 
         } catch (PDOException $e) {
-            return ['success' => false, 'error' => $e->getMessage()];
+            error_log('[Routes::ToggleRoute] ' . $e->getMessage());
+            return ['success' => false, 'message' => 'Unable to update route status. Please try again.'];
         }
     }
 
@@ -276,6 +283,21 @@ class Routes
         ");
         $stmt->execute([':id' => $routeId]);
         return (int) $stmt->fetchColumn();
+    }
+
+    private function RouteExists(int $routeId): bool
+    {
+        if (!$routeId) {
+            return false;
+        }
+
+        $stmt = $this->conn->prepare("
+            SELECT COUNT(*)
+            FROM {$this->table}
+            WHERE route_id_pk = :id
+        ");
+        $stmt->execute([':id' => $routeId]);
+        return (int) $stmt->fetchColumn() > 0;
     }
 
     public function GetActiveRoutes(){

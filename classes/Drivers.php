@@ -78,30 +78,40 @@ class Drivers
 
             return ['success' => true, 'id' => (int) $this->conn->lastInsertId()];
         } catch (PDOException $e) {
-            return ['success' => false, 'error' => $e->getMessage()];
+            error_log('[Drivers::AddDriver] ' . $e->getMessage());
+            return ['success' => false, 'message' => 'Unable to add driver. Please check the details and try again.'];
         }
     }
 
     // UPDATE
     public function EditDriver(): array
     {
-        $stmt = $this->conn->prepare("
-            UPDATE {$this->table}
-            SET full_name = :full_name,
-                license_number = :license_number,
-                contact_number = :contact_number,
-                status = :status
-            WHERE driver_id_pk = :id
-        ");
-        $stmt->execute([
-            ':full_name' => $this->full_name,
-            ':license_number' => strtoupper($this->license_number),
-            ':contact_number' => $this->contact_number,
-            ':status' => $this->status,
-            ':id' => $this->id,
-        ]);
+        try {
+            if (!$this->DriverExists((int) $this->id)) {
+                return ['success' => false, 'message' => 'Driver not found.'];
+            }
 
-        return ['success' => true];
+            $stmt = $this->conn->prepare("
+                UPDATE {$this->table}
+                SET full_name = :full_name,
+                    license_number = :license_number,
+                    contact_number = :contact_number,
+                    status = :status
+                WHERE driver_id_pk = :id
+            ");
+            $stmt->execute([
+                ':full_name' => $this->full_name,
+                ':license_number' => strtoupper($this->license_number),
+                ':contact_number' => $this->contact_number,
+                ':status' => $this->status,
+                ':id' => $this->id,
+            ]);
+
+            return ['success' => true];
+        } catch (PDOException $e) {
+            error_log('[Drivers::EditDriver] ' . $e->getMessage());
+            return ['success' => false, 'message' => 'Unable to update record. Please check the details and try again.'];
+        }
     }
 
     // ── DELETE ────────────────────────────────────────────────
@@ -115,7 +125,7 @@ class Drivers
             if ($this->CountAssignedSchedules((int) $this->id) > 0) {
                 return [
                     'success' => false,
-                    'message' => 'This driver is assigned to one or more schedules, so they cannot be deleted. Set the driver inactive instead to keep schedule history intact.'
+                    'message' => 'This record cannot be deleted because it is already linked to existing schedules or bookings. You may deactivate it instead.'
                 ];
             }
 
@@ -128,10 +138,10 @@ class Drivers
                 'message' => $stmt->rowCount() > 0 ? 'Driver deleted successfully.' : 'Driver not found.'
             ];
         } catch (PDOException $e) {
+            error_log('[Drivers::DeleteDriver] ' . $e->getMessage());
             return [
                 'success' => false,
-                'message' => 'Unable to delete this driver because they are still linked to other records.',
-                'error' => $e->getMessage()
+                'message' => 'This record cannot be deleted because it is already linked to existing schedules or bookings. You may deactivate it instead.'
             ];
         }
     }
@@ -140,6 +150,10 @@ class Drivers
     public function ToggleDriver(): array
     {
         try {
+            if (!$this->DriverExists((int) $this->id)) {
+                return ['success' => false, 'message' => 'Driver not found.'];
+            }
+
             $stmt = $this->conn->prepare("
                 UPDATE {$this->table}
                 SET status = :status
@@ -151,7 +165,8 @@ class Drivers
             ]);
             return ['success' => true];
         } catch (PDOException $e) {
-            return ['success' => false, 'error' => $e->getMessage()];
+            error_log('[Drivers::ToggleDriver] ' . $e->getMessage());
+            return ['success' => false, 'message' => 'Unable to update driver status. Please try again.'];
         }
     }
 
@@ -168,6 +183,21 @@ class Drivers
         ");
         $stmt->execute([':id' => $driverId]);
         return (int) $stmt->fetchColumn();
+    }
+
+    private function DriverExists(int $driverId): bool
+    {
+        if (!$driverId) {
+            return false;
+        }
+
+        $stmt = $this->conn->prepare("
+            SELECT COUNT(*)
+            FROM {$this->table}
+            WHERE driver_id_pk = :id
+        ");
+        $stmt->execute([':id' => $driverId]);
+        return (int) $stmt->fetchColumn() > 0;
     }
 }
 ?>
