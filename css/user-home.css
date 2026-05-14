@@ -548,10 +548,6 @@
 .user-home-page .u-search-toolbar input {
     opacity: 1 !important;
 }
-/* =========================================================
-   TODAY DATE BOX - LIGHT/DARK READABILITY FIX
-   Paste at the VERY BOTTOM of user-home.css
-========================================================= */
 
 .user-home-page .u-header-date {
     background: var(--u-surface2) !important;
@@ -570,7 +566,6 @@
     font-weight: 850;
 }
 
-/* Extra fallback kung may ibang CSS na tumatama */
 .user-home-page .u-header-date span {
     opacity: 1 !important;
 }
