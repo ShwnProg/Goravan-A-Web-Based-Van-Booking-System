@@ -33,6 +33,7 @@
     var DISCOUNTS = window.GV_DISCOUNTS || { student: 10, senior: 15, pwd: 20 };
     var VERIFIED_BONUS = parseFloat(window.GV_VERIFIED_BONUS || 0);
     var VERIFIED_TYPE = normalizePassengerType(window.GV_VERIFIED_TYPE || 'regular');
+    var AVAILABLE_DESTINATIONS = window.GV_AVAILABLE_DESTINATIONS || {};
     var currentStep = 1;
     var map = null;
     var markers = [];
@@ -49,6 +50,7 @@
 
     function init() {
         window.buildSearchableSelects(document);
+        bindRouteDropdowns();
         bindSearchValidation();
         bindBookButtons();
         bindStepButtons();
@@ -74,6 +76,7 @@
             contactNumber: '',
             paymentMethod: '',
             paymentReference: '',
+            mainSeatId: '',
             verifiedSeatId: '',
             baseTotal: 0,
             discountAmount: 0,
@@ -81,6 +84,64 @@
             convenienceFee: 0,
             grandTotal: 0
         };
+    }
+
+    function bindRouteDropdowns() {
+        var from = document.getElementById('from');
+        var to = document.getElementById('to');
+        if (!from || !to) return;
+
+        from.addEventListener('change', function () {
+            refreshDestinationOptions(from.value, to);
+        });
+    }
+
+    function refreshDestinationOptions(origin, toSelect) {
+        var current = toSelect.value;
+        var destinations = [];
+
+        if (origin && AVAILABLE_DESTINATIONS[origin]) {
+            destinations = AVAILABLE_DESTINATIONS[origin].slice();
+        } else {
+            Object.keys(AVAILABLE_DESTINATIONS).forEach(function (key) {
+                (AVAILABLE_DESTINATIONS[key] || []).forEach(function (destination) {
+                    if (destinations.indexOf(destination) === -1) destinations.push(destination);
+                });
+            });
+        }
+
+        destinations.sort();
+        toSelect.innerHTML = '<option value="">Select destination</option>' + destinations.map(function (name) {
+            return '<option value="' + esc(name) + '">' + esc(name) + '</option>';
+        }).join('');
+
+        toSelect.value = destinations.indexOf(current) !== -1 ? current : '';
+        refreshSearchableSelect(toSelect);
+    }
+
+    function refreshSearchableSelect(select) {
+        var wrap = select.closest('.ss-wrap');
+        if (!wrap) return;
+
+        var btn = wrap.querySelector('.ss-btn');
+        var txt = wrap.querySelector('.ss-btn-txt');
+        var list = wrap.querySelector('.ss-list');
+        var ph = select.dataset.placeholder || 'Select';
+        var current = select.options[select.selectedIndex];
+
+        if (txt) txt.textContent = current && current.value ? current.text : ph;
+        if (btn) btn.classList.toggle('is-placeholder', !current || !current.value);
+        if (!list) return;
+
+        list.innerHTML = '';
+        Array.from(select.options).forEach(function (opt) {
+            var li = document.createElement('li');
+            li.className = 'ss-item' + (!opt.value ? ' is-placeholder' : '') + (opt.selected && opt.value ? ' is-sel' : '');
+            li.dataset.val = opt.value;
+            li.dataset.text = opt.text;
+            li.textContent = opt.text;
+            list.appendChild(li);
+        });
     }
 
     function bindSearchValidation() {
@@ -457,25 +518,33 @@
         assignVerifiedDiscountSeat();
 
         wrap.innerHTML = state.selectedSeats.map(function (seat) {
-            var type = seat.type || 'regular';
-            var isVerifiedSeat = state.verifiedSeatId && String(state.verifiedSeatId) === String(seat.seat_id);
+            var type = normalizePassengerType(seat.type || 'regular');
+            var isMainSeat = isMainPassengerSeat(seat);
+            var discountRate = discountForSeat(seat);
+            var discountNote = '';
+            if (isMainSeat && hasVerifiedType()) {
+                discountNote = ' - account verified';
+            } else if (!isMainSeat && type !== 'regular') {
+                discountNote = ' - ID required';
+            }
             return '<div class="passenger-seat-row" data-seat-id="' + esc(seat.seat_id) + '">' +
-                '<div class="passenger-seat-label"><span>Seat ' + esc(seat.seat_number) + '</span><strong>' + esc(labelPassengerType(type)) + '</strong></div>' +
-                '<select class="passenger-seat-type" data-field="type"' + (isVerifiedSeat ? ' disabled data-verified-seat="1"' : '') + '>' +
-                passengerTypeOption('regular', type) +
-                passengerTypeOption('student', type) +
-                passengerTypeOption('senior', type) +
-                passengerTypeOption('pwd', type) +
+                '<div class="passenger-seat-label"><span>Seat ' + esc(seat.seat_number) + ' - ' + (isMainSeat ? 'Main Passenger' : 'Companion') + '</span><strong>' + esc(labelPassengerType(type)) + '</strong></div>' +
+                '<select class="passenger-seat-type" data-field="type"' + (isMainSeat ? ' disabled data-main-seat="1"' : '') + '>' +
+                passengerTypeOption('regular', type, isMainSeat) +
+                passengerTypeOption('student', type, isMainSeat) +
+                passengerTypeOption('senior', type, isMainSeat) +
+                passengerTypeOption('pwd', type, isMainSeat) +
                 '</select>' +
-                '<span class="passenger-seat-discount' + (isVerifiedSeat ? ' verified' : '') + '">' +
-                discountForType(type) + '% off' + (isVerifiedSeat ? ' · verified' : '') +
+                '<span class="passenger-seat-discount' + (isMainSeat && hasVerifiedType() ? ' verified' : '') + '">' +
+                discountRate + '% off' + esc(discountNote) +
                 '</span>' +
                 '</div>';
         }).join('');
     }
 
-    function passengerTypeOption(value, current) {
-        return '<option value="' + value + '"' + (value === current ? ' selected' : '') + '>' + labelPassengerType(value) + '</option>';
+    function passengerTypeOption(value, current, isMainSeat) {
+        var disabled = isMainSeat && value !== mainPassengerType();
+        return '<option value="' + value + '"' + (value === current ? ' selected' : '') + (disabled ? ' disabled' : '') + '>' + labelPassengerType(value) + '</option>';
     }
 
     function updatePassengerSeatFromInput(e) {
@@ -490,11 +559,12 @@
             seat.name = e.target.value.trim();
         }
         if (e.target.dataset.field === 'type') {
-            if (e.target.dataset.verifiedSeat === '1') {
-                e.target.value = VERIFIED_TYPE;
+            if (isMainPassengerSeat(seat)) {
+                seat.type = mainPassengerType();
+                e.target.value = seat.type;
                 return;
             }
-            seat.type = e.target.value || 'regular';
+            seat.type = normalizePassengerType(e.target.value || 'regular');
             renderPassengerSeatList();
         }
 
@@ -510,7 +580,8 @@
         if (!state.selectedSeats.length) return 'Regular';
         var counts = {};
         state.selectedSeats.forEach(function (seat) {
-            counts[seat.type || 'regular'] = (counts[seat.type || 'regular'] || 0) + 1;
+            var type = normalizePassengerType(seat.type || 'regular');
+            counts[type] = (counts[type] || 0) + 1;
         });
         return Object.keys(counts).map(function (type) {
             return counts[type] + ' ' + labelPassengerType(type);
@@ -543,7 +614,7 @@
         var count = state.selectedSeats.length;
         var base = count * state.pricePerSeat;
         var discount = state.selectedSeats.reduce(function (sum, seat) {
-            return sum + (state.pricePerSeat * (discountForType(seat.type) / 100));
+            return sum + (state.pricePerSeat * (discountForSeat(seat) / 100));
         }, 0);
         state.baseTotal = base;
         state.discountAmount = discount;
@@ -742,35 +813,56 @@
     }
 
     function discountForType(type) {
+        type = normalizePassengerType(type);
         var base = 0;
         if (type === 'student') base = parseFloat(DISCOUNTS.student || 0);
         if (type === 'senior') base = parseFloat(DISCOUNTS.senior || 0);
         if (type === 'pwd') base = parseFloat(DISCOUNTS.pwd || 0);
-        if (base > 0) return base + VERIFIED_BONUS;
-        return 0;
+        return base > 0 ? base : 0;
+    }
+
+    function discountForSeat(seat) {
+        var type = normalizePassengerType(seat && seat.type);
+        var base = discountForType(type);
+        if (base > 0 && isMainPassengerSeat(seat) && hasVerifiedType() && type === VERIFIED_TYPE) {
+            return base + VERIFIED_BONUS;
+        }
+        return base;
     }
 
     function assignVerifiedDiscountSeat() {
-        if (!hasVerifiedType()) {
-            state.verifiedSeatId = '';
-            return;
-        }
-
         if (!state.selectedSeats.length) {
+            state.mainSeatId = '';
             state.verifiedSeatId = '';
             return;
         }
 
-        var verifiedSeat = state.selectedSeats.find(function (seat) {
-            return String(seat.seat_id) === String(state.verifiedSeatId);
+        var mainSeat = state.selectedSeats.find(function (seat) {
+            return String(seat.seat_id) === String(state.mainSeatId);
         });
 
-        if (!verifiedSeat) {
-            verifiedSeat = state.selectedSeats[0];
-            state.verifiedSeatId = verifiedSeat.seat_id;
+        if (!mainSeat) {
+            mainSeat = state.selectedSeats[0];
+            state.mainSeatId = mainSeat.seat_id;
         }
 
-        verifiedSeat.type = VERIFIED_TYPE;
+        state.verifiedSeatId = hasVerifiedType() ? mainSeat.seat_id : '';
+
+        state.selectedSeats.forEach(function (seat) {
+            if (String(seat.seat_id) === String(state.mainSeatId)) {
+                seat.type = mainPassengerType();
+            } else {
+                seat.type = normalizePassengerType(seat.type || 'regular');
+            }
+        });
+    }
+
+    function mainPassengerType() {
+        return hasVerifiedType() ? VERIFIED_TYPE : 'regular';
+    }
+
+    function isMainPassengerSeat(seat) {
+        return !!seat && String(seat.seat_id) === String(state.mainSeatId);
     }
 
     function hasVerifiedType() {

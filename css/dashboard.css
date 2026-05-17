@@ -585,3 +585,24 @@ body.admin-dark-mode-active .db-table tbody tr,
 body.admin-dark-mode-active .db-act {
     border-color: rgba(148, 163, 184, .12);
 }
+.schedule-warning-card {
+    margin: 16px 0;
+}
+
+.schedule-missing-days {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.schedule-missing-days span {
+    display: inline-flex;
+    align-items: center;
+    min-height: 30px;
+    padding: 0 10px;
+    border-radius: 999px;
+    background: rgba(249, 115, 22, .1);
+    color: #c2410c;
+    font-size: 12px;
+    font-weight: 700;
+}

@@ -126,12 +126,13 @@ function showDriverPreview(row) {
     const fullname = row.dataset.fullname || '—';
     const license = row.dataset.license || '—';
     const contact = row.dataset.contact || '—';
+    const email = row.dataset.email || 'No login email';
     const status = row.dataset.status || '—';
 
-    // Update details
     document.getElementById('preview-name').textContent = fullname;
     document.getElementById('preview-license').textContent = license;
     document.getElementById('preview-contact').textContent = contact;
+    document.getElementById('preview-email').textContent = email;
     document.getElementById('preview-status').textContent = status.charAt(0).toUpperCase() + status.slice(1);
     document.getElementById('preview-status').className = 'detail-badge ' + status;
 
@@ -141,31 +142,10 @@ function showDriverPreview(row) {
     driverPreview.style.display = 'block';
 }
 
-function handleDriverActionClick(e) {
-    // Edit
-    const editBtn = e.target.closest('.icon-btn.edit');
-    if (editBtn) {
-        e.stopPropagation();
-
-        document.getElementById('edit-id').value = editBtn.dataset.id;
-        document.getElementById('edit-fullname').value = editBtn.dataset.fullname;
-        document.getElementById('edit-license').value = editBtn.dataset.license;
-        document.getElementById('edit-contact').value = editBtn.dataset.contact;
-        window.syncSS(document.getElementById('edit-status'), editBtn.dataset.status);
-
-        bootstrap.Modal.getOrCreateInstance(document.getElementById('editModal')).show();
-        return;
-    }
-
-}
-
 function getCsrf() {
     return document.getElementById('csrf_token')?.value;
 }
 
-/* =========================================================
-   SINGLE EVENT DELEGATION (EDIT / DELETE / TOGGLE)
-========================================================= */
 document.getElementById('drivers-tbody')?.addEventListener('click', function (e) {
 
     /* ===================== EDIT ===================== */
@@ -176,6 +156,8 @@ document.getElementById('drivers-tbody')?.addEventListener('click', function (e)
         document.getElementById('edit-fullname').value = editBtn.dataset.fullname;
         document.getElementById('edit-license').value = editBtn.dataset.license;
         document.getElementById('edit-contact').value = editBtn.dataset.contact;
+        document.getElementById('edit-email').value = editBtn.dataset.email || '';
+        document.getElementById('edit-password').value = '';
 
         window.syncSS(
             document.getElementById('edit-status'),
@@ -269,7 +251,7 @@ document.getElementById('drivers-tbody')?.addEventListener('click', function (e)
                                 label: nextStatus === 'active' ? 'Active Drivers' : 'Inactive Drivers',
                                 icon: 'fas fa-user-tie',
                                 hint: nextStatus === 'active' ? 'Available for assignment' : 'Not available',
-                                colspan: 7
+                                colspan: 8
                             });
                             AdminUI.refreshGroups(document.getElementById('drivers-tbody'), 'tr.driver-row', row => row.dataset.status || '');
                             if (row.classList.contains('selected')) showDriverPreview(row);
@@ -331,7 +313,6 @@ document.getElementById('editDriverForm')?.addEventListener('submit', function (
 
         })
         .catch(err => {
-            console.log(err);
             Swal.fire('Error', 'Network error', 'error');
         });
 });
@@ -367,7 +348,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const match =
                 row.dataset.fullname.toLowerCase().includes(q) ||
                 row.dataset.license.toLowerCase().includes(q) ||
-                row.dataset.contact.toLowerCase().includes(q);
+                row.dataset.contact.toLowerCase().includes(q) ||
+                (row.dataset.email || '').toLowerCase().includes(q);
             row.style.display = match && withinDate(row.dataset.created || '', from, to) ? '' : 'none';
         });
         updateDriverGroups();
@@ -400,9 +382,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Action buttons via event delegation
-    document.getElementById('page-content')?.addEventListener('click', handleDriverActionClick);
-
     // Add modal open
     document.getElementById('open-add-modal')?.addEventListener('click', () => {
         bootstrap.Modal.getOrCreateInstance(document.getElementById('addModal')).show();
@@ -424,7 +403,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const hasVisible = Array.from(rows).some(row => row.style.display !== 'none');
         if (hasVisible) return;
         const message = dateFiltered ? 'No drivers found for the selected date range.' : 'No drivers match your current filters.';
-        tbody.insertAdjacentHTML('beforeend', '<tr class="js-empty-row"><td colspan="7"><div class="empty-state"><i class="fas fa-search"></i><p>' + message + '</p></div></td></tr>');
+        tbody.insertAdjacentHTML('beforeend', '<tr class="js-empty-row"><td colspan="8"><div class="empty-state"><i class="fas fa-search"></i><p>' + message + '</p></div></td></tr>');
     }
 
     function withinDate(raw, from, to) {

@@ -356,12 +356,14 @@ body.admin-dark-mode-active {
 }
 
 .badge.boarding,
+.badge.not_departed,
 .badge.refund_requested {
     background: rgba(249, 115, 22, .08);
     color: var(--color-accent);
 }
 
 .badge.boarding::before,
+.badge.not_departed::before,
 .badge.refund_requested::before {
     background: var(--color-accent);
 }

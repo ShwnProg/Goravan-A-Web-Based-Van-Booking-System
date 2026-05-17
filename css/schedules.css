@@ -298,12 +298,14 @@
 }
 
 /* boarding → orange */
-.schedules-card .badge.boarding {
+.schedules-card .badge.boarding,
+.schedules-card .badge.not_departed {
     background: rgba(249,115,22,.1);
     color: #ea6c0a;
     border: 1px solid rgba(249,115,22,.18);
 }
-.schedules-card .badge.boarding::after  { background: #f97316; }
+.schedules-card .badge.boarding::after,
+.schedules-card .badge.not_departed::after { background: #f97316; }
 
 /* departed → blue */
 .schedules-card .badge.departed {
@@ -314,12 +316,14 @@
 .schedules-card .badge.departed::after  { background: #3b82f6; }
 
 /* arrived → green */
-.schedules-card .badge.arrived {
+.schedules-card .badge.arrived,
+.schedules-card .badge.completed {
     background: rgba(22,163,74,.08);
     color: #16a34a;
     border: 1px solid rgba(22,163,74,.16);
 }
-.schedules-card .badge.arrived::after   { background: #16a34a; }
+.schedules-card .badge.arrived::after,
+.schedules-card .badge.completed::after { background: #16a34a; }
 
 /* cancelled → red */
 .schedules-card .badge.cancelled {
@@ -634,73 +638,22 @@
     flex-shrink: 0;
 }
 
-.detail-badge.badge.boarding  { background: rgba(249,115,22,.1); color: #ea6c0a; border: 1px solid rgba(249,115,22,.18); }
-.detail-badge.badge.boarding::after  { background: #f97316; }
+.detail-badge.badge.boarding,
+.detail-badge.badge.not_departed { background: rgba(249,115,22,.1); color: #ea6c0a; border: 1px solid rgba(249,115,22,.18); }
+.detail-badge.badge.boarding::after,
+.detail-badge.badge.not_departed::after { background: #f97316; }
 .detail-badge.badge.departed  { background: rgba(59,130,246,.1); color: #2563eb; border: 1px solid rgba(59,130,246,.18); }
 .detail-badge.badge.departed::after  { background: #3b82f6; }
-.detail-badge.badge.arrived   { background: rgba(22,163,74,.08); color: #16a34a; border: 1px solid rgba(22,163,74,.16); }
-.detail-badge.badge.arrived::after   { background: #16a34a; }
+.detail-badge.badge.arrived,
+.detail-badge.badge.completed { background: rgba(22,163,74,.08); color: #16a34a; border: 1px solid rgba(22,163,74,.16); }
+.detail-badge.badge.arrived::after,
+.detail-badge.badge.completed::after { background: #16a34a; }
 .detail-badge.badge.cancelled { background: rgba(239,68,68,.08); color: #dc2626; border: 1px solid rgba(239,68,68,.15); }
 .detail-badge.badge.cancelled::after { background: #ef4444; }
 
 
 /* ══════════════════════════════════════════════════════════════════════
-   9. STATUS CHANGE DROPDOWN (JS-injected)
 ══════════════════════════════════════════════════════════════════════ */
-
-.sched-status-dropdown {
-    background: #fff;
-    border: 1px solid rgba(0,0,0,.09);
-    border-radius: 10px;
-    box-shadow: 0 8px 28px rgba(0,0,0,.12);
-    min-width: 200px;
-    overflow: hidden;
-    animation: schedDropIn .15s ease;
-}
-
-@keyframes schedDropIn {
-    from { opacity: 0; transform: translateY(-6px); }
-    to   { opacity: 1; transform: translateY(0); }
-}
-
-.sched-status-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 14px;
-    font-size: 12.5px;
-    color: #374151;
-    cursor: pointer;
-    transition: background .12s;
-    border-bottom: 1px solid rgba(0,0,0,.04);
-}
-
-.sched-status-item:last-child {
-    border-bottom: none;
-}
-
-.sched-status-item:hover {
-    background: rgba(249,115,22,.05);
-    color: var(--color-primary);
-}
-
-/* Badge inside dropdown inherits pill styles from above */
-.sched-status-item .badge {
-    pointer-events: none;
-}
-
-.sched-status-disabled {
-    color: #9ca3af;
-    font-style: italic;
-    cursor: default;
-    font-size: 12px;
-    padding: 10px 14px;
-}
-
-.sched-status-disabled:hover {
-    background: transparent;
-}
-
 
 /* ══════════════════════════════════════════════════════════════════════
    10. MODAL ADDITIONS (date+time inline pair)
@@ -892,12 +845,3 @@ body.admin-dark-mode-active .plate-number {
     border-color: rgba(255, 255, 255, .1);
 }
 
-body.admin-dark-mode-active .sched-status-dropdown {
-    background: #1e293b;
-    border-color: rgba(255, 255, 255, .09);
-}
-
-body.admin-dark-mode-active .sched-status-item {
-    color: #cbd5e1;
-    border-bottom-color: rgba(255, 255, 255, .06);
-}

@@ -343,16 +343,12 @@ function editRoute(routeId) {
     stopsInputs.forEach(stop => formData.append('stops[]', stop));
     formData.append('csrf_token', getCsrf());
 
-    console.log('[Routes Edit] Sending:', Object.fromEntries(formData));
-
     fetch('../../controllers/routes/EditRoute.php', {
         method: 'POST',
         body: formData
     })
         .then(res => res.json())
         .then(data => {
-            console.log('[Routes Edit] Response:', data);
-
             if (data.no_changes) {
                 Swal.fire({
                     icon: 'info',
@@ -403,16 +399,12 @@ function deleteRoute(routeId, routeName) {
         formData.append('route_id', routeId);
         formData.append('csrf_token', getCsrf());
 
-        console.log('[Routes Delete] Sending ID:', routeId);
-
         fetch('../../controllers/routes/DeleteRoute.php', {
             method: 'POST',
             body: formData
         })
             .then(res => res.json())
             .then(data => {
-                console.log('[Routes Delete] Response:', data);
-
                 if (data.success) {
                     Swal.fire({
                         icon: 'success',
@@ -458,16 +450,12 @@ function toggleRouteStatus(routeId, currentActive) {
         formData.append('is_active', newActive);
         formData.append('csrf_token', getCsrf());
 
-        console.log('[Routes Toggle] Sending:', { routeId, newActive });
-
         fetch('../../controllers/routes/ToggleRoute.php', {
             method: 'POST',
             body: formData
         })
             .then(res => res.json())
             .then(data => {
-                console.log('[Routes Toggle] Response:', data);
-
                 if (data.success) {
                     const row = document.querySelector('.route-row[data-id="' + routeId + '"]');
                     if (row) {

@@ -798,3 +798,25 @@ body.admin-dark-mode-active #detailsModal .modal-footer .btn-secondary {
     border-color: rgba(255, 255, 255, .1);
     color: #cbd5e1;
 }
+.admin-passenger-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.admin-passenger-table {
+    width: 100%;
+    min-width: 420px;
+    border-collapse: collapse;
+}
+
+.admin-passenger-table th,
+.admin-passenger-table td {
+    padding: 9px 10px;
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+}
+
+.admin-passenger-table th {
+    color: var(--text-muted);
+    font-size: 12px;
+}

@@ -23,6 +23,7 @@ let bookingCurrentPage = 1;
 function initBookingsModule() {
     const searchInput   = document.getElementById('booking-search');
     const filterStatus  = document.getElementById('booking-filter-status');
+    const dateSelect    = document.getElementById('booking-date-select');
     const dateFrom      = document.getElementById('booking-date-from');
     const dateTo        = document.getElementById('booking-date-to');
     const dateClear     = document.getElementById('booking-date-clear');
@@ -41,12 +42,14 @@ function initBookingsModule() {
     if (searchInput) searchInput.addEventListener('input', debouncedApply);
 
     if (filterStatus) filterStatus.addEventListener('change', applyFromFilters);
+    if (dateSelect) dateSelect.addEventListener('change', applyFromFilters);
     if (dateFrom) dateFrom.addEventListener('change', applyFromFilters);
     if (dateTo) dateTo.addEventListener('change', applyFromFilters);
     if (dateClear) {
         dateClear.addEventListener('click', () => {
             if (searchInput) searchInput.value = '';
             if (filterStatus) filterStatus.value = 'pending';
+            if (dateSelect) dateSelect.value = '';
             if (dateFrom) dateFrom.value = '';
             if (dateTo) dateTo.value = '';
             if (statusTabs) {
@@ -100,6 +103,7 @@ function filterBookings() {
     const filterStatus = document.getElementById('booking-filter-status');
     const searchTerm   = searchInput?.value.toLowerCase().trim() || '';
     const statusFilter = filterStatus?.value || '';
+    const exactDate    = document.getElementById('booking-date-select')?.value || '';
     const fromDate     = document.getElementById('booking-date-from')?.value || '';
     const toDate       = document.getElementById('booking-date-to')?.value || '';
 
@@ -119,6 +123,7 @@ function filterBookings() {
         const seats    = (row.dataset.seat || '').toLowerCase();
         const payment  = (row.dataset.payment || '').toLowerCase();
         const status   = row.dataset.status || '';
+        const rowDate  = String(row.dataset.created || '').slice(0, 10);
 
         const matchesSearch = !searchTerm ||
             refCode.includes(searchTerm) ||
@@ -127,7 +132,8 @@ function filterBookings() {
             seats.includes(searchTerm) ||
             payment.includes(searchTerm);
         const matchesStatus = !statusFilter || status === statusFilter;
-        const matchesDate = withinDateRange(row.dataset.created || '', fromDate, toDate);
+        const matchesExactDate = !exactDate || rowDate === exactDate;
+        const matchesDate = matchesExactDate && withinDateRange(row.dataset.created || '', fromDate, toDate);
 
         row.dataset.filterMatch = matchesSearch && matchesStatus && matchesDate ? '1' : '0';
     });
@@ -157,7 +163,7 @@ function filterBookings() {
                 <td colspan="8">
                     <div class="empty-state">
                         <i class="fas fa-search"></i>
-                        <p>${bookingEmptyMessage(statusFilter, !!(searchTerm || fromDate || toDate))}</p>
+                        <p>${bookingEmptyMessage(statusFilter, !!(searchTerm || exactDate || fromDate || toDate))}</p>
                     </div>
                 </td>
             </tr>`);
@@ -215,9 +221,10 @@ function bookingViewTitle(status) {
 function bookingFiltersActive() {
     const search = document.getElementById('booking-search')?.value.trim() || '';
     const status = document.getElementById('booking-filter-status')?.value || '';
+    const exact = document.getElementById('booking-date-select')?.value || '';
     const from = document.getElementById('booking-date-from')?.value || '';
     const to = document.getElementById('booking-date-to')?.value || '';
-    return !!(search || (status && status !== 'pending') || from || to);
+    return !!(search || (status && status !== 'pending') || exact || from || to);
 }
 
 function renderBookingPagination(total, totalPages) {
@@ -292,7 +299,8 @@ function showBookingDetails(row, modal) {
     set('detail-passenger-email', row.dataset.userEmail);
     set('detail-passenger-phone', row.dataset.userPhone);
     set('detail-route',           row.dataset.route);
-    set('detail-seat',            [row.dataset.seat, row.dataset.passengerTypes].filter(Boolean).join(' | '));
+    const seatEl = document.getElementById('detail-seat');
+    if (seatEl) seatEl.innerHTML = passengerTableFromNotes(row.dataset.notes || '', row.dataset.seat || '');
     set('detail-departure',       row.dataset.departure);
     set('detail-driver',          row.dataset.driver);
     set('detail-van',             row.dataset.van);
@@ -323,6 +331,31 @@ function showBookingDetails(row, modal) {
     modal.show();
 }
 
+function passengerTableFromNotes(raw, fallbackSeats) {
+    try {
+        const notes = raw ? JSON.parse(raw) : {};
+        if (Array.isArray(notes.passengers) && notes.passengers.length) {
+            const rows = notes.passengers.map(p => `
+                <tr>
+                    <td>${escapeHtml(p.seat_number || '-')}</td>
+                    <td>${escapeHtml(p.name || notes.passenger_name || 'Passenger')}</td>
+                    <td>${escapeHtml(statusLabel(p.type || 'regular'))}</td>
+                </tr>
+            `).join('');
+            return `
+                <div class="admin-passenger-table-wrap">
+                    <table class="admin-passenger-table">
+                        <thead><tr><th>Seat</th><th>Passenger Name</th><th>Passenger Type</th></tr></thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                </div>
+            `;
+        }
+    } catch (_) {}
+
+    return escapeHtml(fallbackSeats || '-');
+}
+
 function summarizeBookingNotes(raw) {
     if (!raw) return 'No booking notes available.';
     try {
@@ -338,6 +371,21 @@ function summarizeBookingNotes(raw) {
     } catch (_) {
         return raw || 'No booking notes available.';
     }
+}
+
+function statusLabel(value) {
+    return String(value || 'regular')
+        .replace(/_/g, ' ')
+        .replace(/\b\w/g, ch => ch.toUpperCase());
+}
+
+function escapeHtml(value) {
+    return String(value == null ? '' : value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
 }
 
 /* ═══════════════════════════════════════════════════════════════════

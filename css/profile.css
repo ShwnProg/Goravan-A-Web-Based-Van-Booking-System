@@ -1264,22 +1264,6 @@ body.admin-dark-mode-active .btn-close {
     color: #e2e8f0;
 }
 
-#page-content.admin-dark-mode .sched-status-dropdown {
-    background: #1a1f2e;
-    border: 1px solid rgba(255, 255, 255, .08);
-    box-shadow: 0 8px 28px rgba(0, 0, 0, .5);
-    border-radius: 8px;
-    overflow: hidden;
-}
-
-#page-content.admin-dark-mode .sched-status-item {
-    color: #9ca3af;
-}
-
-#page-content.admin-dark-mode .sched-status-item:hover {
-    background: rgba(255, 255, 255, .05);
-}
-
 /* ── Bookings Specific ───────────────────────── */
 #page-content.admin-dark-mode .ref-code {
     background: rgba(255, 255, 255, .05);
@@ -1690,22 +1674,6 @@ body.admin-dark-mode-active #page-content.admin-dark-mode .badge.arrived {
     background: rgba(22, 163, 74, .12) !important;
     color: #4ade80 !important;
     border-color: rgba(22, 163, 74, .2) !important;
-}
-
-/* ── sched-status-dropdown ───────────────────── */
-body.admin-dark-mode-active .sched-status-dropdown {
-    background: #1a1f2e !important;
-    border-color: rgba(255, 255, 255, .08) !important;
-}
-
-body.admin-dark-mode-active .sched-status-item {
-    color: #9ca3af !important;
-    border-bottom-color: rgba(255, 255, 255, .04) !important;
-}
-
-body.admin-dark-mode-active .sched-status-item:hover {
-    background: rgba(255, 255, 255, .05) !important;
-    color: #e2e8f0 !important;
 }
 
 /* ── db-stat specific ────────────────────────── */

@@ -691,7 +691,8 @@ body.admin-light-mode-active * {
     text-transform: uppercase;
 }
 
-.admin-date-filters input {
+.admin-date-filters input,
+.admin-date-filters select {
     height: 40px;
     min-width: 142px;
     border: 1px solid var(--admin-border);
@@ -788,6 +789,7 @@ body.admin-light-mode-active * {
     .admin-date-filters,
     .admin-date-filters label,
     .admin-date-filters input,
+    .admin-date-filters select,
     .filter-btn {
         width: 100%;
     }

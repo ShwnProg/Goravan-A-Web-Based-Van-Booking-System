@@ -4,6 +4,7 @@ window.initPaymentsPage = function () {
     var countBadge   = document.getElementById('payment-count');
     var searchInput  = document.getElementById('payment-search');
     var statusFilter = document.getElementById('payment-status-filter');
+    var dateSelect   = document.getElementById('payment-date-select');
     var dateFrom     = document.getElementById('payment-date-from');
     var dateTo       = document.getElementById('payment-date-to');
     var dateClear    = document.getElementById('payment-date-clear');
@@ -42,6 +43,7 @@ window.initPaymentsPage = function () {
     function filtersActive() {
         return !!((searchInput && searchInput.value.trim()) ||
             (statusFilter && statusFilter.value && statusFilter.value !== 'pending') ||
+            (dateSelect && dateSelect.value) ||
             (dateFrom && dateFrom.value) ||
             (dateTo && dateTo.value));
     }
@@ -65,6 +67,7 @@ window.initPaymentsPage = function () {
     function applyFilters() {
         var q      = searchInput  ? searchInput.value.toLowerCase().trim() : '';
         var status = statusFilter ? statusFilter.value : '';
+        var exact  = dateSelect ? dateSelect.value : '';
         var from   = dateFrom ? dateFrom.value : '';
         var to     = dateTo ? dateTo.value : '';
         if (!tbody.querySelector('tr.payment-row')) {
@@ -79,22 +82,27 @@ window.initPaymentsPage = function () {
                 || (row.dataset.userEmail  || '').toLowerCase().includes(q)
                 || (row.dataset.ref        || '').toLowerCase().includes(q);
             var matchS = !status || (row.dataset.status || '') === status;
-            var matchD = _withinDate(row.dataset.created || row.dataset.paidAt || '', from, to);
+            var dateValue = row.dataset.filterDate || row.dataset.paidAt || row.dataset.created || '';
+            var rowDate = String(dateValue).slice(0, 10);
+            var matchExactDate = !exact || rowDate === exact;
+            var matchD = matchExactDate && _withinDate(dateValue, from, to);
             row.style.display = matchQ && matchS && matchD ? '' : 'none';
         });
         updateGroupRows();
         updateCount();
-        renderEmptyState(status, from || to);
+        renderEmptyState(status, exact || from || to);
     }
 
     var debouncedApply = AdminUI.debounce(applyFilters, 350);
     if (searchInput)  searchInput.addEventListener('input', debouncedApply);
     if (statusFilter) statusFilter.addEventListener('change', applyFilters);
+    if (dateSelect) dateSelect.addEventListener('change', applyFilters);
     if (dateFrom) dateFrom.addEventListener('change', applyFilters);
     if (dateTo) dateTo.addEventListener('change', applyFilters);
     if (dateClear) dateClear.addEventListener('click', function () {
         if (searchInput) searchInput.value = '';
         if (statusFilter) statusFilter.value = 'pending';
+        if (dateSelect) dateSelect.value = '';
         if (dateFrom) dateFrom.value = '';
         if (dateTo) dateTo.value = '';
         if (statusTabs) {
